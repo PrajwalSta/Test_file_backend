@@ -9,8 +9,14 @@ import 'schedule_card.dart';
 class ScheduleList extends StatelessWidget {
   final String title;
   final List<ScheduleModel> tasks;
+
   final ValueChanged<ScheduleModel>? onScheduleTap;
   final ValueChanged<ScheduleModel>? onScheduleDelete;
+
+  final void Function(
+    ScheduleModel schedule,
+    bool completed,
+  )? onCompletedChanged;
 
   const ScheduleList({
     super.key,
@@ -18,6 +24,7 @@ class ScheduleList extends StatelessWidget {
     required this.tasks,
     this.onScheduleTap,
     this.onScheduleDelete,
+    this.onCompletedChanged,
   });
 
   @override
@@ -44,11 +51,14 @@ class ScheduleList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: titleStyle,
-        ),
-        const SizedBox(height: 14),
+        if (title.isNotEmpty) ...[
+          Text(
+            title,
+            style: titleStyle,
+          ),
+          const SizedBox(height: 14),
+        ],
+
         if (tasks.isEmpty)
           Container(
             width: double.infinity,
@@ -89,22 +99,41 @@ class ScheduleList extends StatelessWidget {
             children: List.generate(
               tasks.length,
               (index) {
-                final ScheduleModel schedule = tasks[index];
+                final ScheduleModel schedule =
+                    tasks[index];
 
                 return Padding(
                   padding: EdgeInsets.only(
-                    bottom: index == tasks.length - 1
+                    bottom: index ==
+                            tasks.length - 1
                         ? 0
                         : AppConstants.itemSpacing,
                   ),
                   child: ScheduleCard(
                     schedule: schedule,
+
                     onTap: onScheduleTap == null
                         ? null
-                        : () => onScheduleTap!(schedule),
-                    onDelete: onScheduleDelete == null
-                        ? null
-                        : () => onScheduleDelete!(schedule),
+                        : () =>
+                            onScheduleTap!(schedule),
+
+                    onDelete:
+                        onScheduleDelete == null
+                            ? null
+                            : () =>
+                                onScheduleDelete!(
+                                  schedule,
+                                ),
+
+                    onCompletedChanged:
+                        onCompletedChanged == null
+                            ? null
+                            : (completed) {
+                                onCompletedChanged!(
+                                  schedule,
+                                  completed,
+                                );
+                              },
                   ),
                 );
               },

@@ -9,12 +9,14 @@ class ScheduleCard extends StatelessWidget {
   final ScheduleModel schedule;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final ValueChanged<bool>? onCompletedChanged;
 
   const ScheduleCard({
     super.key,
     required this.schedule,
     this.onTap,
     this.onDelete,
+    this.onCompletedChanged,
   });
 
   @override
@@ -41,57 +43,85 @@ class ScheduleCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           AppConstants.scheduleCardRadius,
         ),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(
-              AppConstants.scheduleCardRadius,
-            ),
-            border: Border.all(
-              color: schedule.categoryColor.withValues(
-                alpha: isDarkMode ? 0.30 : 0.20,
-              ),
-            ),
-            boxShadow: isDarkMode
-                ? null
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+        child: AnimatedOpacity(
+          duration: const Duration(
+            milliseconds: 180,
           ),
-          child: Row(
-            children: [
-              _EmojiBox(schedule: schedule),
-              const SizedBox(width: 14),
-              Expanded(
-                child: _ScheduleDetails(
-                  schedule: schedule,
-                  titleStyle: titleStyle,
-                  subtitleStyle: subtitleStyle,
+          opacity: schedule.completed ? 0.65 : 1,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(
+                AppConstants.scheduleCardRadius,
+              ),
+              border: Border.all(
+                color:
+                    schedule.categoryColor.withValues(
+                  alpha: isDarkMode ? 0.30 : 0.20,
                 ),
               ),
-              if (onDelete != null) ...[
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: onDelete,
-                  tooltip: 'Delete schedule',
-                  style: IconButton.styleFrom(
-                    backgroundColor:
-                        AppColors.danger.withValues(alpha: 0.10),
+              boxShadow: isDarkMode
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                          alpha: 0.05,
+                        ),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+            ),
+            child: Row(
+              children: [
+                if (onCompletedChanged != null) ...[
+                  Checkbox(
+                    value: schedule.completed,
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+
+                      onCompletedChanged!(value);
+                    },
                   ),
-                  icon: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: AppColors.danger,
-                    size: 20,
+                  const SizedBox(width: 6),
+                ],
+
+                _EmojiBox(schedule: schedule),
+
+                const SizedBox(width: 14),
+
+                Expanded(
+                  child: _ScheduleDetails(
+                    schedule: schedule,
+                    titleStyle: titleStyle,
+                    subtitleStyle: subtitleStyle,
                   ),
                 ),
+
+                if (onDelete != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: onDelete,
+                    tooltip: 'Delete schedule',
+                    style: IconButton.styleFrom(
+                      backgroundColor:
+                          AppColors.danger.withValues(
+                        alpha: 0.10,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.danger,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -113,7 +143,9 @@ class _EmojiBox extends StatelessWidget {
       height: AppConstants.scheduleEmojiSize,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: schedule.categoryColor.withValues(alpha: 0.15),
+        color: schedule.categoryColor.withValues(
+          alpha: 0.15,
+        ),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Text(
@@ -137,6 +169,11 @@ class _ScheduleDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final TextDecoration? decoration =
+        schedule.completed
+            ? TextDecoration.lineThrough
+            : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -144,7 +181,9 @@ class _ScheduleDetails extends StatelessWidget {
           schedule.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: titleStyle,
+          style: titleStyle.copyWith(
+            decoration: decoration,
+          ),
         ),
         const SizedBox(height: 7),
         Row(
@@ -157,10 +196,13 @@ class _ScheduleDetails extends StatelessWidget {
             const SizedBox(width: 5),
             Expanded(
               child: Text(
-                '${schedule.time} • ${schedule.durationMinutes} min',
+                '${schedule.time} • '
+                '${schedule.durationMinutes} min',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: subtitleStyle,
+                style: subtitleStyle.copyWith(
+                  decoration: decoration,
+                ),
               ),
             ),
           ],
@@ -173,13 +215,17 @@ class _ScheduleDetails extends StatelessWidget {
             _ScheduleChip(
               text: schedule.category,
               backgroundColor:
-                  schedule.categoryColor.withValues(alpha: 0.14),
+                  schedule.categoryColor.withValues(
+                alpha: 0.14,
+              ),
               textColor: schedule.categoryColor,
             ),
             _ScheduleChip(
               text: schedule.focusMode,
               backgroundColor:
-                  AppColors.schedulePrimary.withValues(alpha: 0.14),
+                  AppColors.schedulePrimary.withValues(
+                alpha: 0.14,
+              ),
               textColor: AppColors.schedulePrimary,
             ),
           ],

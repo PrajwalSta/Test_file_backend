@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ScheduleModel {
+  final String? id;
   final String emoji;
   final String title;
   final String time;
@@ -8,8 +9,10 @@ class ScheduleModel {
   final Color categoryColor;
   final String focusMode;
   final int durationMinutes;
+  final bool completed;
 
   const ScheduleModel({
+    this.id,
     required this.emoji,
     required this.title,
     required this.time,
@@ -17,9 +20,11 @@ class ScheduleModel {
     required this.categoryColor,
     required this.focusMode,
     required this.durationMinutes,
+    this.completed = false,
   });
 
   ScheduleModel copyWith({
+    String? id,
     String? emoji,
     String? title,
     String? time,
@@ -27,15 +32,25 @@ class ScheduleModel {
     Color? categoryColor,
     String? focusMode,
     int? durationMinutes,
+    bool? completed,
   }) {
     return ScheduleModel(
+      id: id ?? this.id,
       emoji: emoji ?? this.emoji,
       title: title ?? this.title,
       time: time ?? this.time,
-      category: category ?? this.category,
-      categoryColor: categoryColor ?? this.categoryColor,
-      focusMode: focusMode ?? this.focusMode,
-      durationMinutes: durationMinutes ?? this.durationMinutes,
+      category:
+          category ?? this.category,
+      categoryColor:
+          categoryColor ??
+              this.categoryColor,
+      focusMode:
+          focusMode ?? this.focusMode,
+      durationMinutes:
+          durationMinutes ??
+              this.durationMinutes,
+      completed:
+          completed ?? this.completed,
     );
   }
 }

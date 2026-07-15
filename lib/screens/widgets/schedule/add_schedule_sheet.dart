@@ -112,13 +112,17 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
 
   String _formatTime(TimeOfDay time) {
     final int hour =
-        time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+        time.hourOfPeriod == 0
+            ? 12
+            : time.hourOfPeriod;
 
     final String minute =
         time.minute.toString().padLeft(2, '0');
 
     final String period =
-        time.period == DayPeriod.am ? 'AM' : 'PM';
+        time.period == DayPeriod.am
+            ? 'AM'
+            : 'PM';
 
     return '${hour.toString().padLeft(2, '0')}:'
         '$minute $period';
@@ -128,7 +132,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     FocusScope.of(context).unfocus();
 
     final bool isValid =
-        _formKey.currentState?.validate() ?? false;
+        _formKey.currentState?.validate() ??
+            false;
 
     if (!isValid) {
       return;
@@ -156,11 +161,13 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
         supabase.auth.currentUser;
 
     debugPrint(
-      'Current Supabase user: ${currentUser?.email}',
+      'Current Supabase user: '
+      '${currentUser?.email}',
     );
 
     debugPrint(
-      'Current Supabase user ID: ${currentUser?.id}',
+      'Current Supabase user ID: '
+      '${currentUser?.id}',
     );
 
     if (currentUser == null) {
@@ -185,37 +192,55 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
       final String formattedTime =
           _formatTime(_selectedTime);
 
-      await supabase.from('schedules').insert({
-        'user_id': currentUser.id,
-        'title': title,
-        'time': formattedTime,
-        'duration_minutes': duration,
-        'category': _selectedCategory.name,
-        'focus_mode': _selectedFocusMode,
-        'completed': false,
-      });
+      final Map<String, dynamic> insertedRow =
+          await supabase
+              .from('schedules')
+              .insert({
+                'user_id': currentUser.id,
+                'title': title,
+                'time': formattedTime,
+                'duration_minutes': duration,
+                'category':
+                    _selectedCategory.name,
+                'focus_mode':
+                    _selectedFocusMode,
+                'completed': false,
+              })
+              .select()
+              .single();
 
       debugPrint(
         'Schedule inserted successfully',
       );
 
+      debugPrint(
+        'Inserted schedule ID: '
+        '${insertedRow['id']}',
+      );
+
       final ScheduleModel newSchedule =
           ScheduleModel(
+        id: insertedRow['id']?.toString(),
         emoji: _selectedCategory.emoji,
         title: title,
         time: formattedTime,
-        category: _selectedCategory.name,
+        category:
+            _selectedCategory.name,
         categoryColor:
             _selectedCategory.color,
-        focusMode: _selectedFocusMode,
-        durationMinutes: duration,
+        focusMode:
+            _selectedFocusMode,
+        durationMinutes:
+            duration,
       );
 
       if (!mounted) {
         return;
       }
 
-      widget.onScheduleSaved(newSchedule);
+      widget.onScheduleSaved(
+        newSchedule,
+      );
     } on PostgrestException catch (error) {
       debugPrint(
         'Supabase message: ${error.message}',
@@ -284,43 +309,56 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     final double screenHeight =
         mediaQuery.size.height;
 
-    final Color sheetColor = isDarkMode
-        ? AppColors.scheduleBottomSheetDark
-        : AppColors.scheduleBottomSheetLight;
+    final Color sheetColor =
+        isDarkMode
+            ? AppColors
+                .scheduleBottomSheetDark
+            : AppColors
+                .scheduleBottomSheetLight;
 
-    final Color handleColor = isDarkMode
-        ? AppColors.scheduleDragHandleDark
-        : AppColors.scheduleDragHandleLight;
+    final Color handleColor =
+        isDarkMode
+            ? AppColors
+                .scheduleDragHandleDark
+            : AppColors
+                .scheduleDragHandleLight;
 
-    final Color titleColor = isDarkMode
-        ? AppColors.textPrimaryDark
-        : AppColors.textPrimaryLight;
+    final Color titleColor =
+        isDarkMode
+            ? AppColors.textPrimaryDark
+            : AppColors.textPrimaryLight;
 
-    final Color labelColor = isDarkMode
-        ? AppColors.textSecondaryDark
-        : AppColors.textSecondaryLight;
+    final Color labelColor =
+        isDarkMode
+            ? AppColors.textSecondaryDark
+            : AppColors.textSecondaryLight;
 
-    final Color closeButtonColor = isDarkMode
-        ? AppColors.scheduleInputDark
-        : AppColors.scheduleInputLight;
+    final Color closeButtonColor =
+        isDarkMode
+            ? AppColors.scheduleInputDark
+            : AppColors.scheduleInputLight;
 
     return AnimatedPadding(
       duration:
-          const Duration(milliseconds: 200),
+          const Duration(
+        milliseconds: 200,
+      ),
       curve: Curves.easeOut,
       padding: EdgeInsets.only(
         bottom: keyboardHeight,
       ),
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: screenHeight * 0.82,
+          maxHeight:
+              screenHeight * 0.82,
         ),
         decoration: BoxDecoration(
           color: sheetColor,
           borderRadius:
               const BorderRadius.vertical(
             top: Radius.circular(
-              AppConstants.bottomSheetRadius,
+              AppConstants
+                  .bottomSheetRadius,
             ),
           ),
           boxShadow: [
@@ -329,7 +367,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                 alpha: 0.28,
               ),
               blurRadius: 24,
-              offset: const Offset(0, -8),
+              offset:
+                  const Offset(0, -8),
             ),
           ],
         ),
@@ -339,11 +378,15 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
               width: 42,
               height: 4,
               margin:
-                  const EdgeInsets.only(top: 10),
+                  const EdgeInsets.only(
+                top: 10,
+              ),
               decoration: BoxDecoration(
                 color: handleColor,
                 borderRadius:
-                    BorderRadius.circular(20),
+                    BorderRadius.circular(
+                  20,
+                ),
               ),
             ),
             Padding(
@@ -368,10 +411,12 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                     ),
                   ),
                   IconButton(
-                    onPressed: _isSaving
-                        ? null
-                        : widget.onClose,
-                    style: IconButton.styleFrom(
+                    onPressed:
+                        _isSaving
+                            ? null
+                            : widget.onClose,
+                    style:
+                        IconButton.styleFrom(
                       backgroundColor:
                           closeButtonColor,
                     ),
@@ -384,7 +429,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
+              child:
+                  SingleChildScrollView(
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior
                         .onDrag,
@@ -399,23 +445,30 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        CrossAxisAlignment
+                            .start,
                     children: [
                       _SectionLabel(
                         text: 'Title',
                         color: labelColor,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(
+                        height: 8,
+                      ),
                       TitleTextField(
                         controller:
                             _titleController,
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(
+                        height: 18,
+                      ),
                       _SectionLabel(
                         text: 'Category',
                         color: labelColor,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       CategorySelector(
                         selectedCategory:
                             _selectedCategory,
@@ -427,10 +480,13 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                           });
                         },
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(
+                        height: 18,
+                      ),
                       Row(
                         crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            CrossAxisAlignment
+                                .start,
                         children: [
                           Expanded(
                             child: Column(
@@ -439,8 +495,10 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                                       .start,
                               children: [
                                 _SectionLabel(
-                                  text: 'Start Time',
-                                  color: labelColor,
+                                  text:
+                                      'Start Time',
+                                  color:
+                                      labelColor,
                                 ),
                                 const SizedBox(
                                   height: 8,
@@ -448,12 +506,15 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                                 TimePickerField(
                                   selectedTime:
                                       _selectedTime,
-                                  onTap: _selectTime,
+                                  onTap:
+                                      _selectTime,
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(
+                            width: 10,
+                          ),
                           Expanded(
                             child: Column(
                               crossAxisAlignment:
@@ -463,7 +524,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                                 _SectionLabel(
                                   text:
                                       'Duration (min)',
-                                  color: labelColor,
+                                  color:
+                                      labelColor,
                                 ),
                                 const SizedBox(
                                   height: 8,
@@ -477,28 +539,38 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(
+                        height: 18,
+                      ),
                       _SectionLabel(
-                        text: 'Focus Mode',
+                        text:
+                            'Focus Mode',
                         color: labelColor,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       FocusModeSelector(
                         selectedMode:
                             _selectedFocusMode,
-                        onModeSelected: (mode) {
+                        onModeSelected:
+                            (mode) {
                           setState(() {
                             _selectedFocusMode =
                                 mode;
                           });
                         },
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(
+                        height: 18,
+                      ),
                       SaveScheduleButton(
-                        isLoading: _isSaving,
-                        onPressed: _isSaving
-                            ? null
-                            : _saveSchedule,
+                        isLoading:
+                            _isSaving,
+                        onPressed:
+                            _isSaving
+                                ? null
+                                : _saveSchedule,
                       ),
                     ],
                   ),
@@ -526,7 +598,8 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style:
-          AppTextStyles.inputLabelDark.copyWith(
+          AppTextStyles.inputLabelDark
+              .copyWith(
         color: color,
       ),
     );
