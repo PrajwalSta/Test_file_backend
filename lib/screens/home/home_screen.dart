@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -113,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return '${hours}h';
     }
 
-    return '${hours}h${minutes}m';
+    return '${hours}h ${minutes}m';
   }
 
   String get sleepModeText {
@@ -175,7 +176,19 @@ class _HomeScreenState extends State<HomeScreen> {
       return '${hours}h';
     }
 
-    return '${hours}h${minutes}m';
+    return '${hours}h ${minutes}m';
+  }
+
+  String _formatDatabaseDate(
+    DateTime date,
+  ) {
+    final String month =
+        date.month.toString().padLeft(2, '0');
+
+    final String day =
+        date.day.toString().padLeft(2, '0');
+
+    return '${date.year}-$month-$day';
   }
 
   Future<void> _loadSleepSettings() async {
@@ -284,6 +297,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
+      final DateTime now =
+          DateTime.now();
+
+      final DateTime today =
+          DateTime(
+        now.year,
+        now.month,
+        now.day,
+      );
+
+      final String todayDatabaseDate =
+          _formatDatabaseDate(today);
+
       final List<Map<String, dynamic>> response =
           await _supabase
               .from('schedules')
@@ -293,8 +319,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 currentUser.id,
               )
               .eq(
-                'schedule_day',
-                'today',
+                'schedule_date',
+                todayDatabaseDate,
               )
               .order(
                 'created_at',
@@ -317,6 +343,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   .categories.first,
         );
 
+        final String scheduleDateValue =
+            row['schedule_date']
+                    ?.toString() ??
+                todayDatabaseDate;
+
+        final DateTime scheduleDate =
+            DateTime.tryParse(
+                  scheduleDateValue,
+                ) ??
+                today;
+
         return ScheduleModel(
           id: row['id']?.toString(),
           emoji: category.emoji,
@@ -326,7 +363,10 @@ class _HomeScreenState extends State<HomeScreen> {
           time:
               row['time']?.toString() ??
                   '09:00 AM',
-          category: categoryName,
+          scheduleDate:
+              scheduleDate,
+          category:
+              categoryName,
           categoryColor:
               category.color,
           focusMode:
@@ -393,12 +433,17 @@ class _HomeScreenState extends State<HomeScreen> {
         'Home schedule error: ${error.message}',
       );
 
+      debugPrint(
+        'Home schedule code: ${error.code}',
+      );
+
       if (!mounted) {
         return;
       }
 
       setState(() {
         _isLoading = false;
+
         _errorMessage =
             'Database error: ${error.message}';
 
@@ -422,6 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _isLoading = false;
+
         _errorMessage =
             'Unable to load schedules.';
 
@@ -517,7 +563,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return ScheduleSection(
-      schedules: todaySchedules,
+      schedules:
+          todaySchedules,
       onScheduleTap:
           _handleScheduleTap,
     );

@@ -70,6 +70,11 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(
         sleepSettingsRefreshVersion:
             sleepSettingsRefreshVersion,
+
+        // Added: Home reloads when schedules change.
+        scheduleRefreshVersion:
+            scheduleRefreshVersion,
+
         onScheduleUpdated:
             _refreshSchedules,
 
@@ -79,9 +84,10 @@ class _MainScreenState extends State<MainScreen> {
       ),
 
       ScheduleScreen(
-        key: ValueKey(
-          scheduleRefreshVersion,
-        ),
+        // Added: Notify MainScreen after add,
+        // complete, or delete.
+        onScheduleUpdated:
+            _refreshSchedules,
       ),
 
       const StatisticsScreen(),
