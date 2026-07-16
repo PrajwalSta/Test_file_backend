@@ -1,59 +1,132 @@
+
 import 'package:flutter/material.dart';
 
 class ProgressCard extends StatelessWidget {
-  const ProgressCard({super.key});
+  // Progress value must be between 0.0 and 1.0.
+  //
+  // Example:
+  // 0.50 = 50%
+  // 0.85 = 85%
+  // 1.00 = 100%
+  final double progress;
+
+  // Number of completed schedules.
+  final int completedTasks;
+
+  // Total number of schedules.
+  final int totalTasks;
+
+  const ProgressCard({
+    super.key,
+    required this.progress,
+    required this.completedTasks,
+    required this.totalTasks,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    // Make sure progress stays between 0 and 1.
+    final double safeProgress =
+        progress.clamp(0.0, 1.0);
+
+    // Convert progress into percentage.
+    //
+    // Example:
+    // 0.75 × 100 = 75%
+    final int percentage =
+        (safeProgress * 100).round();
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius:
+            BorderRadius.circular(20),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.45),
+          color: theme.dividerColor
+              .withValues(alpha: 0.45),
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment:
+            MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Today's Progress",
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+          // Progress information.
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Today's Progress",
+                  style: TextStyle(
+                    color: colorScheme
+                        .onSurfaceVariant,
+                    fontSize: 14,
+                    fontWeight:
+                        FontWeight.w500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '85%',
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+
+                const SizedBox(height: 8),
+
+                // Show dynamic percentage.
+                Text(
+                  '$percentage%',
+                  style: TextStyle(
+                    color:
+                        colorScheme.onSurface,
+                    fontSize: 32,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 4),
+
+                // Show completed and total schedules.
+                Text(
+                  '$completedTasks of $totalTasks tasks completed',
+                  style: TextStyle(
+                    color: colorScheme
+                        .onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
           ),
+
+          const SizedBox(width: 16),
+
+          // Circular progress indicator.
           SizedBox(
             height: 70,
             width: 70,
-            child: CircularProgressIndicator(
-              value: 0.85,
+            child:
+                CircularProgressIndicator(
+              // Dynamic progress from HomeScreen.
+              value: safeProgress,
               strokeWidth: 8,
               backgroundColor:
-                  colorScheme.primary.withValues(alpha: 0.15),
-              valueColor: AlwaysStoppedAnimation<Color>(
+                  colorScheme.primary
+                      .withValues(
+                alpha: 0.15,
+              ),
+              valueColor:
+                  AlwaysStoppedAnimation<
+                      Color>(
                 colorScheme.primary,
               ),
-              strokeCap: StrokeCap.round,
+              strokeCap:
+                  StrokeCap.round,
             ),
           ),
         ],
@@ -61,3 +134,4 @@ class ProgressCard extends StatelessWidget {
     );
   }
 }
+

@@ -16,25 +16,22 @@ class MainScreen extends StatefulWidget {
   });
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainScreen> createState() =>
+      _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
   late int currentIndex;
 
-  final List<Widget> pages = const [
-    HomeScreen(),
-    ScheduleScreen(),
-    StatisticsScreen(),
-    WorldClocksScreen(),
-    SettingsScreen(),
-  ];
+  int sleepSettingsRefreshVersion = 0;
+  int scheduleRefreshVersion = 0;
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.initialIndex >= 0 && widget.initialIndex < pages.length) {
+    if (widget.initialIndex >= 0 &&
+        widget.initialIndex < 5) {
       currentIndex = widget.initialIndex;
     } else {
       currentIndex = 0;
@@ -42,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void changePage(int index) {
-    if (index < 0 || index >= pages.length) {
+    if (index < 0 || index >= 5) {
       return;
     }
 
@@ -51,10 +48,56 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _refreshSleepSettings() {
+    setState(() {
+      sleepSettingsRefreshVersion++;
+    });
+  }
+
+  void _refreshSchedules() {
+    setState(() {
+      scheduleRefreshVersion++;
+    });
+  }
+
+  void _openScheduleScreen() {
+    changePage(1);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      HomeScreen(
+        sleepSettingsRefreshVersion:
+            sleepSettingsRefreshVersion,
+        onScheduleUpdated:
+            _refreshSchedules,
+
+        // Open the Schedule bottom navigation page.
+        onOpenSchedule:
+            _openScheduleScreen,
+      ),
+
+      ScheduleScreen(
+        key: ValueKey(
+          scheduleRefreshVersion,
+        ),
+      ),
+
+      const StatisticsScreen(),
+
+      const WorldClocksScreen(),
+
+      SettingsScreen(
+        onSleepSettingsUpdated:
+            _refreshSleepSettings,
+      ),
+    ];
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor:
+          Theme.of(context)
+              .scaffoldBackgroundColor,
       body: IndexedStack(
         index: currentIndex,
         children: pages,

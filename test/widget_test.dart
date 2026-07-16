@@ -38,7 +38,11 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: SettingsScreen()),
+      MaterialApp(
+        home: SettingsScreen(
+          onSleepSettingsUpdated: () {},
+        ),
+      ),
     );
 
     await tester.tap(find.widgetWithText(ListTile, 'Notifications'));

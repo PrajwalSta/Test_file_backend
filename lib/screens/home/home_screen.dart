@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/schedule_model.dart';
-import '../clocks/world_clocks_screen.dart';
-import '../schedule/schedule_screen.dart';
-import '../settings/settings_screen.dart';
-import '../statistics_screen/statistics_screen.dart';
+import '../../services/sleep_setting_service.dart';
 import '../widgets/home/greeting_header.dart';
 import '../widgets/home/progress_card.dart';
 import '../widgets/home/schedule_section.dart';
@@ -14,7 +11,19 @@ import '../widgets/schedule/add_schedule_sheet.dart';
 import '../widgets/schedule/category_selector.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int sleepSettingsRefreshVersion;
+  final int scheduleRefreshVersion;
+
+  final VoidCallback? onScheduleUpdated;
+  final VoidCallback? onOpenSchedule;
+
+  const HomeScreen({
+    super.key,
+    this.sleepSettingsRefreshVersion = 0,
+    this.scheduleRefreshVersion = 0,
+    this.onScheduleUpdated,
+    this.onOpenSchedule,
+  });
 
   @override
   State<HomeScreen> createState() =>
@@ -22,66 +31,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int currentIndex = 0;
-
-  int scheduleRefreshVersion = 0;
-
-  void _refreshScheduleScreen() {
-    setState(() {
-      scheduleRefreshVersion++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    final List<Widget> pages = [
-      _HomePage(
-        onScheduleSaved: _refreshScheduleScreen,
-      ),
-      ScheduleScreen(
-        key: ValueKey(
-          scheduleRefreshVersion,
-        ),
-      ),
-      const StatisticsScreen(),
-      const WorldClocksScreen(),
-      const SettingsScreen(),
-    ];
-
-    return Scaffold(
-      backgroundColor:
-          theme.scaffoldBackgroundColor,
-      body: IndexedStack(
-        index: currentIndex,
-        children: pages,
-      ),
-    );
-  }
-}
-
-class _HomePage extends StatefulWidget {
-  final VoidCallback onScheduleSaved;
-
-  const _HomePage({
-    required this.onScheduleSaved,
-  });
-
-  @override
-  State<_HomePage> createState() =>
-      _HomePageState();
-}
-
-class _HomePageState extends State<_HomePage> {
   final SupabaseClient _supabase =
       Supabase.instance.client;
+
+  final SleepSettingService
+      _sleepSettingService =
+      SleepSettingService();
 
   List<ScheduleModel> todaySchedules = [];
 
   int completedTasks = 0;
   int totalTasks = 0;
+  int totalFocusMinutes = 0;
 
+  TimeOfDay _sleepTime =
+      const TimeOfDay(
+    hour: 22,
+    minute: 0,
+  );
+
+  TimeOfDay _wakeTime =
+      const TimeOfDay(
+    hour: 7,
+    minute: 0,
+  );
+
+  bool _sleepModeEnabled = false;
   bool _isLoading = true;
 
   String? _errorMessage;
@@ -91,6 +66,191 @@ class _HomePageState extends State<_HomePage> {
     super.initState();
 
     _loadTodaySchedules();
+    _loadSleepSettings();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant HomeScreen oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.sleepSettingsRefreshVersion !=
+        widget.sleepSettingsRefreshVersion) {
+      _loadSleepSettings();
+    }
+
+    if (oldWidget.scheduleRefreshVersion !=
+        widget.scheduleRefreshVersion) {
+      _loadTodaySchedules();
+    }
+  }
+
+  double get todayProgress {
+    if (totalTasks == 0) {
+      return 0.0;
+    }
+
+    return completedTasks / totalTasks;
+  }
+
+  String get focusTimeText {
+    final int hours =
+        totalFocusMinutes ~/ 60;
+
+    final int minutes =
+        totalFocusMinutes % 60;
+
+    if (hours == 0 && minutes == 0) {
+      return '0m';
+    }
+
+    if (hours == 0) {
+      return '${minutes}m';
+    }
+
+    if (minutes == 0) {
+      return '${hours}h';
+    }
+
+    return '${hours}h${minutes}m';
+  }
+
+  String get sleepModeText {
+    if (!_sleepModeEnabled) {
+      return 'Off';
+    }
+
+    final DateTime now =
+        DateTime.now();
+
+    final DateTime bedtimeToday =
+        DateTime(
+      now.year,
+      now.month,
+      now.day,
+      _sleepTime.hour,
+      _sleepTime.minute,
+    );
+
+    final DateTime wakeTimeToday =
+        DateTime(
+      now.year,
+      now.month,
+      now.day,
+      _wakeTime.hour,
+      _wakeTime.minute,
+    );
+
+    if (now.isBefore(wakeTimeToday)) {
+      return 'Sleeping';
+    }
+
+    if (!now.isBefore(bedtimeToday)) {
+      return 'Sleeping';
+    }
+
+    final Duration remaining =
+        bedtimeToday.difference(now);
+
+    return _formatDuration(
+      remaining,
+    );
+  }
+
+  String _formatDuration(
+    Duration duration,
+  ) {
+    final int hours =
+        duration.inHours;
+
+    final int minutes =
+        duration.inMinutes % 60;
+
+    if (hours == 0) {
+      return '${minutes}m';
+    }
+
+    if (minutes == 0) {
+      return '${hours}h';
+    }
+
+    return '${hours}h${minutes}m';
+  }
+
+  Future<void> _loadSleepSettings() async {
+    try {
+      final Map<String, dynamic> settings =
+          await _sleepSettingService
+              .getSleepSettings();
+
+      final String sleepValue =
+          settings['sleep_time']
+                  ?.toString() ??
+              '22:00:00';
+
+      final String wakeValue =
+          settings['wake_time']
+                  ?.toString() ??
+              '07:00:00';
+
+      final List<String> sleepParts =
+          sleepValue.split(':');
+
+      final List<String> wakeParts =
+          wakeValue.split(':');
+
+      final int sleepHour =
+          int.tryParse(
+                sleepParts.first,
+              ) ??
+              22;
+
+      final int sleepMinute =
+          sleepParts.length > 1
+              ? int.tryParse(
+                    sleepParts[1],
+                  ) ??
+                  0
+              : 0;
+
+      final int wakeHour =
+          int.tryParse(
+                wakeParts.first,
+              ) ??
+              7;
+
+      final int wakeMinute =
+          wakeParts.length > 1
+              ? int.tryParse(
+                    wakeParts[1],
+                  ) ??
+                  0
+              : 0;
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _sleepTime = TimeOfDay(
+          hour: sleepHour,
+          minute: sleepMinute,
+        );
+
+        _wakeTime = TimeOfDay(
+          hour: wakeHour,
+          minute: wakeMinute,
+        );
+
+        _sleepModeEnabled =
+            settings['enabled'] == true;
+      });
+    } catch (error) {
+      debugPrint(
+        'Home Sleep Mode load error: $error',
+      );
+    }
   }
 
   Future<void> _loadTodaySchedules() async {
@@ -104,14 +264,13 @@ class _HomePageState extends State<_HomePage> {
 
       setState(() {
         _isLoading = false;
-
         _errorMessage =
             'Please log in to view schedules.';
 
         todaySchedules = [];
-
         completedTasks = 0;
         totalTasks = 0;
+        totalFocusMinutes = 0;
       });
 
       return;
@@ -125,9 +284,6 @@ class _HomePageState extends State<_HomePage> {
     }
 
     try {
-      // Load every schedule for today.
-      // Do not filter completed here because we need
-      // completed tasks for the Tasks Done count.
       final List<Map<String, dynamic>> response =
           await _supabase
               .from('schedules')
@@ -152,11 +308,13 @@ class _HomePageState extends State<_HomePage> {
                 'Study';
 
         final ScheduleCategory category =
-            CategorySelector.categories.firstWhere(
-          (item) =>
+            CategorySelector.categories
+                .firstWhere(
+          (ScheduleCategory item) =>
               item.name == categoryName,
           orElse: () =>
-              CategorySelector.categories.first,
+              CategorySelector
+                  .categories.first,
         );
 
         return ScheduleModel(
@@ -169,12 +327,14 @@ class _HomePageState extends State<_HomePage> {
               row['time']?.toString() ??
                   '09:00 AM',
           category: categoryName,
-          categoryColor: category.color,
+          categoryColor:
+              category.color,
           focusMode:
               row['focus_mode']?.toString() ??
                   'Study Mode',
           durationMinutes:
-              (row['duration_minutes'] as num?)
+              (row['duration_minutes']
+                          as num?)
                       ?.toInt() ??
                   0,
           completed:
@@ -182,36 +342,49 @@ class _HomePageState extends State<_HomePage> {
         );
       }).toList();
 
-      // Count completed schedules.
       final int completedCount =
-          loadedSchedules.where((schedule) {
-        return schedule.completed;
-      }).length;
+          loadedSchedules.where(
+        (ScheduleModel schedule) {
+          return schedule.completed;
+        },
+      ).length;
 
-      // Show only incomplete schedules on Home.
+      final int calculatedFocusMinutes =
+          loadedSchedules.fold(
+        0,
+        (
+          int total,
+          ScheduleModel schedule,
+        ) {
+          return total +
+              schedule.durationMinutes;
+        },
+      );
+
       final List<ScheduleModel>
           incompleteSchedules =
-          loadedSchedules.where((schedule) {
-        return !schedule.completed;
-      }).toList();
+          loadedSchedules.where(
+        (ScheduleModel schedule) {
+          return !schedule.completed;
+        },
+      ).toList();
 
       if (!mounted) {
         return;
       }
 
       setState(() {
-        // Only incomplete schedules are visible.
         todaySchedules =
             incompleteSchedules;
 
-        // Completed count for Tasks Done.
         completedTasks =
             completedCount;
 
-        // Total includes both completed
-        // and incomplete schedules.
         totalTasks =
             loadedSchedules.length;
+
+        totalFocusMinutes =
+            calculatedFocusMinutes;
 
         _isLoading = false;
       });
@@ -220,24 +393,19 @@ class _HomePageState extends State<_HomePage> {
         'Home schedule error: ${error.message}',
       );
 
-      debugPrint(
-        'Home schedule code: ${error.code}',
-      );
-
       if (!mounted) {
         return;
       }
 
       setState(() {
         _isLoading = false;
-
         _errorMessage =
             'Database error: ${error.message}';
 
         todaySchedules = [];
-
         completedTasks = 0;
         totalTasks = 0;
+        totalFocusMinutes = 0;
       });
     } catch (error, stackTrace) {
       debugPrint(
@@ -254,27 +422,32 @@ class _HomePageState extends State<_HomePage> {
 
       setState(() {
         _isLoading = false;
-
         _errorMessage =
             'Unable to load schedules.';
 
         todaySchedules = [];
-
         completedTasks = 0;
         totalTasks = 0;
+        totalFocusMinutes = 0;
       });
     }
+  }
+
+  Future<void> _refreshHomeData() async {
+    await Future.wait([
+      _loadTodaySchedules(),
+      _loadSleepSettings(),
+    ]);
   }
 
   void _openAddScheduleSheet() {
     AddScheduleSheet.show(
       context: context,
-      onScheduleSaved: (newSchedule) async {
-        // Refresh Home after saving.
+      onScheduleSaved:
+          (ScheduleModel newSchedule) async {
         await _loadTodaySchedules();
 
-        // Refresh Schedule screen too.
-        widget.onScheduleSaved();
+        widget.onScheduleUpdated?.call();
 
         if (!mounted) {
           return;
@@ -303,16 +476,7 @@ class _HomePageState extends State<_HomePage> {
   void _handleScheduleTap(
     ScheduleModel schedule,
   ) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(
-          '${schedule.title} selected',
-        ),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
-    );
+    widget.onOpenSchedule?.call();
   }
 
   Widget _buildScheduleSection() {
@@ -367,11 +531,14 @@ class _HomePageState extends State<_HomePage> {
     final ColorScheme colorScheme =
         theme.colorScheme;
 
+    final Size screenSize =
+        MediaQuery.sizeOf(context);
+
     final double screenWidth =
-        MediaQuery.sizeOf(context).width;
+        screenSize.width;
 
     final double screenHeight =
-        MediaQuery.sizeOf(context).height;
+        screenSize.height;
 
     return ColoredBox(
       color:
@@ -379,7 +546,7 @@ class _HomePageState extends State<_HomePage> {
       child: SafeArea(
         child: RefreshIndicator(
           onRefresh:
-              _loadTodaySchedules,
+              _refreshHomeData,
           child:
               SingleChildScrollView(
             physics:
@@ -402,7 +569,14 @@ class _HomePageState extends State<_HomePage> {
                       screenHeight * 0.025,
                 ),
 
-                const ProgressCard(),
+                ProgressCard(
+                  progress:
+                      todayProgress,
+                  completedTasks:
+                      completedTasks,
+                  totalTasks:
+                      totalTasks,
+                ),
 
                 SizedBox(
                   height:
@@ -411,10 +585,12 @@ class _HomePageState extends State<_HomePage> {
 
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: StatCard(
-                        icon: Icons.timer,
-                        title: '23h40m',
+                        icon:
+                            Icons.timer,
+                        title:
+                            focusTimeText,
                         subtitle:
                             'Focus Time',
                       ),
@@ -441,11 +617,12 @@ class _HomePageState extends State<_HomePage> {
                           screenWidth * 0.025,
                     ),
 
-                    const Expanded(
+                    Expanded(
                       child: StatCard(
-                        icon:
-                            Icons.nightlight,
-                        title: 'Tonight',
+                        icon: Icons
+                            .nightlight_rounded,
+                        title:
+                            sleepModeText,
                         subtitle:
                             'Sleep Mode',
                       ),
@@ -461,22 +638,42 @@ class _HomePageState extends State<_HomePage> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        "Today's Schedule",
-                        maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color:
-                              colorScheme.onSurface,
-                          fontSize:
-                              (screenWidth * 0.055)
-                                  .clamp(
-                            20.0,
-                            28.0,
+                      child: InkWell(
+                        onTap:
+                            widget.onOpenSchedule,
+                        borderRadius:
+                            BorderRadius.circular(
+                          8,
+                        ),
+                        child: Padding(
+                          padding:
+                              const EdgeInsets
+                                  .symmetric(
+                            vertical: 4,
                           ),
-                          fontWeight:
-                              FontWeight.bold,
+                          child: Text(
+                            "Today's Schedule",
+                            maxLines: 1,
+                            overflow:
+                                TextOverflow
+                                    .ellipsis,
+                            style:
+                                TextStyle(
+                              color:
+                                  colorScheme
+                                      .onSurface,
+                              fontSize:
+                                  (screenWidth *
+                                          0.055)
+                                      .clamp(
+                                20.0,
+                                28.0,
+                              ),
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -484,7 +681,8 @@ class _HomePageState extends State<_HomePage> {
                     TextButton.icon(
                       onPressed:
                           _openAddScheduleSheet,
-                      icon: const Icon(
+                      icon:
+                          const Icon(
                         Icons.add,
                         size: 18,
                       ),
