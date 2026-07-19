@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -8,6 +7,8 @@ import '../widgets/schedule/add_schedule_sheet.dart';
 import '../widgets/schedule/category_selector.dart';
 import '../widgets/schedule/schedule_header.dart';
 import '../widgets/schedule/schedule_list.dart';
+import '../../services/local_notification_service.dart';
+import '../../services/notification_setting_service.dart';
 
 class ScheduleScreen extends StatefulWidget {
   final VoidCallback? onScheduleUpdated;
@@ -45,26 +46,27 @@ class _ScheduleScreenState
     _loadSchedules();
   }
 
-  String _formatDatabaseDate(
-    DateTime date,
+  String _formatDisplayTime(
+    DateTime dateTime,
   ) {
-    final String month =
-        date.month.toString().padLeft(2, '0');
+    final int hour = dateTime.hour;
 
-    final String day =
-        date.day.toString().padLeft(2, '0');
+    final int displayHour =
+        hour == 0
+            ? 12
+            : hour > 12
+                ? hour - 12
+                : hour;
 
-    return '${date.year}-$month-$day';
-  }
+    final String minute =
+        dateTime.minute
+            .toString()
+            .padLeft(2, '0');
 
-  DateTime _normaliseDate(
-    DateTime date,
-  ) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    final String period =
+        hour >= 12 ? 'PM' : 'AM';
+
+    return '$displayHour:$minute $period';
   }
 
   Future<void> _loadSchedules() async {
@@ -99,18 +101,29 @@ class _ScheduleScreenState
           DateTime.now();
 
       final DateTime today =
-          _normaliseDate(now);
+          DateTime(
+        now.year,
+        now.month,
+        now.day,
+      );
 
       final DateTime tomorrow =
           today.add(
         const Duration(days: 1),
       );
 
-      final String todayDate =
-          _formatDatabaseDate(today);
+      final DateTime dayAfterTomorrow =
+          tomorrow.add(
+        const Duration(days: 1),
+      );
 
-      final String tomorrowDate =
-          _formatDatabaseDate(tomorrow);
+      final String startDateTime =
+          today.toUtc().toIso8601String();
+
+      final String endDateTime =
+          dayAfterTomorrow
+              .toUtc()
+              .toIso8601String();
 
       final List<Map<String, dynamic>>
           response = await _supabase
@@ -124,21 +137,23 @@ class _ScheduleScreenState
                 'completed',
                 false,
               )
-              .inFilter(
-                'schedule_date',
-                [
-                  todayDate,
-                  tomorrowDate,
-                ],
+              .gte(
+                'scheduled_at',
+                startDateTime,
+              )
+              .lt(
+                'scheduled_at',
+                endDateTime,
               )
               .order(
-                'schedule_date',
-                ascending: true,
-              )
-              .order(
-                'created_at',
+                'scheduled_at',
                 ascending: true,
               );
+
+      debugPrint(
+        'Loaded schedule rows: '
+        '${response.length}',
+      );
 
       final List<ScheduleModel>
           loadedToday = [];
@@ -148,6 +163,10 @@ class _ScheduleScreenState
 
       for (final Map<String, dynamic> row
           in response) {
+        debugPrint(
+          'Schedule row: $row',
+        );
+
         final String categoryName =
             row['category']?.toString() ??
                 'Study';
@@ -156,7 +175,8 @@ class _ScheduleScreenState
             CategorySelector.categories
                 .firstWhere(
           (ScheduleCategory item) {
-            return item.name == categoryName;
+            return item.name ==
+                categoryName;
           },
           orElse: () {
             return CategorySelector
@@ -164,23 +184,43 @@ class _ScheduleScreenState
           },
         );
 
-        final String? scheduleDateValue =
-            row['schedule_date']
+        final String? scheduledAtValue =
+            row['scheduled_at']
                 ?.toString();
 
-        if (scheduleDateValue == null ||
-            scheduleDateValue.isEmpty) {
+        if (scheduledAtValue == null ||
+            scheduledAtValue.isEmpty) {
+          debugPrint(
+            'Schedule skipped because '
+            'scheduled_at is empty.',
+          );
+
           continue;
         }
 
-        final DateTime? parsedScheduleDate =
+        final DateTime? parsedDate =
             DateTime.tryParse(
-          scheduleDateValue,
+          scheduledAtValue,
         );
 
-        if (parsedScheduleDate == null) {
+        if (parsedDate == null) {
+          debugPrint(
+            'Could not parse scheduled_at: '
+            '$scheduledAtValue',
+          );
+
           continue;
         }
+
+        final DateTime localScheduleDate =
+            parsedDate.toLocal();
+
+        final DateTime scheduleDay =
+            DateTime(
+          localScheduleDate.year,
+          localScheduleDate.month,
+          localScheduleDate.day,
+        );
 
         final ScheduleModel schedule =
             ScheduleModel(
@@ -191,15 +231,18 @@ class _ScheduleScreenState
                   'Untitled',
           time:
               row['time']?.toString() ??
-                  '09:00 AM',
+                  _formatDisplayTime(
+                    localScheduleDate,
+                  ),
           scheduleDate:
-              parsedScheduleDate,
+              localScheduleDate,
           category:
               categoryName,
           categoryColor:
               category.color,
           focusMode:
-              row['focus_mode']?.toString() ??
+              row['focus_mode']
+                      ?.toString() ??
                   'Study Mode',
           durationMinutes:
               (row['duration_minutes']
@@ -210,20 +253,12 @@ class _ScheduleScreenState
               row['completed'] == true,
         );
 
-        final DateTime
-            normalisedScheduleDate =
-            _normaliseDate(
-          parsedScheduleDate,
-        );
-
-        if (normalisedScheduleDate ==
-            today) {
+        if (scheduleDay == today) {
           loadedToday.add(
             schedule,
           );
         } else if (
-            normalisedScheduleDate ==
-                tomorrow) {
+            scheduleDay == tomorrow) {
           loadedTomorrow.add(
             schedule,
           );
@@ -243,6 +278,16 @@ class _ScheduleScreenState
 
         _isLoading = false;
       });
+
+      debugPrint(
+        'Today schedules: '
+        '${loadedToday.length}',
+      );
+
+      debugPrint(
+        'Tomorrow schedules: '
+        '${loadedTomorrow.length}',
+      );
     } on PostgrestException catch (error) {
       debugPrint(
         'Schedule loading error: '
@@ -416,20 +461,39 @@ class _ScheduleScreenState
 
     try {
       await _supabase
-          .from('schedules')
-          .update({
-            'completed': completed,
-          })
-          .eq(
-            'id',
-            scheduleId,
-          )
-          .eq(
-            'user_id',
-            currentUser.id,
-          );
+    .from('schedules')
+    .update({
+      'completed': completed,
+    })
+    .eq(
+      'id',
+      scheduleId,
+    )
+    .eq(
+      'user_id',
+      currentUser.id,
+    );
 
-      await _loadSchedules();
+final NotificationSettingService
+    notificationSettingService =
+    NotificationSettingService();
+
+if (completed) {
+  final bool notificationEnabled =
+      await notificationSettingService
+          .isTaskCompletedNotificationEnabled();
+
+  if (notificationEnabled) {
+    await LocalNotificationService.instance
+        .showTaskStatusNotification(
+      title: '🎉 Task Completed',
+      body:
+          '${schedule.title} has been completed successfully.',
+    );
+  }
+}
+
+await _loadSchedules();
 
       widget.onScheduleUpdated?.call();
 
@@ -563,18 +627,35 @@ class _ScheduleScreenState
 
     try {
       await _supabase
-          .from('schedules')
-          .delete()
-          .eq(
-            'id',
-            scheduleId,
-          )
-          .eq(
-            'user_id',
-            currentUser.id,
-          );
+    .from('schedules')
+    .delete()
+    .eq(
+      'id',
+      scheduleId,
+    )
+    .eq(
+      'user_id',
+      currentUser.id,
+    );
 
-      await _loadSchedules();
+final NotificationSettingService
+    notificationSettingService =
+    NotificationSettingService();
+
+final bool notificationEnabled =
+    await notificationSettingService
+        .isScheduleDeleteNotificationEnabled();
+
+if (notificationEnabled) {
+  await LocalNotificationService.instance
+      .showTaskStatusNotification(
+    title: 'Schedule Cancelled',
+    body:
+        '${schedule.title} has been deleted from your schedule.',
+  );
+}
+
+await _loadSchedules();
 
       widget.onScheduleUpdated?.call();
 

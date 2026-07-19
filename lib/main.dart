@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/theme/app_theme.dart';
 import 'screens/theme/theme_provider.dart';
+import 'services/local_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,8 @@ Future<void> main() async {
         'sb_publishable_2dn-psJkX9OjFVoPc5rQ9w_h-0KgVR-',
   );
 
+  await LocalNotificationService.instance.initialize();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -24,7 +27,9 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,9 @@ class MyApp extends StatelessWidget {
 }
 
 class FocusGlowApp extends StatelessWidget {
-  const FocusGlowApp({super.key});
+  const FocusGlowApp({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class ScheduleModel {
@@ -6,12 +5,18 @@ class ScheduleModel {
   final String emoji;
   final String title;
   final String time;
+
+  // Stores the complete selected date and time.
   final DateTime scheduleDate;
+
   final String category;
   final Color categoryColor;
   final String focusMode;
   final int durationMinutes;
   final bool completed;
+
+  // Used to cancel or replace the local notification.
+  final int? notificationId;
 
   const ScheduleModel({
     this.id,
@@ -24,6 +29,7 @@ class ScheduleModel {
     required this.focusMode,
     required this.durationMinutes,
     this.completed = false,
+    this.notificationId,
   });
 
   ScheduleModel copyWith({
@@ -37,6 +43,8 @@ class ScheduleModel {
     String? focusMode,
     int? durationMinutes,
     bool? completed,
+    int? notificationId,
+    bool removeNotificationId = false,
   }) {
     return ScheduleModel(
       id: id ?? this.id,
@@ -55,6 +63,11 @@ class ScheduleModel {
           durationMinutes ?? this.durationMinutes,
       completed:
           completed ?? this.completed,
+      notificationId:
+          removeNotificationId
+              ? null
+              : notificationId ??
+                  this.notificationId,
     );
   }
 
@@ -63,8 +76,8 @@ class ScheduleModel {
     required Color categoryColor,
     required String emoji,
   }) {
-    final String? scheduleDateValue =
-        map['schedule_date']?.toString();
+    final DateTime scheduleDate =
+        _parseScheduleDate(map);
 
     return ScheduleModel(
       id: map['id']?.toString(),
@@ -75,33 +88,26 @@ class ScheduleModel {
       time:
           map['time']?.toString() ??
               '09:00 AM',
-      scheduleDate:
-          scheduleDateValue != null &&
-                  scheduleDateValue.isNotEmpty
-              ? DateTime.tryParse(
-                    scheduleDateValue,
-                  ) ??
-                  DateTime.now()
-              : DateTime.now(),
+      scheduleDate: scheduleDate,
       category:
           map['category']?.toString() ??
               'Study',
-      categoryColor:
-          categoryColor,
+      categoryColor: categoryColor,
       focusMode:
           map['focus_mode']?.toString() ??
               'Study Mode',
       durationMinutes:
-          (map['duration_minutes'] as num?)
-                  ?.toInt() ??
-              int.tryParse(
-                map['duration_minutes']
-                        ?.toString() ??
-                    '',
-              ) ??
-              0,
+          _parseInt(
+        map['duration_minutes'],
+      ),
       completed:
           map['completed'] == true,
+      notificationId:
+          map['notification_id'] != null
+              ? _parseInt(
+                  map['notification_id'],
+                )
+              : null,
     );
   }
 
@@ -109,22 +115,95 @@ class ScheduleModel {
     String? userId,
     bool includeId = false,
   }) {
-    return {
-      if (includeId && id != null)
-        'id': id,
-      'user_id': ?userId,
+    final Map<String, dynamic> data = {
       'title': title,
       'time': time,
+
+      // Keep this if your table still uses schedule_date.
       'schedule_date':
           formatDatabaseDate(
         scheduleDate,
       ),
+
+      // Complete date and time used for notifications.
+      'scheduled_at':
+          scheduleDate
+              .toUtc()
+              .toIso8601String(),
+
       'category': category,
       'focus_mode': focusMode,
       'duration_minutes':
           durationMinutes,
       'completed': completed,
     };
+
+    if (includeId && id != null) {
+      data['id'] = id;
+    }
+
+    if (userId != null) {
+      data['user_id'] = userId;
+    }
+
+    if (notificationId != null) {
+      data['notification_id'] =
+          notificationId;
+    }
+
+    return data;
+  }
+
+  static DateTime _parseScheduleDate(
+    Map<String, dynamic> map,
+  ) {
+    final dynamic scheduledAtValue =
+        map['scheduled_at'];
+
+    if (scheduledAtValue != null) {
+      final DateTime? scheduledAt =
+          DateTime.tryParse(
+        scheduledAtValue.toString(),
+      );
+
+      if (scheduledAt != null) {
+        return scheduledAt.toLocal();
+      }
+    }
+
+    final String? scheduleDateValue =
+        map['schedule_date']?.toString();
+
+    if (scheduleDateValue != null &&
+        scheduleDateValue.isNotEmpty) {
+      final DateTime? parsedDate =
+          DateTime.tryParse(
+        scheduleDateValue,
+      );
+
+      if (parsedDate != null) {
+        return parsedDate;
+      }
+    }
+
+    return DateTime.now();
+  }
+
+  static int _parseInt(
+    dynamic value,
+  ) {
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    return int.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0;
   }
 
   static String formatDatabaseDate(

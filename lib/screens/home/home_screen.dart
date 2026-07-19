@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -179,18 +178,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return '${hours}h ${minutes}m';
   }
 
-  String _formatDatabaseDate(
-    DateTime date,
-  ) {
-    final String month =
-        date.month.toString().padLeft(2, '0');
-
-    final String day =
-        date.day.toString().padLeft(2, '0');
-
-    return '${date.year}-$month-$day';
-  }
-
   Future<void> _loadSleepSettings() async {
     try {
       final Map<String, dynamic> settings =
@@ -300,15 +287,17 @@ class _HomeScreenState extends State<HomeScreen> {
       final DateTime now =
           DateTime.now();
 
-      final DateTime today =
+      final DateTime startOfToday =
           DateTime(
         now.year,
         now.month,
         now.day,
       );
 
-      final String todayDatabaseDate =
-          _formatDatabaseDate(today);
+      final DateTime startOfTomorrow =
+          startOfToday.add(
+        const Duration(days: 1),
+      );
 
       final List<Map<String, dynamic>> response =
           await _supabase
@@ -318,17 +307,53 @@ class _HomeScreenState extends State<HomeScreen> {
                 'user_id',
                 currentUser.id,
               )
-              .eq(
-                'schedule_date',
-                todayDatabaseDate,
+              .gte(
+                'scheduled_at',
+                startOfToday
+                    .toUtc()
+                    .toIso8601String(),
+              )
+              .lt(
+                'scheduled_at',
+                startOfTomorrow
+                    .toUtc()
+                    .toIso8601String(),
               )
               .order(
-                'created_at',
+                'scheduled_at',
                 ascending: true,
               );
 
+      debugPrint(
+        'Home loaded rows: ${response.length}',
+      );
+
       final List<ScheduleModel> loadedSchedules =
-          response.map((row) {
+          [];
+
+      for (final Map<String, dynamic> row
+          in response) {
+        final String? scheduledAtValue =
+            row['scheduled_at']
+                ?.toString();
+
+        if (scheduledAtValue == null ||
+            scheduledAtValue.isEmpty) {
+          continue;
+        }
+
+        final DateTime? parsedDate =
+            DateTime.tryParse(
+          scheduledAtValue,
+        );
+
+        if (parsedDate == null) {
+          continue;
+        }
+
+        final DateTime localScheduleDate =
+            parsedDate.toLocal();
+
         final String categoryName =
             row['category']?.toString() ??
                 'Study';
@@ -336,51 +361,46 @@ class _HomeScreenState extends State<HomeScreen> {
         final ScheduleCategory category =
             CategorySelector.categories
                 .firstWhere(
-          (ScheduleCategory item) =>
-              item.name == categoryName,
-          orElse: () =>
-              CategorySelector
-                  .categories.first,
+          (ScheduleCategory item) {
+            return item.name ==
+                categoryName;
+          },
+          orElse: () {
+            return CategorySelector
+                .categories.first;
+          },
         );
 
-        final String scheduleDateValue =
-            row['schedule_date']
-                    ?.toString() ??
-                todayDatabaseDate;
-
-        final DateTime scheduleDate =
-            DateTime.tryParse(
-                  scheduleDateValue,
-                ) ??
-                today;
-
-        return ScheduleModel(
-          id: row['id']?.toString(),
-          emoji: category.emoji,
-          title:
-              row['title']?.toString() ??
-                  'Untitled',
-          time:
-              row['time']?.toString() ??
-                  '09:00 AM',
-          scheduleDate:
-              scheduleDate,
-          category:
-              categoryName,
-          categoryColor:
-              category.color,
-          focusMode:
-              row['focus_mode']?.toString() ??
-                  'Study Mode',
-          durationMinutes:
-              (row['duration_minutes']
-                          as num?)
-                      ?.toInt() ??
-                  0,
-          completed:
-              row['completed'] == true,
+        loadedSchedules.add(
+          ScheduleModel(
+            id: row['id']?.toString(),
+            emoji: category.emoji,
+            title:
+                row['title']?.toString() ??
+                    'Untitled',
+            time:
+                row['time']?.toString() ??
+                    '',
+            scheduleDate:
+                localScheduleDate,
+            category:
+                categoryName,
+            categoryColor:
+                category.color,
+            focusMode:
+                row['focus_mode']
+                        ?.toString() ??
+                    'Study Mode',
+            durationMinutes:
+                (row['duration_minutes']
+                            as num?)
+                        ?.toInt() ??
+                    0,
+            completed:
+                row['completed'] == true,
+          ),
         );
-      }).toList();
+      }
 
       final int completedCount =
           loadedSchedules.where(
