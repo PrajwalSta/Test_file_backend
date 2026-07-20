@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'local_notification_service.dart';
 import 'notification_setting_service.dart';
+import 'profile/activity_service.dart';
 
 class ScheduleService {
   final SupabaseClient _supabase =
@@ -11,6 +12,9 @@ class ScheduleService {
   final NotificationSettingService
       _notificationSettingService =
       NotificationSettingService();
+
+  final ActivityService _activityService =
+      ActivityService();
 
   User get _currentUser {
     final User? user =
@@ -53,7 +57,8 @@ class ScheduleService {
     required String category,
     required String focusMode,
   }) async {
-    final User user = _currentUser;
+    final User user =
+        _currentUser;
 
     if (!scheduleDateTime.isAfter(
       DateTime.now(),
@@ -115,8 +120,19 @@ class ScheduleService {
             'notification_id':
                 notificationId,
           })
-          .eq('id', scheduleId)
-          .eq('user_id', user.id);
+          .eq(
+            'id',
+            scheduleId,
+          )
+          .eq(
+            'user_id',
+            user.id,
+          );
+
+      await _activityService
+          .logScheduleAdded(
+        title,
+      );
 
       debugPrint(
         'Schedule created successfully.',
@@ -221,10 +237,14 @@ class ScheduleService {
 
     try {
       final List<Map<String, dynamic>>
-          schedules = await _supabase
+          schedules =
+          await _supabase
               .from('schedules')
               .select()
-              .eq('user_id', user.id)
+              .eq(
+                'user_id',
+                user.id,
+              )
               .order(
                 'scheduled_at',
                 ascending: true,
@@ -288,7 +308,9 @@ class ScheduleService {
     }
 
     final DateTime localStart =
-        _startOfDay(date);
+        _startOfDay(
+      date,
+    );
 
     final DateTime localEnd =
         localStart.add(
@@ -297,10 +319,14 @@ class ScheduleService {
 
     try {
       final List<Map<String, dynamic>>
-          schedules = await _supabase
+          schedules =
+          await _supabase
               .from('schedules')
               .select()
-              .eq('user_id', user.id)
+              .eq(
+                'user_id',
+                user.id,
+              )
               .gte(
                 'scheduled_at',
                 localStart
@@ -364,7 +390,9 @@ class ScheduleService {
         DateTime.now();
 
     final DateTime startOfToday =
-        _startOfDay(now);
+        _startOfDay(
+      now,
+    );
 
     final DateTime startOfTomorrow =
         startOfToday.add(
@@ -373,12 +401,16 @@ class ScheduleService {
 
     try {
       final List<Map<String, dynamic>>
-          schedules = await _supabase
+          schedules =
+          await _supabase
               .from('schedules')
               .select(
                 'id, completed',
               )
-              .eq('user_id', user.id)
+              .eq(
+                'user_id',
+                user.id,
+              )
               .gte(
                 'scheduled_at',
                 startOfToday
@@ -396,10 +428,15 @@ class ScheduleService {
           schedules.length;
 
       final int completed =
-          schedules.where((schedule) {
-        return schedule['completed'] ==
-            true;
-      }).length;
+          schedules.where(
+        (
+          Map<String, dynamic>
+              schedule,
+        ) {
+          return schedule['completed'] ==
+              true;
+        },
+      ).length;
 
       final double progress =
           total == 0
@@ -439,13 +476,53 @@ class ScheduleService {
         _currentUser;
 
     try {
+      final Map<String, dynamic>
+          schedule =
+          await _supabase
+              .from('schedules')
+              .select(
+                'title, completed',
+              )
+              .eq(
+                'id',
+                scheduleId,
+              )
+              .eq(
+                'user_id',
+                user.id,
+              )
+              .single();
+
+      final String scheduleTitle =
+          schedule['title']
+                  ?.toString() ??
+              'Schedule';
+
+      final bool wasCompleted =
+          schedule['completed'] ==
+              true;
+
       await _supabase
           .from('schedules')
           .update({
             'completed': completed,
           })
-          .eq('id', scheduleId)
-          .eq('user_id', user.id);
+          .eq(
+            'id',
+            scheduleId,
+          )
+          .eq(
+            'user_id',
+            user.id,
+          );
+
+      if (completed &&
+          !wasCompleted) {
+        await _activityService
+            .logScheduleCompleted(
+          scheduleTitle,
+        );
+      }
 
       if (completed &&
           notificationId != null) {
@@ -455,10 +532,20 @@ class ScheduleService {
           notificationId,
         );
       }
+
+      debugPrint(
+        'Schedule completion updated.',
+      );
     } on PostgrestException catch (error) {
       debugPrint(
         'Update completed error: '
         '${error.message}',
+      );
+
+      rethrow;
+    } catch (error) {
+      debugPrint(
+        'Update completed error: $error',
       );
 
       rethrow;
@@ -515,21 +602,35 @@ class ScheduleService {
                     .toIso8601String(),
             'duration_minutes':
                 durationMinutes,
-            'category': category,
-            'focus_mode': focusMode,
+            'category':
+                category,
+            'focus_mode':
+                focusMode,
             'notification_id':
                 newNotificationId,
           })
-          .eq('id', scheduleId)
-          .eq('user_id', user.id);
+          .eq(
+            'id',
+            scheduleId,
+          )
+          .eq(
+            'user_id',
+            user.id,
+          );
 
       await _scheduleReminder(
-        scheduleId: scheduleId,
+        scheduleId:
+            scheduleId,
         notificationId:
             newNotificationId,
-        title: title,
+        title:
+            title,
         scheduleDateTime:
             scheduleDateTime,
+      );
+
+      debugPrint(
+        'Schedule updated successfully.',
       );
     } on PostgrestException catch (error) {
       debugPrint(
@@ -557,19 +658,40 @@ class ScheduleService {
         _currentUser;
 
     try {
-      final Map<String, dynamic> schedule =
+      final Map<String, dynamic>
+          schedule =
           await _supabase
               .from('schedules')
               .select(
-                'notification_id',
+                'title, notification_id',
               )
-              .eq('id', scheduleId)
-              .eq('user_id', user.id)
+              .eq(
+                'id',
+                scheduleId,
+              )
+              .eq(
+                'user_id',
+                user.id,
+              )
               .single();
 
+      final String scheduleTitle =
+          schedule['title']
+                  ?.toString() ??
+              'Schedule';
+
+      final dynamic
+          notificationValue =
+          schedule['notification_id'];
+
       final int? notificationId =
-          schedule['notification_id']
-              as int?;
+          notificationValue is int
+              ? notificationValue
+              : int.tryParse(
+                  notificationValue
+                          ?.toString() ??
+                      '',
+                );
 
       if (notificationId != null) {
         await LocalNotificationService
@@ -582,8 +704,23 @@ class ScheduleService {
       await _supabase
           .from('schedules')
           .delete()
-          .eq('id', scheduleId)
-          .eq('user_id', user.id);
+          .eq(
+            'id',
+            scheduleId,
+          )
+          .eq(
+            'user_id',
+            user.id,
+          );
+
+      await _activityService
+          .logScheduleDeleted(
+        scheduleTitle,
+      );
+
+      debugPrint(
+        'Schedule deleted successfully.',
+      );
     } on PostgrestException catch (error) {
       debugPrint(
         'Delete schedule error: '

@@ -5,33 +5,44 @@ import '../../theme/app_colors.dart';
 import 'stat_card.dart';
 
 class ProfileStats extends StatelessWidget {
-  const ProfileStats({super.key});
+  final int streak;
+  final int completedTasks;
+  final int focusHours;
+  final String membership;
+
+  const ProfileStats({
+    super.key,
+    required this.streak,
+    required this.completedTasks,
+    required this.focusHours,
+    required this.membership,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final stats = [
+    final List<StatModel> stats = [
       StatModel(
         icon: Icons.local_fire_department,
-        value: "7",
-        label: "days",
+        value: streak.toString(),
+        label: 'days',
         color: AppColors.orange,
       ),
-      const StatModel(
+      StatModel(
         icon: Icons.check_box,
-        value: "142",
-        label: "done",
+        value: completedTasks.toString(),
+        label: 'done',
         color: AppColors.cyan,
       ),
-      const StatModel(
+      StatModel(
         icon: Icons.bolt,
-        value: "98",
-        label: "hours",
+        value: focusHours.toString(),
+        label: 'hours',
         color: AppColors.primary,
       ),
-      const StatModel(
+      StatModel(
         icon: Icons.emoji_events,
-        value: "12",
-        label: "pro",
+        value: membership,
+        label: 'membership',
         color: AppColors.yellow,
       ),
     ];
@@ -39,7 +50,10 @@ class ProfileStats extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: LayoutBuilder(
-        builder: (context, constraints) {
+        builder: (
+          BuildContext context,
+          BoxConstraints constraints,
+        ) {
           int crossAxisCount = 4;
 
           if (constraints.maxWidth < 700) {
@@ -48,15 +62,20 @@ class ProfileStats extends StatelessWidget {
 
           return GridView.builder(
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+            physics:
+                const NeverScrollableScrollPhysics(),
             itemCount: stats.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate:
+                SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: 1.45,
             ),
-            itemBuilder: (context, index) {
+            itemBuilder: (
+              BuildContext context,
+              int index,
+            ) {
               return StatCard(
                 stat: stats[index],
               );

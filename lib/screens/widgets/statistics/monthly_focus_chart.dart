@@ -1,67 +1,86 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../../../data/statistics_data.dart';
 import '../../theme/app_colors.dart';
 
 class MonthlyFocusChart extends StatelessWidget {
-  const MonthlyFocusChart({super.key});
+  final Map<String, double> monthlyData;
+
+  const MonthlyFocusChart({
+    super.key,
+    required this.monthlyData,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final values = StatisticsData.monthlyFocus;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final entries = monthlyData.entries.toList();
+
+    if (entries.isEmpty) {
+      return const Center(
+        child: Text("No data"),
+      );
+    }
+
+    final values = entries
+        .map((e) => e.value / 60)
+        .toList();
+
+    final maxY = values.reduce(
+              (a, b) => a > b ? a : b,
+            ) +
+        1;
 
     return LineChart(
       LineChartData(
         minX: 0,
-        maxX: values.length - 1,
+        maxX: (values.length - 1).toDouble(),
         minY: 0,
-        maxY: 8,
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        lineTouchData: const LineTouchData(enabled: false),
+        maxY: maxY,
+        gridData: const FlGridData(
+          show: false,
+        ),
+        borderData: FlBorderData(
+          show: false,
+        ),
+        lineTouchData: const LineTouchData(
+          enabled: false,
+        ),
         titlesData: FlTitlesData(
           topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
+            sideTitles:
+                SideTitles(showTitles: false),
           ),
           leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
+            sideTitles:
+                SideTitles(showTitles: false),
           ),
           rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
+            sideTitles:
+                SideTitles(showTitles: false),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 20,
-              interval: 2,
-              getTitlesWidget: (value, meta) {
-                String? label;
+              getTitlesWidget:
+                  (value, meta) {
+                final index = value.toInt();
 
-                switch (value.toInt()) {
-                  case 2:
-                    label = 'W2';
-                    break;
-                  case 4:
-                    label = 'W3';
-                    break;
-                  case 6:
-                    label = 'W4';
-                    break;
-                }
-
-                if (label == null) {
-                  return const SizedBox.shrink();
+                if (index >= entries.length) {
+                  return const SizedBox();
                 }
 
                 return Text(
-                  label,
+                  entries[index].key,
                   style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
+                    color: colorScheme
+                        .onSurfaceVariant,
                     fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    fontWeight:
+                        FontWeight.w500,
                   ),
                 );
               },
@@ -74,15 +93,25 @@ class MonthlyFocusChart extends StatelessWidget {
             curveSmoothness: 0.35,
             barWidth: 2,
             color: AppColors.primaryLight,
-            dotData: const FlDotData(show: false),
+            dotData: const FlDotData(
+              show: false,
+            ),
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin:
+                    Alignment.topCenter,
+                end:
+                    Alignment.bottomCenter,
                 colors: [
-                  AppColors.primary.withValues(alpha: 0.35),
-                  AppColors.primary.withValues(alpha: 0.02),
+                  AppColors.primary
+                      .withValues(
+                    alpha: 0.35,
+                  ),
+                  AppColors.primary
+                      .withValues(
+                    alpha: 0.02,
+                  ),
                 ],
               ),
             ),

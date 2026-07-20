@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/schedule_model.dart';
 import '../../services/local_notification_service.dart';
 import '../../services/notification_setting_service.dart';
+import '../../services/profile/profile_service.dart';
 import '../theme/app_constants.dart';
 import '../widgets/schedule/add_schedule_sheet.dart';
 import '../widgets/schedule/category_selector.dart';
@@ -23,9 +24,13 @@ class ScheduleScreen extends StatefulWidget {
       _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends State<ScheduleScreen> {
+class _ScheduleScreenState
+    extends State<ScheduleScreen> {
   final SupabaseClient _supabase =
       Supabase.instance.client;
+
+  final ProfileService _profileService =
+      ProfileService();
 
   String selectedCategory = 'All';
 
@@ -42,6 +47,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   void initState() {
     super.initState();
+
     _loadSchedules();
   }
 
@@ -60,10 +66,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final String minute =
         dateTime.minute
             .toString()
-            .padLeft(2, '0');
+            .padLeft(
+              2,
+              '0',
+            );
 
     final String period =
-        hour >= 12 ? 'PM' : 'AM';
+        hour >= 12
+            ? 'PM'
+            : 'AM';
 
     return '$displayHour:$minute $period';
   }
@@ -108,16 +119,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
       final DateTime tomorrow =
           today.add(
-        const Duration(days: 1),
+        const Duration(
+          days: 1,
+        ),
       );
 
       final DateTime dayAfterTomorrow =
           tomorrow.add(
-        const Duration(days: 1),
+        const Duration(
+          days: 1,
+        ),
       );
 
       final String startDateTime =
-          today.toUtc().toIso8601String();
+          today
+              .toUtc()
+              .toIso8601String();
 
       final String endDateTime =
           dayAfterTomorrow
@@ -125,7 +142,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               .toIso8601String();
 
       final List<Map<String, dynamic>>
-          response = await _supabase
+          response =
+          await _supabase
               .from('schedules')
               .select()
               .eq(
@@ -160,26 +178,32 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       final List<ScheduleModel>
           loadedTomorrow = [];
 
-      for (final Map<String, dynamic> row
-          in response) {
+      for (
+        final Map<String, dynamic> row
+        in response
+      ) {
         debugPrint(
           'Schedule row: $row',
         );
 
         final String categoryName =
-            row['category']?.toString() ??
+            row['category']
+                    ?.toString() ??
                 'Study';
 
         final ScheduleCategory category =
             CategorySelector.categories
                 .firstWhere(
-          (ScheduleCategory item) {
+          (
+            ScheduleCategory item,
+          ) {
             return item.name ==
                 categoryName;
           },
           orElse: () {
             return CategorySelector
-                .categories.first;
+                .categories
+                .first;
           },
         );
 
@@ -223,13 +247,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
         final ScheduleModel schedule =
             ScheduleModel(
-          id: row['id']?.toString(),
-          emoji: category.emoji,
+          id:
+              row['id']
+                  ?.toString(),
+          emoji:
+              category.emoji,
           title:
-              row['title']?.toString() ??
+              row['title']
+                      ?.toString() ??
                   'Untitled',
           time:
-              row['time']?.toString() ??
+              row['time']
+                      ?.toString() ??
                   _formatDisplayTime(
                     localScheduleDate,
                   ),
@@ -249,7 +278,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       ?.toInt() ??
                   0,
           completed:
-              row['completed'] == true,
+              row['completed'] ==
+                  true,
         );
 
         if (scheduleDay == today) {
@@ -305,7 +335,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       setState(() {
         _isLoading = false;
         _errorMessage =
-            'Database error: ${error.message}';
+            'Database error: '
+            '${error.message}';
       });
     } catch (error, stackTrace) {
       debugPrint(
@@ -336,7 +367,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
 
     return todaySchedules.where(
-      (ScheduleModel schedule) {
+      (
+        ScheduleModel schedule,
+      ) {
         return schedule.category ==
             selectedCategory;
       },
@@ -350,7 +383,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
 
     return tomorrowSchedules.where(
-      (ScheduleModel schedule) {
+      (
+        ScheduleModel schedule,
+      ) {
         return schedule.category ==
             selectedCategory;
       },
@@ -394,7 +429,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         .showSnackBar(
       SnackBar(
         content: Text(
-          'Schedule added successfully: ${newSchedule.title}',
+          'Schedule added successfully: '
+          '${newSchedule.title}',
         ),
         behavior:
             SnackBarBehavior.floating,
@@ -422,8 +458,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         scheduleId.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        SnackBar(
-          content: const Text(
+        const SnackBar(
+          content: Text(
             'Schedule ID is missing.',
           ),
           behavior:
@@ -437,9 +473,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     if (currentUser == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            'Please log in before updating a schedule.',
+            'Please log in before '
+            'updating a schedule.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -454,19 +491,56 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
 
     try {
-      await _supabase
-          .from('schedules')
-          .update({
-            'completed': completed,
-          })
-          .eq(
-            'id',
-            scheduleId,
-          )
-          .eq(
-            'user_id',
-            currentUser.id,
-          );
+      final List<Map<String, dynamic>>
+          updatedRows =
+          await _supabase
+              .from('schedules')
+              .update({
+                'completed':
+                    completed,
+              })
+              .eq(
+                'id',
+                scheduleId,
+              )
+              .eq(
+                'user_id',
+                currentUser.id,
+              )
+              .select(
+                'id, user_id, completed',
+              );
+
+      debugPrint(
+        'Updated schedule rows: '
+        '$updatedRows',
+      );
+
+      if (updatedRows.isEmpty) {
+        throw Exception(
+          'Schedule was not updated. '
+          'Check the schedule RLS policy.',
+        );
+      }
+
+      final bool savedCompletedValue =
+          updatedRows.first[
+                  'completed'] ==
+              true;
+
+      debugPrint(
+        'Saved completed value: '
+        '$savedCompletedValue',
+      );
+
+      final int completedCount =
+          await _profileService
+              .syncCompletedTasks();
+
+      debugPrint(
+        'Profile Done count: '
+        '$completedCount',
+      );
 
       final NotificationSettingService
           notificationSettingService =
@@ -478,12 +552,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 .isTaskCompletedNotificationEnabled();
 
         if (notificationEnabled) {
-          await LocalNotificationService.instance
+          await LocalNotificationService
+              .instance
               .showTaskStatusNotification(
             title:
                 'Task completed',
             body:
-                'Task "${schedule.title}" has been completed.',
+                'Task "${schedule.title}" '
+                'has been completed.',
           );
         }
       }
@@ -501,8 +577,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         SnackBar(
           content: Text(
             completed
-                ? 'Task "${schedule.title}" marked as completed.'
-                : 'Task "${schedule.title}" marked as incomplete.',
+                ? 'Task "${schedule.title}" '
+                    'marked as completed. '
+                    'Done: $completedCount'
+                : 'Task "${schedule.title}" '
+                    'marked as incomplete. '
+                    'Done: $completedCount',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -527,7 +607,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Update failed: ${error.message}',
+            'Update failed: '
+            '${error.message}',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -551,7 +632,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to update schedule.',
+            'Unable to update schedule: '
+            '$error',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -580,8 +662,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         scheduleId.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        SnackBar(
-          content: const Text(
+        const SnackBar(
+          content: Text(
             'Schedule ID is missing.',
           ),
           behavior:
@@ -598,9 +680,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     if (currentUser == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            'Please log in before deleting a schedule.',
+            'Please log in before '
+            'deleting a schedule.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -615,17 +698,43 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
 
     try {
-      await _supabase
-          .from('schedules')
-          .delete()
-          .eq(
-            'id',
-            scheduleId,
-          )
-          .eq(
-            'user_id',
-            currentUser.id,
-          );
+      final List<Map<String, dynamic>>
+          deletedRows =
+          await _supabase
+              .from('schedules')
+              .delete()
+              .eq(
+                'id',
+                scheduleId,
+              )
+              .eq(
+                'user_id',
+                currentUser.id,
+              )
+              .select(
+                'id, completed',
+              );
+
+      debugPrint(
+        'Deleted schedule rows: '
+        '$deletedRows',
+      );
+
+      if (deletedRows.isEmpty) {
+        throw Exception(
+          'Schedule was not deleted. '
+          'Check the schedule RLS policy.',
+        );
+      }
+
+      final int completedCount =
+          await _profileService
+              .syncCompletedTasks();
+
+      debugPrint(
+        'Done count after delete: '
+        '$completedCount',
+      );
 
       final NotificationSettingService
           notificationSettingService =
@@ -636,12 +745,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               .isScheduleDeleteNotificationEnabled();
 
       if (notificationEnabled) {
-        await LocalNotificationService.instance
+        await LocalNotificationService
+            .instance
             .showTaskStatusNotification(
           title:
               'Schedule cancelled',
           body:
-              'Schedule "${schedule.title}" has been cancelled.',
+              'Schedule "${schedule.title}" '
+              'has been cancelled.',
         );
       }
 
@@ -657,7 +768,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Schedule deleted successfully: ${schedule.title}',
+            'Schedule deleted successfully: '
+            '${schedule.title}',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -682,7 +794,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Delete failed: ${error.message}',
+            'Delete failed: '
+            '${error.message}',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -706,7 +819,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to delete schedule.',
+            'Unable to delete schedule: '
+            '$error',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -728,7 +842,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         .showSnackBar(
       SnackBar(
         content: Text(
-          'Schedule selected: ${schedule.title}',
+          'Schedule selected: '
+          '${schedule.title}',
         ),
         behavior:
             SnackBarBehavior.floating,
@@ -771,7 +886,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 icon: const Icon(
                   Icons.refresh_rounded,
                 ),
-                label: Text(
+                label: const Text(
                   'Try Again',
                 ),
               ),
@@ -815,7 +930,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final ThemeData theme =
         Theme.of(context);
 
@@ -841,8 +958,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                      CrossAxisAlignment.start,
                   children: [
                     const SizedBox(
                       height: 10,
@@ -851,7 +967,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       selectedCategory:
                           selectedCategory,
                       onCategorySelected:
-                          (String category) {
+                          (
+                        String category,
+                      ) {
                         setState(() {
                           selectedCategory =
                               category;

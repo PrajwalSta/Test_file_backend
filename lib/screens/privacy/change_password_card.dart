@@ -17,16 +17,24 @@ class ChangePasswordCard extends StatefulWidget {
   });
 
   @override
-  State<ChangePasswordCard> createState() => _ChangePasswordCardState();
+  State<ChangePasswordCard> createState() =>
+      _ChangePasswordCardState();
 }
 
-class _ChangePasswordCardState extends State<ChangePasswordCard>
+class _ChangePasswordCardState
+    extends State<ChangePasswordCard>
     with SingleTickerProviderStateMixin {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>();
 
-  final TextEditingController _currentController = TextEditingController();
-  final TextEditingController _newController = TextEditingController();
-  final TextEditingController _confirmController = TextEditingController();
+  final TextEditingController _currentController =
+      TextEditingController();
+
+  final TextEditingController _newController =
+      TextEditingController();
+
+  final TextEditingController _confirmController =
+      TextEditingController();
 
   late final AnimationController _arrowController;
 
@@ -42,15 +50,21 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
 
     _arrowController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250),
+      duration: const Duration(
+        milliseconds: 250,
+      ),
     );
 
-    _newController.addListener(_checkPasswordStrength);
+    _newController.addListener(
+      _checkPasswordStrength,
+    );
   }
 
   @override
   void dispose() {
-    _newController.removeListener(_checkPasswordStrength);
+    _newController.removeListener(
+      _checkPasswordStrength,
+    );
 
     _arrowController.dispose();
     _currentController.dispose();
@@ -73,9 +87,12 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
   }
 
   void _checkPasswordStrength() {
-    final password = _newController.text;
+    final String password =
+        _newController.text;
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       if (password.isEmpty) {
@@ -97,7 +114,22 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
   Future<void> _updatePassword() async {
     FocusScope.of(context).unfocus();
 
-    if (!(_formKey.currentState?.validate() ?? false)) {
+    final bool isValid =
+        _formKey.currentState?.validate() ??
+            false;
+
+    if (!isValid) {
+      return;
+    }
+
+    if (widget.onUpdatePassword == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Password update service is not connected.',
+          ),
+        ),
+      );
       return;
     }
 
@@ -106,18 +138,20 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
     });
 
     try {
-      if (widget.onUpdatePassword != null) {
-        await widget.onUpdatePassword!(
-          _currentController.text.trim(),
-          _newController.text.trim(),
-        );
-      }
+      await widget.onUpdatePassword!(
+        _currentController.text.trim(),
+        _newController.text.trim(),
+      );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Password updated successfully'),
+          content: Text(
+            'Password updated successfully',
+          ),
         ),
       );
 
@@ -133,11 +167,20 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
 
       _arrowController.reverse();
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
+      final String message = error
+          .toString()
+          .replaceFirst(
+            'Exception: ',
+            '',
+          );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error.toString()),
+          content: Text(message),
         ),
       );
     } finally {
@@ -152,7 +195,9 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
   @override
   Widget build(BuildContext context) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 250),
+      duration: const Duration(
+        milliseconds: 250,
+      ),
       curve: Curves.easeInOut,
       child: CustomCard(
         child: Column(
@@ -165,15 +210,22 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget _buildHeader(
+    BuildContext context,
+  ) {
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: _toggleCard,
+      onTap: _loading ? null : _toggleCard,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          vertical: 4,
+        ),
         child: Row(
           children: [
             _buildIconBox(context),
@@ -182,20 +234,30 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
 
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Change Password',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w700,
+                    style: theme
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                      color:
+                          colorScheme.onSurface,
+                      fontWeight:
+                          FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Update your login password',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                    style: theme
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
+                      color: colorScheme
+                          .onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -206,10 +268,13 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
               turns: Tween<double>(
                 begin: 0,
                 end: 0.5,
-              ).animate(_arrowController),
+              ).animate(
+                _arrowController,
+              ),
               child: Icon(
                 Icons.keyboard_arrow_down,
-                color: colorScheme.onSurfaceVariant,
+                color: colorScheme
+                    .onSurfaceVariant,
               ),
             ),
           ],
@@ -220,23 +285,34 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
 
   Widget _buildExpandedForm() {
     return AnimatedCrossFade(
-      duration: const Duration(milliseconds: 250),
-      crossFadeState:
-          _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+      duration: const Duration(
+        milliseconds: 250,
+      ),
+      crossFadeState: _expanded
+          ? CrossFadeState.showSecond
+          : CrossFadeState.showFirst,
       firstChild: const SizedBox.shrink(),
       secondChild: Padding(
-        padding: const EdgeInsets.only(top: 20),
+        padding: const EdgeInsets.only(
+          top: 20,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               CustomTextField(
-                controller: _currentController,
-                hintText: 'Current Password',
-                prefixIcon: Icons.lock_outline,
+                controller:
+                    _currentController,
+                hintText:
+                    'Current Password',
+                prefixIcon:
+                    Icons.lock_outline,
                 isPassword: true,
                 validator: (value) {
-                  return Validators.validatePassword(value ?? '');
+                  return Validators
+                      .validatePassword(
+                    value ?? '',
+                  );
                 },
               ),
 
@@ -245,27 +321,36 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
               CustomTextField(
                 controller: _newController,
                 hintText: 'New Password',
-                prefixIcon: Icons.lock_reset,
+                prefixIcon:
+                    Icons.lock_reset,
                 isPassword: true,
                 validator: (value) {
-                  return Validators.validatePassword(value ?? '');
+                  return Validators
+                      .validatePassword(
+                    value ?? '',
+                  );
                 },
               ),
 
-              if (_strengthText.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _buildStrengthMessage(),
-              ],
+              if (_strengthText.isNotEmpty)
+                ...[
+                  const SizedBox(height: 8),
+                  _buildStrengthMessage(),
+                ],
 
               const SizedBox(height: 16),
 
               CustomTextField(
-                controller: _confirmController,
-                hintText: 'Confirm Password',
-                prefixIcon: Icons.lock_person_outlined,
+                controller:
+                    _confirmController,
+                hintText:
+                    'Confirm Password',
+                prefixIcon: Icons
+                    .lock_person_outlined,
                 isPassword: true,
                 validator: (value) {
-                  return Validators.validateConfirmPassword(
+                  return Validators
+                      .validateConfirmPassword(
                     _newController.text,
                     value ?? '',
                   );
@@ -276,9 +361,14 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
 
               PrimaryButton(
                 title: 'Update Password',
-                icon: Icons.check_circle_outline,
+                icon: Icons
+                    .check_circle_outline,
                 loading: _loading,
-                onPressed: _updatePassword,
+                onPressed: _loading
+                    ? () {}
+                    : () async {
+                        await _updatePassword();
+                      },
               ),
             ],
           ),
@@ -302,7 +392,8 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
             _strengthText,
             style: TextStyle(
               color: _strengthColor,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
         ],
@@ -310,14 +401,18 @@ class _ChangePasswordCardState extends State<ChangePasswordCard>
     );
   }
 
-  Widget _buildIconBox(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildIconBox(
+    BuildContext context,
+  ) {
+    final ColorScheme colorScheme =
+        Theme.of(context).colorScheme;
 
     return Container(
       height: 42,
       width: 42,
       decoration: BoxDecoration(
-        color: colorScheme.secondary.withValues(alpha: 0.15),
+        color: colorScheme.secondary
+            .withValues(alpha: 0.15),
         shape: BoxShape.circle,
       ),
       child: Icon(

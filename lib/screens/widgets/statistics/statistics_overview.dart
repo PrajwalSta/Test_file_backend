@@ -3,53 +3,65 @@ import 'package:flutter/material.dart';
 import 'statistic_small_card.dart';
 
 class StatisticsOverview extends StatelessWidget {
-  const StatisticsOverview({super.key});
+  final int totalTasks;
+  final int completedTasks;
+  final double completionPercentage;
+
+  const StatisticsOverview({
+    super.key,
+    required this.totalTasks,
+    required this.completedTasks,
+    required this.completionPercentage,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final String percentage =
+        "${completionPercentage.toStringAsFixed(0)}%";
+
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 360) {
-          return const Column(
+          return Column(
             children: [
               StatisticSmallCard(
-                value: '55',
+                value: completedTasks.toString(),
                 label: 'Tasks Done',
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               StatisticSmallCard(
-                value: '7.9h',
-                label: 'Avg Daily',
+                value: totalTasks.toString(),
+                label: 'Total Tasks',
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               StatisticSmallCard(
-                value: 'Thu',
-                label: 'Best Day',
+                value: percentage,
+                label: 'Completed',
               ),
             ],
           );
         }
 
-        return const Row(
+        return Row(
           children: [
             Expanded(
               child: StatisticSmallCard(
-                value: '55',
+                value: completedTasks.toString(),
                 label: 'Tasks Done',
               ),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Expanded(
               child: StatisticSmallCard(
-                value: '7.9h',
-                label: 'Avg Daily',
+                value: totalTasks.toString(),
+                label: 'Total Tasks',
               ),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Expanded(
               child: StatisticSmallCard(
-                value: 'Thu',
-                label: 'Best Day',
+                value: percentage,
+                label: 'Completed',
               ),
             ),
           ],

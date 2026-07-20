@@ -5,7 +5,12 @@ import 'category_donut_chart.dart';
 import 'category_legend.dart';
 
 class CategoryChartCard extends StatelessWidget {
-  const CategoryChartCard({super.key});
+  final Map<String, double> categoryData;
+
+  const CategoryChartCard({
+    super.key,
+    required this.categoryData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +26,14 @@ class CategoryChartCard extends StatelessWidget {
           AppConstants.cardRadius,
         ),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.5),
+          color: theme.dividerColor.withValues(
+            alpha: 0.5,
+          ),
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
             'By Category',
@@ -35,13 +43,17 @@ class CategoryChartCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          const Expanded(
+          Expanded(
             child: Row(
               children: [
-                CategoryDonutChart(),
-                SizedBox(width: 8),
+                CategoryDonutChart(
+                  categoryData: categoryData,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: CategoryLegend(),
+                  child: CategoryLegend(
+                    categoryData: categoryData,
+                  ),
                 ),
               ],
             ),

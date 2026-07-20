@@ -4,7 +4,12 @@ import '../../theme/app_constants.dart';
 import 'monthly_focus_chart.dart';
 
 class MonthlyFocusCard extends StatelessWidget {
-  const MonthlyFocusCard({super.key});
+  final Map<String, double> monthlyData;
+
+  const MonthlyFocusCard({
+    super.key,
+    required this.monthlyData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,14 +18,21 @@ class MonthlyFocusCard extends StatelessWidget {
 
     return Container(
       height: 145,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+      padding: const EdgeInsets.fromLTRB(
+        14,
+        14,
+        14,
+        8,
+      ),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(
           AppConstants.cardRadius,
         ),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.5),
+          color: theme.dividerColor.withValues(
+            alpha: 0.5,
+          ),
         ),
       ),
       child: Column(
@@ -34,8 +46,10 @@ class MonthlyFocusCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 9),
-          const Expanded(
-            child: MonthlyFocusChart(),
+          Expanded(
+            child: MonthlyFocusChart(
+              monthlyData: monthlyData,
+            ),
           ),
         ],
       ),

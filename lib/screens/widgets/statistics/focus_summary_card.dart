@@ -1,108 +1,107 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
-import '../../theme/app_constants.dart';
-
 class FocusSummaryCard extends StatelessWidget {
-  const FocusSummaryCard({super.key});
+  final double totalFocusHours;
+  final int completedTasks;
+
+  const FocusSummaryCard({
+    super.key,
+    required this.totalFocusHours,
+    required this.completedTasks,
+  });
+
+  String get formattedFocusTime {
+    final int totalMinutes =
+        (totalFocusHours * 60).round();
+
+    final int hours = totalMinutes ~/ 60;
+    final int minutes = totalMinutes % 60;
+
+    if (hours == 0) {
+      return '$minutes min';
+    }
+
+    if (minutes == 0) {
+      return '$hours hr';
+    }
+
+    return '$hours hr $minutes min';
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.cardPadding),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(
-          AppConstants.cardRadius,
-        ),
-        border: Border.all(
-          color: isDark
-              ? AppColors.primary.withValues(alpha: 0.45)
-              : AppColors.primary.withValues(alpha: 0.28),
-        ),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [
-                  Color(0xFF211552),
-                  Color(0xFF30206E),
-                ]
-              : const [
-                  Color(0xFFF2EEFF),
-                  Color(0xFFE4DBFF),
-                ],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "This Week's Focus Time",
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '43h 06m',
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const _ProgressIndicator(),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProgressIndicator extends StatelessWidget {
-  const _ProgressIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final progressColor = isDark
-        ? AppColors.cyan
-        : const Color(0xFF008B9A);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 5,
-      ),
-      decoration: BoxDecoration(
-        color: progressColor.withValues(
-          alpha: isDark ? 0.14 : 0.12,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.trending_up_rounded,
-            color: progressColor,
-            size: 13,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '12% vs last week',
-            style: TextStyle(
-              color: progressColor,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+              borderRadius: BorderRadius.circular(18),
             ),
+            child: Icon(
+              Icons.timer_outlined,
+              color: colorScheme.onPrimary,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total Focus Time',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color:
+                        colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  formattedFocusTime,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color:
+                        colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$completedTasks',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color:
+                      colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                completedTasks == 1
+                    ? 'Task done'
+                    : 'Tasks done',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color:
+                      colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ],
           ),
         ],
       ),

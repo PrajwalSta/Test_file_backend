@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -26,24 +25,35 @@ class AddScheduleSheet extends StatefulWidget {
 
   static Future<void> show({
     required BuildContext context,
-    required ValueChanged<ScheduleModel> onScheduleSaved,
+    required ValueChanged<ScheduleModel>
+        onScheduleSaved,
     VoidCallback? onClose,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (BuildContext sheetContext) {
+      builder: (
+        BuildContext sheetContext,
+      ) {
         return AddScheduleSheet(
-          onScheduleSaved: (ScheduleModel newSchedule) {
-            onScheduleSaved(newSchedule);
+          onScheduleSaved: (
+            ScheduleModel newSchedule,
+          ) {
+            onScheduleSaved(
+              newSchedule,
+            );
 
-            Navigator.of(sheetContext).pop();
+            Navigator.of(
+              sheetContext,
+            ).pop();
           },
           onClose: () {
             onClose?.call();
 
-            Navigator.of(sheetContext).pop();
+            Navigator.of(
+              sheetContext,
+            ).pop();
           },
         );
       },
@@ -56,14 +66,17 @@ class AddScheduleSheet extends StatefulWidget {
   }
 }
 
-class _AddScheduleSheetState extends State<AddScheduleSheet> {
+class _AddScheduleSheetState
+    extends State<AddScheduleSheet> {
   final GlobalKey<FormState> _formKey =
       GlobalKey<FormState>();
 
-  final TextEditingController _titleController =
+  final TextEditingController
+      _titleController =
       TextEditingController();
 
-  final TextEditingController _durationController =
+  final TextEditingController
+      _durationController =
       TextEditingController(
     text: '60',
   );
@@ -74,16 +87,37 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
   ScheduleCategory _selectedCategory =
       CategorySelector.categories.first;
 
-  String _selectedFocusMode = 'Study Mode';
+  String _selectedFocusMode =
+      'Study Mode';
 
-  TimeOfDay _selectedTime = const TimeOfDay(
-    hour: 9,
-    minute: 0,
-  );
+  late TimeOfDay _selectedTime;
 
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
 
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final DateTime defaultDateTime =
+        DateTime.now().add(
+      const Duration(
+        minutes: 10,
+      ),
+    );
+
+    _selectedDate = DateTime(
+      defaultDateTime.year,
+      defaultDateTime.month,
+      defaultDateTime.day,
+    );
+
+    _selectedTime = TimeOfDay(
+      hour: defaultDateTime.hour,
+      minute: defaultDateTime.minute,
+    );
+  }
 
   @override
   void dispose() {
@@ -126,7 +160,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     }
 
     setState(() {
-      _selectedTime = selectedTime;
+      _selectedTime =
+          selectedTime;
     });
   }
 
@@ -137,15 +172,18 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     final DateTime today =
         DateTime.now();
 
+    final DateTime firstDate =
+        DateTime(
+      today.year,
+      today.month,
+      today.day,
+    );
+
     final DateTime? selectedDate =
         await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(
-        today.year,
-        today.month,
-        today.day,
-      ),
+      firstDate: firstDate,
       lastDate: DateTime(
         today.year + 10,
         12,
@@ -176,7 +214,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     }
 
     setState(() {
-      _selectedDate = selectedDate;
+      _selectedDate =
+          selectedDate;
     });
   }
 
@@ -189,13 +228,16 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
             : time.hourOfPeriod;
 
     final String minute =
-        time.minute.toString().padLeft(
+        time.minute
+            .toString()
+            .padLeft(
               2,
               '0',
             );
 
     final String period =
-        time.period == DayPeriod.am
+        time.period ==
+                DayPeriod.am
             ? 'AM'
             : 'PM';
 
@@ -207,13 +249,17 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     DateTime date,
   ) {
     final String day =
-        date.day.toString().padLeft(
+        date.day
+            .toString()
+            .padLeft(
               2,
               '0',
             );
 
     final String month =
-        date.month.toString().padLeft(
+        date.month
+            .toString()
+            .padLeft(
               2,
               '0',
             );
@@ -252,13 +298,28 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
   }
 
   Future<void> _saveSchedule() async {
+    if (_isSaving) {
+      return;
+    }
+
     FocusScope.of(context).unfocus();
 
-    final bool isValid =
-        _formKey.currentState?.validate() ??
-            false;
+    final FormState? formState =
+        _formKey.currentState;
 
-    if (!isValid) {
+    if (formState == null ||
+        !formState.validate()) {
+      return;
+    }
+
+    final String title =
+        _titleController.text.trim();
+
+    if (title.isEmpty) {
+      _showMessage(
+        'Please enter a schedule title.',
+      );
+
       return;
     }
 
@@ -277,7 +338,11 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     }
 
     final User? currentUser =
-        Supabase.instance.client.auth.currentUser;
+        Supabase
+            .instance
+            .client
+            .auth
+            .currentUser;
 
     if (currentUser == null) {
       _showMessage(
@@ -290,8 +355,11 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     final DateTime scheduleDateTime =
         _buildScheduleDateTime();
 
+    final DateTime currentTime =
+        DateTime.now();
+
     if (!scheduleDateTime.isAfter(
-      DateTime.now(),
+      currentTime,
     )) {
       _showMessage(
         'Please select a future date and time.',
@@ -305,17 +373,50 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
     });
 
     try {
-      final String title =
-          _titleController.text.trim();
-
       final String formattedTime =
           _formatTime(
         _selectedTime,
       );
 
+      debugPrint(
+        'Saving schedule...',
+      );
+
+      debugPrint(
+        'User ID: ${currentUser.id}',
+      );
+
+      debugPrint(
+        'Title: $title',
+      );
+
+      debugPrint(
+        'Time: $formattedTime',
+      );
+
+      debugPrint(
+        'Scheduled at: '
+        '${scheduleDateTime.toIso8601String()}',
+      );
+
+      debugPrint(
+        'Duration: $duration',
+      );
+
+      debugPrint(
+        'Category: '
+        '${_selectedCategory.name}',
+      );
+
+      debugPrint(
+        'Focus mode: '
+        '$_selectedFocusMode',
+      );
+
       final Map<String, dynamic>
           insertedRow =
-          await _scheduleService.addSchedule(
+          await _scheduleService
+              .addSchedule(
         title: title,
         time: formattedTime,
         scheduleDateTime:
@@ -328,9 +429,25 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
             _selectedFocusMode,
       );
 
+      debugPrint(
+        'Inserted schedule: '
+        '$insertedRow',
+      );
+
+      final String? scheduleId =
+          insertedRow['id']
+              ?.toString();
+
+      if (scheduleId == null ||
+          scheduleId.isEmpty) {
+        throw Exception(
+          'Schedule was saved, but no schedule ID was returned.',
+        );
+      }
+
       final ScheduleModel newSchedule =
           ScheduleModel(
-        id: insertedRow['id']?.toString(),
+        id: scheduleId,
         emoji:
             _selectedCategory.emoji,
         title: title,
@@ -359,32 +476,28 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
         return;
       }
 
-      _showMessage(
-        'Schedule and reminder saved successfully.',
-      );
-
       widget.onScheduleSaved(
         newSchedule,
       );
-    } on PostgrestException catch (error) {
+    } on PostgrestException catch (error, stackTrace) {
       debugPrint(
-        'Supabase message: ${error.message}',
+        'SUPABASE SAVE ERROR: '
+        '${error.message}',
       );
 
       debugPrint(
-        'Supabase code: ${error.code}',
+        'SUPABASE ERROR CODE: '
+        '${error.code}',
       );
 
-      if (!mounted) {
-        return;
-      }
-
-      _showMessage(
-        'Database error: ${error.message}',
-      );
-    } catch (error, stackTrace) {
       debugPrint(
-        'Schedule save error: $error',
+        'SUPABASE ERROR DETAILS: '
+        '${error.details}',
+      );
+
+      debugPrint(
+        'SUPABASE ERROR HINT: '
+        '${error.hint}',
       );
 
       debugPrintStack(
@@ -396,7 +509,26 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
       }
 
       _showMessage(
-        'Unable to save schedule: $error',
+        'Database error: '
+        '${error.message}',
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'SCHEDULE SAVE ERROR: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        'Unable to save schedule: '
+        '$error',
       );
     } finally {
       if (mounted) {
@@ -414,7 +546,11 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: Text(
+            message,
+          ),
+          behavior:
+              SnackBarBehavior.floating,
         ),
       );
   }
@@ -462,13 +598,17 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
 
     final Color closeButtonColor =
         isDarkMode
-            ? AppColors.scheduleInputDark
-            : AppColors.scheduleInputLight;
+            ? AppColors
+                .scheduleInputDark
+            : AppColors
+                .scheduleInputLight;
 
     final Color inputColor =
         isDarkMode
-            ? AppColors.scheduleInputDark
-            : AppColors.scheduleInputLight;
+            ? AppColors
+                .scheduleInputDark
+            : AppColors
+                .scheduleInputLight;
 
     return AnimatedPadding(
       duration: const Duration(
@@ -500,7 +640,10 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
               ),
               blurRadius: 24,
               offset:
-                  const Offset(0, -8),
+                  const Offset(
+                0,
+                -8,
+              ),
             ),
           ],
         ),
@@ -537,7 +680,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                       style: AppTextStyles
                           .sectionTitleDark
                           .copyWith(
-                        color: titleColor,
+                        color:
+                            titleColor,
                         fontSize: 19,
                       ),
                     ),
@@ -546,7 +690,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                     onPressed:
                         _isSaving
                             ? null
-                            : widget.onClose,
+                            : widget
+                                .onClose,
                     style:
                         IconButton.styleFrom(
                       backgroundColor:
@@ -606,8 +751,14 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                         selectedCategory:
                             _selectedCategory,
                         onCategorySelected:
-                            (ScheduleCategory
-                                category) {
+                            (
+                          ScheduleCategory
+                              category,
+                        ) {
+                          if (_isSaving) {
+                            return;
+                          }
+
                           setState(() {
                             _selectedCategory =
                                 category;
@@ -640,11 +791,13 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                           padding:
                               const EdgeInsets
                                   .symmetric(
-                            horizontal: 14,
+                            horizontal:
+                                14,
                           ),
                           decoration:
                               BoxDecoration(
-                            color: inputColor,
+                            color:
+                                inputColor,
                             borderRadius:
                                 BorderRadius
                                     .circular(
@@ -655,7 +808,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                               color: AppColors
                                   .schedulePrimary
                                   .withValues(
-                                alpha: 0.20,
+                                alpha:
+                                    0.20,
                               ),
                             ),
                           ),
@@ -679,7 +833,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                                       TextStyle(
                                     color:
                                         titleColor,
-                                    fontSize: 15,
+                                    fontSize:
+                                        15,
                                     fontWeight:
                                         FontWeight
                                             .w500,
@@ -724,7 +879,7 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                                       _selectedTime,
                                   onTap: _isSaving
                                       ? () {}
-                                      : () => _selectTime(),
+                                      : _selectTime,
                                 ),
                               ],
                             ),
@@ -760,7 +915,8 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                         height: 18,
                       ),
                       _SectionLabel(
-                        text: 'Focus Mode',
+                        text:
+                            'Focus Mode',
                         color: labelColor,
                       ),
                       const SizedBox(
@@ -770,7 +926,9 @@ class _AddScheduleSheetState extends State<AddScheduleSheet> {
                         selectedMode:
                             _selectedFocusMode,
                         onModeSelected:
-                            (String mode) {
+                            (
+                          String mode,
+                        ) {
                           if (_isSaving) {
                             return;
                           }
