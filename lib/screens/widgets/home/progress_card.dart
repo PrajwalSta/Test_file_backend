@@ -1,13 +1,9 @@
-
 import 'package:flutter/material.dart';
+
+import '../../../l10n/app_localizations.dart';
 
 class ProgressCard extends StatelessWidget {
   // Progress value must be between 0.0 and 1.0.
-  //
-  // Example:
-  // 0.50 = 50%
-  // 0.85 = 85%
-  // 1.00 = 100%
   final double progress;
 
   // Number of completed schedules.
@@ -31,14 +27,14 @@ class ProgressCard extends StatelessWidget {
     final ColorScheme colorScheme =
         theme.colorScheme;
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     // Make sure progress stays between 0 and 1.
     final double safeProgress =
         progress.clamp(0.0, 1.0);
 
     // Convert progress into percentage.
-    //
-    // Example:
-    // 0.75 × 100 = 75%
     final int percentage =
         (safeProgress * 100).round();
 
@@ -58,14 +54,13 @@ class ProgressCard extends StatelessWidget {
         mainAxisAlignment:
             MainAxisAlignment.spaceBetween,
         children: [
-          // Progress information.
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Today's Progress",
+                  localizations.todaysProgress,
                   style: TextStyle(
                     color: colorScheme
                         .onSurfaceVariant,
@@ -75,9 +70,10 @@ class ProgressCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(
+                  height: 8,
+                ),
 
-                // Show dynamic percentage.
                 Text(
                   '$percentage%',
                   style: TextStyle(
@@ -89,11 +85,15 @@ class ProgressCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 4),
+                const SizedBox(
+                  height: 4,
+                ),
 
-                // Show completed and total schedules.
                 Text(
-                  '$completedTasks of $totalTasks tasks completed',
+                  localizations.tasksCompleted(
+                    completedTasks,
+                    totalTasks,
+                  ),
                   style: TextStyle(
                     color: colorScheme
                         .onSurfaceVariant,
@@ -104,29 +104,25 @@ class ProgressCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(
+            width: 16,
+          ),
 
-          // Circular progress indicator.
           SizedBox(
             height: 70,
             width: 70,
-            child:
-                CircularProgressIndicator(
-              // Dynamic progress from HomeScreen.
+            child: CircularProgressIndicator(
               value: safeProgress,
               strokeWidth: 8,
               backgroundColor:
-                  colorScheme.primary
-                      .withValues(
+                  colorScheme.primary.withValues(
                 alpha: 0.15,
               ),
               valueColor:
-                  AlwaysStoppedAnimation<
-                      Color>(
+                  AlwaysStoppedAnimation<Color>(
                 colorScheme.primary,
               ),
-              strokeCap:
-                  StrokeCap.round,
+              strokeCap: StrokeCap.round,
             ),
           ),
         ],
@@ -134,4 +130,3 @@ class ProgressCard extends StatelessWidget {
     );
   }
 }
-

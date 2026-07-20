@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_app_project/services/notification_setting_service.dart';
+import 'package:flutter_app_focus_glow/services/notification_setting_service.dart';
 
 import '../../data/notification_data.dart';
 import '../../models/notification_setting.dart';

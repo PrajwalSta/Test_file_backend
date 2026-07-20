@@ -1,0 +1,167 @@
+{
+  "@@locale": "hi",
+
+  "appName": "फोकस ग्लो",
+
+  "home": "होम",
+  "schedule": "शेड्यूल",
+  "statistics": "आंकड़े",
+  "clocks": "घड़ियां",
+  "settings": "सेटिंग",
+
+  "notifications": "सूचनाएं",
+  "themeColor": "थीम रंग",
+  "language": "भाषा",
+  "profile": "प्रोफाइल",
+  "privacyAndSecurity": "गोपनीयता और सुरक्षा",
+  "focusAndDnd": "फोकस और डू नॉट डिस्टर्ब",
+  "sleepMode": "स्लीप मोड",
+
+  "save": "सेव करें",
+  "cancel": "रद्द करें",
+  "delete": "हटाएं",
+  "add": "जोड़ें",
+  "tryAgain": "फिर प्रयास करें",
+
+  "english": "अंग्रेजी",
+  "nepali": "नेपाली",
+  "hindi": "हिन्दी",
+  "selectLanguage": "भाषा चुनें",
+  "languageChanged": "भाषा सफलतापूर्वक बदल दी गई",
+
+  "goodMorning": "सुप्रभात",
+  "goodAfternoon": "शुभ दोपहर",
+  "goodEvening": "शुभ संध्या",
+  "project": "प्रोजेक्ट",
+
+  "todaysProgress": "आज की प्रगति",
+
+  "tasksCompleted": "{total} में से {completed} कार्य पूरे हुए",
+  "@tasksCompleted": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+
+  "focusTime": "फोकस समय",
+  "tasksDone": "पूर्ण कार्य",
+  "todaysSchedule": "आज का शेड्यूल",
+
+  "today": "आज",
+  "tomorrow": "कल",
+
+  "untitled": "बिना शीर्षक",
+  "studyMode": "स्टडी मोड",
+
+  "off": "बंद",
+  "sleeping": "सो रहे हैं",
+
+  "pleaseLoginToViewSchedules": "शेड्यूल देखने के लिए कृपया लॉग इन करें।",
+  "unableToLoadSchedules": "शेड्यूल लोड नहीं किया जा सका।",
+
+  "scheduleIdMissing": "शेड्यूल डेटाबेस आईडी उपलब्ध नहीं है।",
+  "loginBeforeUpdating": "अपडेट करने से पहले कृपया लॉग इन करें।",
+  "loginBeforeDeleting": "हटाने से पहले कृपया लॉग इन करें।",
+
+  "databaseError": "डेटाबेस त्रुटि: {message}",
+  "@databaseError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "scheduleAddedSuccessfully": "{title} सफलतापूर्वक जोड़ा गया",
+  "@scheduleAddedSuccessfully": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCompleted": "{title} पूरा हुआ",
+  "@taskCompleted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskMarkedIncomplete": "{title} अपूर्ण के रूप में चिह्नित किया गया",
+  "@taskMarkedIncomplete": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "updateFailed": "अपडेट विफल: {message}",
+  "@updateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "deleteFailed": "हटाना विफल: {message}",
+  "@deleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unableToUpdateSchedule": "शेड्यूल अपडेट नहीं किया जा सका।",
+  "unableToDeleteSchedule": "शेड्यूल हटाया नहीं जा सका।",
+
+  "scheduleDeletedSuccessfully": "{title} सफलतापूर्वक हटाया गया",
+  "@scheduleDeletedSuccessfully": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "scheduleSelected": "{title} चुना गया",
+  "@scheduleSelected": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCompletedNotificationTitle": "🎉 कार्य पूरा हुआ",
+
+  "taskCompletedNotificationBody": "{title} सफलतापूर्वक पूरा हो गया।",
+  "@taskCompletedNotificationBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "scheduleCancelledNotificationTitle": "शेड्यूल रद्द किया गया",
+
+  "scheduleCancelledNotificationBody": "{title} आपके शेड्यूल से हटा दिया गया है।",
+  "@scheduleCancelledNotificationBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  }
+}

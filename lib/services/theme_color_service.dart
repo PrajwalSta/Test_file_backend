@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ThemeColorService {
@@ -24,7 +25,7 @@ class ThemeColorService {
 
       return data['theme_index'] as int? ?? 0;
     } catch (e) {
-      print('Load Theme Error: $e');
+      debugPrint('Load Theme Error: $e');
       return 0;
     }
   }
@@ -51,7 +52,7 @@ class ThemeColorService {
         onConflict: 'user_id',
       );
     } catch (e) {
-      print('Save Theme Error: $e');
+      debugPrint('Save Theme Error: $e');
       rethrow;
     }
   }
@@ -71,7 +72,7 @@ class ThemeColorService {
           .eq('user_id', user.id)
           .maybeSingle();
     } catch (e) {
-      print('Get Theme Error: $e');
+      debugPrint('Get Theme Error: $e');
       return null;
     }
   }
@@ -88,7 +89,7 @@ class ThemeColorService {
           .delete()
           .eq('user_id', user.id);
     } catch (e) {
-      print('Delete Theme Error: $e');
+      debugPrint('Delete Theme Error: $e');
     }
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_app_project/main.dart';
-import 'package:flutter_app_project/screens/home/home_screen.dart';
-import 'package:flutter_app_project/screens/settings/settings_screen.dart';
+import 'package:flutter_app_focus_glow/main.dart';
+import 'package:flutter_app_focus_glow/screens/home/home_screen.dart';
+import 'package:flutter_app_focus_glow/screens/settings/settings_screen.dart';
 
 void main() {
   testWidgets('App shows splash screen then home screen', (

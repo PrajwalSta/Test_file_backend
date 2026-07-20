@@ -63,7 +63,7 @@ class LocalNotificationService {
 
     final bool? initialized =
         await _notifications.initialize(
-      settings: initializationSettings,
+      initializationSettings,
       onDidReceiveNotificationResponse:
           _handleNotificationTap,
     );
@@ -80,18 +80,15 @@ class LocalNotificationService {
     tz.initializeTimeZones();
 
     try {
-      final TimezoneInfo timezoneInfo =
+      final String timezoneName =
           await FlutterTimezone.getLocalTimezone();
 
       tz.setLocalLocation(
-        tz.getLocation(
-          timezoneInfo.identifier,
-        ),
+        tz.getLocation(timezoneName),
       );
 
       debugPrint(
-        'Local timezone: '
-        '${timezoneInfo.identifier}',
+        'Local timezone: $timezoneName',
       );
     } catch (error) {
       debugPrint(
@@ -262,12 +259,10 @@ class LocalNotificationService {
     );
 
     await _notifications.show(
-      id: _createNotificationId(),
-      title: 'FocusFlow',
-      body:
-          'Your notification pop-up is working.',
-      notificationDetails:
-          notificationDetails,
+      _createNotificationId(),
+      'FocusFlow',
+      'Your notification pop-up is working.',
+      notificationDetails,
       payload: 'test_notification',
     );
 
@@ -340,12 +335,13 @@ class LocalNotificationService {
     );
 
     await _notifications.zonedSchedule(
-      id: id,
-      title: title,
-      body: body,
-      scheduledDate: notificationTime,
-      notificationDetails:
-          notificationDetails,
+      id,
+      title,
+      body,
+      notificationTime,
+      notificationDetails,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       androidScheduleMode:
           AndroidScheduleMode.inexactAllowWhileIdle,
       payload: payload,
@@ -408,11 +404,10 @@ class LocalNotificationService {
         id ?? _createNotificationId();
 
     await _notifications.show(
-      id: notificationId,
-      title: title,
-      body: body,
-      notificationDetails:
-          notificationDetails,
+      notificationId,
+      title,
+      body,
+      notificationDetails,
       payload: 'task_status',
     );
 
@@ -447,9 +442,7 @@ class LocalNotificationService {
   ) async {
     await initialize();
 
-    await _notifications.cancel(
-      id: id,
-    );
+    await _notifications.cancel(id);
   }
 
   Future<void> cancelAllNotifications() async {

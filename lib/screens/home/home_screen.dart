@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/schedule_model.dart';
 import '../../services/sleep_setting_service.dart';
 import '../widgets/home/greeting_header.dart';
@@ -59,7 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _sleepModeEnabled = false;
   bool _isLoading = true;
 
-  String? _errorMessage;
+  String? _errorType;
+  String? _databaseError;
 
   @override
   void initState() {
@@ -116,9 +118,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return '${hours}h ${minutes}m';
   }
 
-  String get sleepModeText {
+  String _getSleepModeText(
+    AppLocalizations localizations,
+  ) {
     if (!_sleepModeEnabled) {
-      return 'Off';
+      return localizations.off;
     }
 
     final DateTime now =
@@ -143,11 +147,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (now.isBefore(wakeTimeToday)) {
-      return 'Sleeping';
+      return localizations.sleeping;
     }
 
     if (!now.isBefore(bedtimeToday)) {
-      return 'Sleeping';
+      return localizations.sleeping;
     }
 
     final Duration remaining =
@@ -176,6 +180,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return '${hours}h ${minutes}m';
+  }
+
+  String _getErrorMessage(
+    AppLocalizations localizations,
+  ) {
+    if (_errorType == 'login') {
+      return localizations
+          .pleaseLoginToViewSchedules;
+    }
+
+    if (_errorType == 'database') {
+      return localizations.databaseError(
+        _databaseError ?? '',
+      );
+    }
+
+    return localizations
+        .unableToLoadSchedules;
   }
 
   Future<void> _loadSleepSettings() async {
@@ -264,8 +286,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _isLoading = false;
-        _errorMessage =
-            'Please log in to view schedules.';
+        _errorType = 'login';
+        _databaseError = null;
 
         todaySchedules = [];
         completedTasks = 0;
@@ -279,7 +301,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       setState(() {
         _isLoading = true;
-        _errorMessage = null;
+        _errorType = null;
+        _databaseError = null;
       });
     }
 
@@ -328,8 +351,8 @@ class _HomeScreenState extends State<HomeScreen> {
         'Home loaded rows: ${response.length}',
       );
 
-      final List<ScheduleModel> loadedSchedules =
-          [];
+      final List<ScheduleModel>
+          loadedSchedules = [];
 
       for (final Map<String, dynamic> row
           in response) {
@@ -463,9 +486,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _isLoading = false;
-
-        _errorMessage =
-            'Database error: ${error.message}';
+        _errorType = 'database';
+        _databaseError = error.message;
 
         todaySchedules = [];
         completedTasks = 0;
@@ -487,9 +509,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _isLoading = false;
-
-        _errorMessage =
-            'Unable to load schedules.';
+        _errorType = 'loading';
+        _databaseError = null;
 
         todaySchedules = [];
         completedTasks = 0;
@@ -519,11 +540,17 @@ class _HomeScreenState extends State<HomeScreen> {
           return;
         }
 
+        final AppLocalizations localizations =
+            AppLocalizations.of(context)!;
+
         ScaffoldMessenger.of(context)
             .showSnackBar(
           SnackBar(
             content: Text(
-              '${newSchedule.title} added successfully',
+              localizations
+                  .scheduleAddedSuccessfully(
+                newSchedule.title,
+              ),
             ),
             backgroundColor:
                 newSchedule.categoryColor,
@@ -545,7 +572,9 @@ class _HomeScreenState extends State<HomeScreen> {
     widget.onOpenSchedule?.call();
   }
 
-  Widget _buildScheduleSection() {
+  Widget _buildScheduleSection(
+    AppLocalizations localizations,
+  ) {
     if (_isLoading) {
       return const Center(
         child: Padding(
@@ -556,12 +585,14 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    if (_errorMessage != null) {
+    if (_errorType != null) {
       return Center(
         child: Column(
           children: [
             Text(
-              _errorMessage!,
+              _getErrorMessage(
+                localizations,
+              ),
               textAlign:
                   TextAlign.center,
             ),
@@ -574,8 +605,9 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(
                 Icons.refresh_rounded,
               ),
-              label:
-                  const Text('Try Again'),
+              label: Text(
+                localizations.tryAgain,
+              ),
             ),
           ],
         ),
@@ -597,6 +629,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final ColorScheme colorScheme =
         theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     final Size screenSize =
         MediaQuery.sizeOf(context);
@@ -659,7 +694,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         title:
                             focusTimeText,
                         subtitle:
-                            'Focus Time',
+                            localizations
+                                .focusTime,
                       ),
                     ),
 
@@ -675,7 +711,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         title:
                             '$completedTasks/$totalTasks',
                         subtitle:
-                            'Tasks Done',
+                            localizations
+                                .tasksDone,
                       ),
                     ),
 
@@ -689,9 +726,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons
                             .nightlight_rounded,
                         title:
-                            sleepModeText,
+                            _getSleepModeText(
+                          localizations,
+                        ),
                         subtitle:
-                            'Sleep Mode',
+                            localizations
+                                .sleepMode,
                       ),
                     ),
                   ],
@@ -719,7 +759,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             vertical: 4,
                           ),
                           child: Text(
-                            "Today's Schedule",
+                            localizations
+                                .todaysSchedule,
                             maxLines: 1,
                             overflow:
                                 TextOverflow
@@ -753,8 +794,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.add,
                         size: 18,
                       ),
-                      label:
-                          const Text('Add'),
+                      label: Text(
+                        localizations.add,
+                      ),
                       style:
                           TextButton.styleFrom(
                         foregroundColor:
@@ -780,7 +822,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       screenHeight * 0.02,
                 ),
 
-                _buildScheduleSection(),
+                _buildScheduleSection(
+                  localizations,
+                ),
 
                 const SizedBox(
                   height: 40,

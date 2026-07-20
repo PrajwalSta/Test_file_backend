@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../main_screen.dart';
+import 'login_screen.dart';
 import '../theme/app_colors.dart';
 import '../widgets/auth/auth_background.dart';
 import '../widgets/auth/auth_button.dart';
@@ -102,28 +102,36 @@ class _SignupScreenState extends State<SignupScreen> {
         'Created user ID: ${user.id}',
       );
 
+      /*
+       * Supabase may automatically log in the user
+       * when email confirmation is disabled.
+       *
+       * Sign out so the user is redirected to Login.
+       */
+      if (response.session != null) {
+        await Supabase.instance.client.auth.signOut();
+      }
+
       if (!mounted) {
         return;
       }
 
-      if (response.session == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Account created. Check your email to confirm your account.',
-            ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            response.session == null
+                ? 'Account created. Check your email to confirm your account, then log in.'
+                : 'Account created successfully. Please log in.',
           ),
-        );
+        ),
+      );
 
-        Navigator.pop(context);
-        return;
-      }
-
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (_) => const MainScreen(),
+          builder: (_) => const LoginScreen(),
         ),
+        (route) => false,
       );
     } on AuthException catch (error) {
       if (!mounted) {
@@ -283,8 +291,16 @@ class _SignupScreenState extends State<SignupScreen> {
                         TextButton(
                           onPressed: isLoading
                               ? null
-                              : () =>
-                                  Navigator.pop(context),
+                              : () {
+                                  Navigator
+                                      .pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const LoginScreen(),
+                                    ),
+                                  );
+                                },
                           child: const Text(
                             'Login',
                             style: TextStyle(

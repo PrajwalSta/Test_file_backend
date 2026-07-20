@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/world_clock.dart';
+import '../../../services/timezone_service.dart';
 
 class WorldClockCard extends StatelessWidget {
   final WorldClock clock;
@@ -81,7 +82,9 @@ class WorldClockCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                clock.time,
+                TimezoneService.formattedTime(
+                  clock.timezoneName,
+                ),
                 style: TextStyle(
                   color: colorScheme.onSurface,
                   fontSize: 28,
@@ -89,7 +92,9 @@ class WorldClockCard extends StatelessWidget {
                 ),
               ),
               Text(
-                clock.period,
+                TimezoneService.period(
+                  clock.timezoneName,
+                ),
                 style: TextStyle(
                   color: Colors.amber.shade600,
                   fontSize: 11,

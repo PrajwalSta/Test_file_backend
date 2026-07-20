@@ -1,0 +1,168 @@
+{
+  "@@locale": "en",
+
+  "appName": "Focus Glow",
+  "@appName": {},
+
+  "home": "Home",
+  "schedule": "Schedule",
+  "statistics": "Statistics",
+  "clocks": "Clocks",
+  "settings": "Settings",
+
+  "notifications": "Notifications",
+  "themeColor": "Theme Color",
+  "language": "Language",
+  "profile": "Profile",
+  "privacyAndSecurity": "Privacy and Security",
+  "focusAndDnd": "Focus and Do Not Disturb",
+  "sleepMode": "Sleep Mode",
+
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "add": "Add",
+  "tryAgain": "Try Again",
+
+  "english": "English",
+  "nepali": "Nepali",
+  "hindi": "Hindi",
+  "selectLanguage": "Select Language",
+  "languageChanged": "Language changed successfully",
+
+  "goodMorning": "Good Morning",
+  "goodAfternoon": "Good Afternoon",
+  "goodEvening": "Good Evening",
+  "project": "Project",
+
+  "todaysProgress": "Today's Progress",
+
+  "tasksCompleted": "{completed} of {total} tasks completed",
+  "@tasksCompleted": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+
+  "focusTime": "Focus Time",
+  "tasksDone": "Tasks Done",
+  "todaysSchedule": "Today's Schedule",
+
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+
+  "untitled": "Untitled",
+  "studyMode": "Study Mode",
+
+  "off": "Off",
+  "sleeping": "Sleeping",
+
+  "pleaseLoginToViewSchedules": "Please log in to view schedules.",
+  "unableToLoadSchedules": "Unable to load schedules.",
+
+  "scheduleIdMissing": "Schedule database ID is missing",
+  "loginBeforeUpdating": "Please log in before updating.",
+  "loginBeforeDeleting": "Please log in before deleting.",
+
+  "databaseError": "Database error: {message}",
+  "@databaseError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "scheduleAddedSuccessfully": "{title} added successfully",
+  "@scheduleAddedSuccessfully": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCompleted": "{title} completed",
+  "@taskCompleted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskMarkedIncomplete": "{title} marked incomplete",
+  "@taskMarkedIncomplete": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "updateFailed": "Update failed: {message}",
+  "@updateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "deleteFailed": "Delete failed: {message}",
+  "@deleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unableToUpdateSchedule": "Unable to update schedule.",
+  "unableToDeleteSchedule": "Unable to delete schedule.",
+
+  "scheduleDeletedSuccessfully": "{title} deleted successfully",
+  "@scheduleDeletedSuccessfully": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "scheduleSelected": "{title} selected",
+  "@scheduleSelected": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCompletedNotificationTitle": "🎉 Task Completed",
+
+  "taskCompletedNotificationBody": "{title} has been completed successfully.",
+  "@taskCompletedNotificationBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "scheduleCancelledNotificationTitle": "Schedule Cancelled",
+
+  "scheduleCancelledNotificationBody": "{title} has been deleted from your schedule.",
+  "@scheduleCancelledNotificationBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  }
+}

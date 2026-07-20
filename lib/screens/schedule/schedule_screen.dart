@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/schedule_model.dart';
+import '../../services/local_notification_service.dart';
+import '../../services/notification_setting_service.dart';
 import '../theme/app_constants.dart';
 import '../widgets/schedule/add_schedule_sheet.dart';
 import '../widgets/schedule/category_selector.dart';
 import '../widgets/schedule/schedule_header.dart';
 import '../widgets/schedule/schedule_list.dart';
-import '../../services/local_notification_service.dart';
-import '../../services/notification_setting_service.dart';
 
 class ScheduleScreen extends StatefulWidget {
   final VoidCallback? onScheduleUpdated;
@@ -23,8 +23,7 @@ class ScheduleScreen extends StatefulWidget {
       _ScheduleScreenState();
 }
 
-class _ScheduleScreenState
-    extends State<ScheduleScreen> {
+class _ScheduleScreenState extends State<ScheduleScreen> {
   final SupabaseClient _supabase =
       Supabase.instance.client;
 
@@ -81,7 +80,7 @@ class _ScheduleScreenState
       setState(() {
         _isLoading = false;
         _errorMessage =
-            'Please log in to view your schedules.';
+            'Please log in to view schedules.';
         todaySchedules = [];
         tomorrowSchedules = [];
       });
@@ -306,8 +305,7 @@ class _ScheduleScreenState
       setState(() {
         _isLoading = false;
         _errorMessage =
-            'Database error: '
-            '${error.message}';
+            'Database error: ${error.message}';
       });
     } catch (error, stackTrace) {
       debugPrint(
@@ -326,8 +324,7 @@ class _ScheduleScreenState
       setState(() {
         _isLoading = false;
         _errorMessage =
-            'Unable to load schedules: '
-            '$error';
+            'Unable to load schedules.';
       });
     }
   }
@@ -397,8 +394,7 @@ class _ScheduleScreenState
         .showSnackBar(
       SnackBar(
         content: Text(
-          '${newSchedule.title} '
-          'added successfully',
+          'Schedule added successfully: ${newSchedule.title}',
         ),
         behavior:
             SnackBarBehavior.floating,
@@ -426,10 +422,9 @@ class _ScheduleScreenState
         scheduleId.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Schedule database ID '
-            'is missing',
+        SnackBar(
+          content: const Text(
+            'Schedule ID is missing.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -442,10 +437,9 @@ class _ScheduleScreenState
     if (currentUser == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Please log in before '
-            'updating',
+            'Please log in before updating a schedule.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -461,39 +455,40 @@ class _ScheduleScreenState
 
     try {
       await _supabase
-    .from('schedules')
-    .update({
-      'completed': completed,
-    })
-    .eq(
-      'id',
-      scheduleId,
-    )
-    .eq(
-      'user_id',
-      currentUser.id,
-    );
+          .from('schedules')
+          .update({
+            'completed': completed,
+          })
+          .eq(
+            'id',
+            scheduleId,
+          )
+          .eq(
+            'user_id',
+            currentUser.id,
+          );
 
-final NotificationSettingService
-    notificationSettingService =
-    NotificationSettingService();
+      final NotificationSettingService
+          notificationSettingService =
+          NotificationSettingService();
 
-if (completed) {
-  final bool notificationEnabled =
-      await notificationSettingService
-          .isTaskCompletedNotificationEnabled();
+      if (completed) {
+        final bool notificationEnabled =
+            await notificationSettingService
+                .isTaskCompletedNotificationEnabled();
 
-  if (notificationEnabled) {
-    await LocalNotificationService.instance
-        .showTaskStatusNotification(
-      title: '🎉 Task Completed',
-      body:
-          '${schedule.title} has been completed successfully.',
-    );
-  }
-}
+        if (notificationEnabled) {
+          await LocalNotificationService.instance
+              .showTaskStatusNotification(
+            title:
+                'Task completed',
+            body:
+                'Task "${schedule.title}" has been completed.',
+          );
+        }
+      }
 
-await _loadSchedules();
+      await _loadSchedules();
 
       widget.onScheduleUpdated?.call();
 
@@ -506,10 +501,8 @@ await _loadSchedules();
         SnackBar(
           content: Text(
             completed
-                ? '${schedule.title} '
-                    'completed'
-                : '${schedule.title} '
-                    'marked incomplete',
+                ? 'Task "${schedule.title}" marked as completed.'
+                : 'Task "${schedule.title}" marked as incomplete.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -534,8 +527,7 @@ await _loadSchedules();
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Update failed: '
-            '${error.message}',
+            'Update failed: ${error.message}',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -559,8 +551,7 @@ await _loadSchedules();
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to update schedule: '
-            '$error',
+            'Unable to update schedule.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -589,10 +580,9 @@ await _loadSchedules();
         scheduleId.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Schedule database ID '
-            'is missing',
+        SnackBar(
+          content: const Text(
+            'Schedule ID is missing.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -608,10 +598,9 @@ await _loadSchedules();
     if (currentUser == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Please log in before '
-            'deleting',
+            'Please log in before deleting a schedule.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -627,35 +616,36 @@ await _loadSchedules();
 
     try {
       await _supabase
-    .from('schedules')
-    .delete()
-    .eq(
-      'id',
-      scheduleId,
-    )
-    .eq(
-      'user_id',
-      currentUser.id,
-    );
+          .from('schedules')
+          .delete()
+          .eq(
+            'id',
+            scheduleId,
+          )
+          .eq(
+            'user_id',
+            currentUser.id,
+          );
 
-final NotificationSettingService
-    notificationSettingService =
-    NotificationSettingService();
+      final NotificationSettingService
+          notificationSettingService =
+          NotificationSettingService();
 
-final bool notificationEnabled =
-    await notificationSettingService
-        .isScheduleDeleteNotificationEnabled();
+      final bool notificationEnabled =
+          await notificationSettingService
+              .isScheduleDeleteNotificationEnabled();
 
-if (notificationEnabled) {
-  await LocalNotificationService.instance
-      .showTaskStatusNotification(
-    title: 'Schedule Cancelled',
-    body:
-        '${schedule.title} has been deleted from your schedule.',
-  );
-}
+      if (notificationEnabled) {
+        await LocalNotificationService.instance
+            .showTaskStatusNotification(
+          title:
+              'Schedule cancelled',
+          body:
+              'Schedule "${schedule.title}" has been cancelled.',
+        );
+      }
 
-await _loadSchedules();
+      await _loadSchedules();
 
       widget.onScheduleUpdated?.call();
 
@@ -667,8 +657,7 @@ await _loadSchedules();
           .showSnackBar(
         SnackBar(
           content: Text(
-            '${schedule.title} '
-            'deleted successfully',
+            'Schedule deleted successfully: ${schedule.title}',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -693,8 +682,7 @@ await _loadSchedules();
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Delete failed: '
-            '${error.message}',
+            'Delete failed: ${error.message}',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -718,8 +706,7 @@ await _loadSchedules();
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to delete schedule: '
-            '$error',
+            'Unable to delete schedule.',
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -741,7 +728,7 @@ await _loadSchedules();
         .showSnackBar(
       SnackBar(
         content: Text(
-          '${schedule.title} selected',
+          'Schedule selected: ${schedule.title}',
         ),
         behavior:
             SnackBarBehavior.floating,
@@ -784,7 +771,7 @@ await _loadSchedules();
                 icon: const Icon(
                   Icons.refresh_rounded,
                 ),
-                label: const Text(
+                label: Text(
                   'Try Again',
                 ),
               ),
