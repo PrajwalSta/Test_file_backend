@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../theme/app_text_styles.dart';
@@ -14,8 +15,18 @@ class TitleTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final bool isDarkMode =
-        Theme.of(context).brightness == Brightness.dark;
+        theme.brightness ==
+            Brightness.dark;
 
     final Color fillColor = isDarkMode
         ? AppColors.scheduleInputDark
@@ -35,64 +46,92 @@ class TitleTextField extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
-      textInputAction: TextInputAction.next,
+      textInputAction:
+          TextInputAction.next,
       style: inputStyle,
       validator: (value) {
-        final String title = value?.trim() ?? '';
+        final String title =
+            value?.trim() ?? '';
 
         if (title.isEmpty) {
-          return 'Please enter a schedule title';
+          return localizations
+              .scheduleTitleRequired;
         }
 
-        if (title.length < AppConstants.minimumTitleLength) {
-          return 'Title must contain at least 3 characters';
+        if (title.length <
+            AppConstants
+                .minimumTitleLength) {
+          return localizations
+              .minimumTitleLength(
+            AppConstants
+                .minimumTitleLength,
+          );
         }
 
         return null;
       },
       decoration: InputDecoration(
-        hintText: 'e.g. Deep Work Session',
+        hintText: localizations
+            .scheduleTitleHint,
         hintStyle: TextStyle(
           color: hintColor,
           fontSize: 13,
         ),
         filled: true,
         fillColor: fillColor,
-        contentPadding: const EdgeInsets.symmetric(
+        contentPadding:
+            const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 15,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(
-            AppConstants.scheduleInputRadius,
+        enabledBorder:
+            OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(
+            AppConstants
+                .scheduleInputRadius,
           ),
           borderSide: BorderSide(
             color: borderColor,
           ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(
-            AppConstants.scheduleInputRadius,
+        focusedBorder:
+            OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(
+            AppConstants
+                .scheduleInputRadius,
           ),
-          borderSide: const BorderSide(
-            color: AppColors.schedulePrimary,
+          borderSide: BorderSide(
+            color:
+                colorScheme.primary,
             width: 1.4,
           ),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(
-            AppConstants.scheduleInputRadius,
+        errorBorder:
+            OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(
+            AppConstants
+                .scheduleInputRadius,
           ),
-          borderSide: const BorderSide(
-            color: AppColors.danger,
+          borderSide:
+              const BorderSide(
+            color:
+                AppColors.danger,
           ),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(
-            AppConstants.scheduleInputRadius,
+        focusedErrorBorder:
+            OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(
+            AppConstants
+                .scheduleInputRadius,
           ),
-          borderSide: const BorderSide(
-            color: AppColors.danger,
+          borderSide:
+              const BorderSide(
+            color:
+                AppColors.danger,
             width: 1.4,
           ),
         ),

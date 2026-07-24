@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../models/stat_model.dart';
 import '../../theme/app_colors.dart';
 import 'stat_card.dart';
@@ -20,29 +21,32 @@ class ProfileStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final List<StatModel> stats = [
       StatModel(
         icon: Icons.local_fire_department,
         value: streak.toString(),
-        label: 'days',
+        label: localizations.days,
         color: AppColors.orange,
       ),
       StatModel(
         icon: Icons.check_box,
         value: completedTasks.toString(),
-        label: 'done',
+        label: localizations.done,
         color: AppColors.cyan,
       ),
       StatModel(
         icon: Icons.bolt,
         value: focusHours.toString(),
-        label: 'hours',
+        label: localizations.hours,
         color: AppColors.primary,
       ),
       StatModel(
         icon: Icons.emoji_events,
         value: membership,
-        label: 'membership',
+        label: localizations.membership,
         color: AppColors.yellow,
       ),
     ];

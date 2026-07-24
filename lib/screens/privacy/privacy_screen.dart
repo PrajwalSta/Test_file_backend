@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../services/MFA Auth/biometric_auth_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/MFA Auth/activity_log_service.dart';
+import '../../services/MFA Auth/biometric_auth_service.dart';
+import '../../services/MFA Auth/biometric_setting_service.dart';
 import '../../services/MFA Auth/security_settings_service.dart';
 import '../main_screen.dart';
+import '../privacy/activity_log_screen.dart';
 import '../privacy/change_password_card.dart';
 import '../privacy/two_factor_auth_screen.dart';
-import '../privacy/activity_log_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/privacy/security_header.dart';
 import '../widgets/privacy/security_option_tile.dart';
@@ -26,10 +29,16 @@ class _PrivacySecurityScreenState
     extends State<PrivacySecurityScreen> {
   final SecuritySettingsService _securityService =
       SecuritySettingsService();
+
   final BiometricAuthService _biometricService =
-      BiometricAuthService();
+      BiometricAuthService.instance;
+
+  final BiometricSettingService
+      _biometricSettingService =
+      BiometricSettingService.instance;
+
   final ActivityLogService _activityLogService =
-    ActivityLogService();
+      ActivityLogService();
 
   bool twoFactorAuth = false;
   bool biometricLogin = false;
@@ -37,19 +46,77 @@ class _PrivacySecurityScreenState
   bool dataSharing = false;
 
   bool _isLoadingSettings = true;
+  bool _isUpdatingBiometric = false;
+  bool _isOpeningTwoFactor = false;
+
+  bool _biometricAvailable = false;
+  bool _faceIdAvailable = false;
+  bool _fingerprintAvailable = false;
 
   final int selectedIndex = 4;
+
+  AppLocalizations get _localizations =>
+      AppLocalizations.of(context)!;
 
   @override
   void initState() {
     super.initState();
-    _loadSecuritySettings();
+    _initializeScreen();
   }
 
+  // ==========================================================
+  // INITIALIZE SCREEN
+  // ==========================================================
+  Future<void> _initializeScreen() async {
+    await _loadSecuritySettings();
+    await _checkBiometricAvailability();
+  }
+
+  // ==========================================================
+  // LOAD SECURITY SETTINGS
+  // ==========================================================
   Future<void> _loadSecuritySettings() async {
     try {
       final Map<String, dynamic> settings =
           await _securityService.getSettings();
+
+      final bool supabaseBiometricEnabled =
+          settings['biometric_enabled']
+                  as bool? ??
+              false;
+
+      final bool localBiometricEnabled =
+          await _biometricSettingService
+              .isEnabled();
+
+      /*
+       * Supabase stores the account setting.
+       * SharedPreferences stores the setting for
+       * the current device.
+       *
+       * Both must be enabled for biometric login
+       * to work on this device.
+       */
+      final bool biometricEnabled =
+          supabaseBiometricEnabled &&
+              localBiometricEnabled;
+
+      /*
+       * Synchronize inconsistent settings.
+       */
+      if (supabaseBiometricEnabled !=
+          biometricEnabled) {
+        await _securityService.updateBiometric(
+          biometricEnabled,
+        );
+      }
+
+      if (localBiometricEnabled !=
+          biometricEnabled) {
+        await _biometricSettingService.setEnabled(
+          biometricEnabled,
+        );
+      }
 
       if (!mounted) {
         return;
@@ -62,9 +129,7 @@ class _PrivacySecurityScreenState
                 false;
 
         biometricLogin =
-            settings['biometric_enabled']
-                    as bool? ??
-                false;
+            biometricEnabled;
 
         activityLog =
             settings['activity_log_enabled']
@@ -78,7 +143,16 @@ class _PrivacySecurityScreenState
 
         _isLoadingSettings = false;
       });
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to load security settings: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
       if (!mounted) {
         return;
       }
@@ -88,36 +162,250 @@ class _PrivacySecurityScreenState
       });
 
       _showMessage(
-        error
-            .toString()
-            .replaceFirst(
-              'Exception: ',
-              '',
-            ),
+        _localizations
+            .unableToLoadSecuritySettings,
       );
     }
   }
 
-  Future<void> _openTwoFactorAuthScreen() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const TwoFactorAuthScreen(),
-      ),
-    );
+  // ==========================================================
+  // CHECK FACE ID / FINGERPRINT
+  // ==========================================================
+  Future<void> _checkBiometricAvailability() async {
+    try {
+      final bool available =
+          await _biometricService
+              .isBiometricAvailable();
 
-    if (!mounted) {
+      final List<BiometricType> biometrics =
+          await _biometricService
+              .getAvailableBiometrics();
+
+      final bool hasFaceId =
+          biometrics.contains(
+        BiometricType.face,
+      );
+
+      final bool hasFingerprint =
+          biometrics.contains(
+                BiometricType.fingerprint,
+              ) ||
+              biometrics.contains(
+                BiometricType.strong,
+              ) ||
+              biometrics.contains(
+                BiometricType.weak,
+              );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _biometricAvailable = available;
+        _faceIdAvailable = hasFaceId;
+        _fingerprintAvailable =
+            hasFingerprint;
+      });
+
+      /*
+       * Disable biometric login if the user
+       * removed Face ID or fingerprint from
+       * the device settings.
+       */
+      if (biometricLogin && !available) {
+        await Future.wait([
+          _securityService.updateBiometric(
+            false,
+          ),
+          _biometricSettingService.setEnabled(
+            false,
+          ),
+        ]);
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          biometricLogin = false;
+        });
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Biometric availability error: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _biometricAvailable = false;
+        _faceIdAvailable = false;
+        _fingerprintAvailable = false;
+      });
+    }
+  }
+
+  // ==========================================================
+  // BIOMETRIC DISPLAY TEXT
+  // ==========================================================
+  String get _biometricTitle {
+    if (_faceIdAvailable) {
+      return _localizations.faceIdLogin;
+    }
+
+    if (_fingerprintAvailable) {
+      return _localizations.fingerprintLogin;
+    }
+
+    return _localizations.biometricLogin;
+  }
+
+  String get _biometricSubtitle {
+    if (_isUpdatingBiometric) {
+      return _localizations
+          .checkingAuthentication;
+    }
+
+    if (_faceIdAvailable) {
+      return biometricLogin
+          ? _localizations.faceIdLoginEnabled
+          : _localizations.unlockUsingFaceId;
+    }
+
+    if (_fingerprintAvailable) {
+      return biometricLogin
+          ? _localizations
+              .fingerprintLoginEnabled
+          : _localizations
+              .unlockUsingFingerprint;
+    }
+
+    if (!_biometricAvailable) {
+      return _localizations
+          .biometricUnavailable;
+    }
+
+    return _localizations
+        .faceIdOrFingerprint;
+  }
+
+  IconData get _biometricIcon {
+    if (_faceIdAvailable) {
+      return Icons.face_rounded;
+    }
+
+    return Icons.fingerprint_rounded;
+  }
+
+  String get _authenticationName {
+    if (_faceIdAvailable) {
+      return _localizations.faceId;
+    }
+
+    if (_fingerprintAvailable) {
+      return _localizations.fingerprint;
+    }
+
+    return _localizations.biometric;
+  }
+
+  // ==========================================================
+  // OPEN TWO-FACTOR AUTHENTICATION SCREEN
+  // ==========================================================
+  Future<void> _openTwoFactorAuthScreen() async {
+    if (_isOpeningTwoFactor) {
       return;
     }
 
     setState(() {
-      _isLoadingSettings = true;
+      _isOpeningTwoFactor = true;
     });
 
-    await _loadSecuritySettings();
+    try {
+      final bool? result =
+          await Navigator.push<bool>(
+        context,
+        MaterialPageRoute<bool>(
+          builder: (
+            BuildContext context,
+          ) {
+            return const TwoFactorAuthScreen();
+          },
+        ),
+      );
+
+      if (!mounted || result == null) {
+        return;
+      }
+
+      setState(() {
+        twoFactorAuth = result;
+      });
+
+      _showMessage(
+        result
+            ? _localizations
+                .emailVerificationEnabledSuccessfully
+            : _localizations
+                .emailVerificationDisabled,
+      );
+
+      if (activityLog) {
+        try {
+          await _activityLogService.addActivity(
+            action: result
+                ? 'Email Verification Enabled'
+                : 'Email Verification Disabled',
+            description: result
+                ? 'Email OTP verification was enabled.'
+                : 'Email OTP verification was disabled.',
+            iconName: 'security',
+          );
+        } catch (error) {
+          debugPrint(
+            'Unable to save email verification activity: '
+            '$error',
+          );
+        }
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to open email verification: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        _localizations
+            .unableToOpenEmailVerification,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isOpeningTwoFactor = false;
+        });
+      }
+    }
   }
 
+  // ==========================================================
+  // CHANGE PASSWORD
+  // ==========================================================
   Future<void> _changePassword(
     String currentPassword,
     String newPassword,
@@ -132,27 +420,30 @@ class _PrivacySecurityScreenState
         currentUser?.email;
 
     if (currentUser == null ||
-        email == null) {
+        email == null ||
+        email.isEmpty) {
       throw Exception(
-        'Your session has expired. Please log in again.',
+        _localizations.sessionExpiredLoginAgain,
       );
     }
 
     if (currentPassword.isEmpty) {
       throw Exception(
-        'Please enter your current password.',
+        _localizations
+            .enterCurrentPassword,
       );
     }
 
     if (newPassword.isEmpty) {
       throw Exception(
-        'Please enter a new password.',
+        _localizations.enterNewPassword,
       );
     }
 
     if (currentPassword == newPassword) {
       throw Exception(
-        'The new password must be different from your current password.',
+        _localizations
+            .newPasswordMustBeDifferent,
       );
     }
 
@@ -167,6 +458,22 @@ class _PrivacySecurityScreenState
           password: newPassword,
         ),
       );
+
+      if (activityLog) {
+        try {
+          await _activityLogService.addActivity(
+            action: 'Password Changed',
+            description:
+                'The account password was changed.',
+            iconName: 'lock',
+          );
+        } catch (error) {
+          debugPrint(
+            'Unable to save password activity: '
+            '$error',
+          );
+        }
+      }
     } on AuthException catch (error) {
       final String errorMessage =
           error.message.toLowerCase();
@@ -178,12 +485,19 @@ class _PrivacySecurityScreenState
             'invalid credentials',
           )) {
         throw Exception(
-          'Your current password is incorrect.',
+          _localizations
+              .currentPasswordIncorrect,
         );
       }
 
+      debugPrint(
+        'Unable to change password: '
+        '${error.message}',
+      );
+
       throw Exception(
-        error.message,
+        _localizations
+            .unableToUpdatePassword,
       );
     } catch (error) {
       if (error is Exception) {
@@ -191,91 +505,169 @@ class _PrivacySecurityScreenState
       }
 
       throw Exception(
-        'Unable to update your password. Please try again.',
+        _localizations
+            .unableToUpdatePassword,
       );
     }
   }
 
+  // ==========================================================
+  // ENABLE OR DISABLE BIOMETRIC LOGIN
+  // ==========================================================
   Future<void> _updateBiometric(
     bool value,
   ) async {
+    if (_isUpdatingBiometric) {
+      return;
+    }
+
     final bool previousValue =
         biometricLogin;
 
-    if (!value) {
-      setState(() {
-        biometricLogin = false;
-      });
+    setState(() {
+      _isUpdatingBiometric = true;
+    });
 
-      try {
-        await _securityService.updateBiometric(
-          false,
-        );
+    try {
+      // ------------------------------------------------------
+      // DISABLE BIOMETRIC LOGIN
+      // ------------------------------------------------------
+      if (!value) {
+        await Future.wait([
+          _securityService.updateBiometric(
+            false,
+          ),
+          _biometricSettingService.setEnabled(
+            false,
+          ),
+        ]);
 
-        _showMessage(
-          'Biometric login disabled.',
-        );
-      } catch (_) {
         if (!mounted) {
           return;
         }
 
         setState(() {
-          biometricLogin =
-              previousValue;
+          biometricLogin = false;
         });
 
+        final String authenticationName =
+            _authenticationName;
+
         _showMessage(
-          'Unable to disable biometric login.',
+          _localizations.biometricLoginDisabled(
+            authenticationName,
+          ),
+        );
+
+        if (activityLog) {
+          try {
+            await _activityLogService.addActivity(
+              action:
+                  'Biometric Login Disabled',
+              description:
+                  '$authenticationName login was disabled.',
+              iconName: 'fingerprint',
+            );
+          } catch (error) {
+            debugPrint(
+              'Unable to save biometric activity: '
+              '$error',
+            );
+          }
+        }
+
+        return;
+      }
+
+      // ------------------------------------------------------
+      // REQUIRE ACTIVE SUPABASE SESSION
+      // ------------------------------------------------------
+      final Session? session =
+          Supabase.instance.client.auth
+              .currentSession;
+
+      if (session == null) {
+        throw Exception(
+          _localizations
+              .sessionExpiredBeforeBiometric,
         );
       }
 
-      return;
-    }
-
-    try {
+      // ------------------------------------------------------
+      // CHECK DEVICE BIOMETRIC SUPPORT
+      // ------------------------------------------------------
       final bool available =
           await _biometricService
               .isBiometricAvailable();
 
       if (!available) {
-        if (!mounted) {
-          return;
-        }
-
-        setState(() {
-          biometricLogin =
-              previousValue;
-        });
-
-        _showMessage(
-          'Face ID or fingerprint is not available on this device.',
+        throw Exception(
+          _localizations
+              .configureBiometricsFirst,
         );
-        return;
       }
 
+      final List<BiometricType> biometrics =
+          await _biometricService
+              .getAvailableBiometrics();
+
+      if (biometrics.isEmpty) {
+        throw Exception(
+          _localizations
+              .noBiometricAuthenticationEnrolled,
+        );
+      }
+
+      // ------------------------------------------------------
+      // VERIFY BIOMETRICS BEFORE ENABLING
+      // ------------------------------------------------------
       final bool authenticated =
-          await _biometricService.authenticate();
+          await _biometricService
+              .authenticateForBiometricSetup();
 
       if (!authenticated) {
-        if (!mounted) {
-          return;
-        }
-
-        setState(() {
-          biometricLogin =
-              previousValue;
-        });
-
-        _showMessage(
-          'Biometric authentication was cancelled.',
+        throw Exception(
+          _localizations
+              .biometricVerificationFailed,
         );
-        return;
       }
 
-      await _securityService.updateBiometric(
-        true,
+      // ------------------------------------------------------
+      // SAVE SETTING IN SUPABASE AND LOCAL STORAGE
+      // ------------------------------------------------------
+      await Future.wait([
+        _securityService.updateBiometric(
+          true,
+        ),
+        _biometricSettingService.setEnabled(
+          true,
+        ),
+      ]);
+
+      /*
+       * Keep the service value for internal
+       * activity logging, but show a localized
+       * biometric name to the user.
+       */
+      final String serviceAuthenticationName =
+          await _biometricService
+              .getBiometricName();
+
+      final bool hasFaceId =
+          biometrics.contains(
+        BiometricType.face,
       );
+
+      final bool hasFingerprint =
+          biometrics.contains(
+                BiometricType.fingerprint,
+              ) ||
+              biometrics.contains(
+                BiometricType.strong,
+              ) ||
+              biometrics.contains(
+                BiometricType.weak,
+              );
 
       if (!mounted) {
         return;
@@ -283,102 +675,180 @@ class _PrivacySecurityScreenState
 
       setState(() {
         biometricLogin = true;
+        _biometricAvailable = true;
+        _faceIdAvailable = hasFaceId;
+        _fingerprintAvailable =
+            hasFingerprint;
       });
 
+      final String localizedAuthenticationName =
+          hasFaceId
+              ? _localizations.faceId
+              : hasFingerprint
+                  ? _localizations.fingerprint
+                  : _localizations.biometric;
+
       _showMessage(
-        'Biometric login enabled successfully.',
+        _localizations.biometricLoginEnabled(
+          localizedAuthenticationName,
+        ),
       );
-    } catch (error) {
+
+      if (activityLog) {
+        try {
+          await _activityLogService.addActivity(
+            action:
+                'Biometric Login Enabled',
+            description:
+                '$serviceAuthenticationName login was enabled.',
+            iconName: 'fingerprint',
+          );
+        } catch (error) {
+          debugPrint(
+            'Unable to save biometric activity: '
+            '$error',
+          );
+        }
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to update biometric login: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      /*
+       * Restore both settings if the update failed.
+       */
+      try {
+        await Future.wait([
+          _securityService.updateBiometric(
+            previousValue,
+          ),
+          _biometricSettingService.setEnabled(
+            previousValue,
+          ),
+        ]);
+      } catch (restoreError) {
+        debugPrint(
+          'Unable to restore biometric setting: '
+          '$restoreError',
+        );
+      }
+
       if (!mounted) {
         return;
       }
 
       setState(() {
-        biometricLogin =
-            previousValue;
+        biometricLogin = previousValue;
       });
 
       _showMessage(
-        error
-            .toString()
-            .replaceFirst(
-              'Exception: ',
-              '',
-            ),
+        _cleanLocalizedError(
+          error,
+          fallback: _localizations
+              .unableToUpdateBiometricLogin,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingBiometric = false;
+        });
+      }
+    }
+  }
+
+  // ==========================================================
+  // UPDATE ACTIVITY LOG
+  // ==========================================================
+  Future<void> _updateActivityLog(
+    bool value,
+  ) async {
+    final bool previousValue =
+        activityLog;
+
+    setState(() {
+      activityLog = value;
+    });
+
+    try {
+      await _securityService.updateActivityLog(
+        value,
+      );
+
+      if (value) {
+        await _activityLogService.addActivity(
+          action: 'Activity Log Enabled',
+          description:
+              'Account activity tracking was enabled.',
+          iconName: 'history',
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        value
+            ? _localizations
+                .activityLogEnabledMessage
+            : _localizations
+                .activityLogDisabledMessage,
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to update activity log: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        activityLog = previousValue;
+      });
+
+      _showMessage(
+        _localizations
+            .unableToUpdateActivityLog,
       );
     }
   }
 
-  Future<void> _updateActivityLog(
-  bool value,
-) async {
-  final bool previousValue =
-      activityLog;
-
-  setState(() {
-    activityLog = value;
-  });
-
-  try {
-    await _securityService.updateActivityLog(
-      value,
-    );
-
-    if (value) {
-      debugPrint('Calling addActivity...');
-
-await _activityLogService.addActivity(
-  action: 'Test Activity',
-  description: 'Testing Activity Log',
-  iconName: 'history',
-);
-
-debugPrint('Finished addActivity');
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    _showMessage(
-      value
-          ? 'Activity log enabled.'
-          : 'Activity log disabled.',
-    );
-  } catch (error) {
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      activityLog =
-          previousValue;
-    });
-
-    _showMessage(
-      error
-          .toString()
-          .replaceFirst(
-            'Exception: ',
-            '',
-          ),
-    );
-  }
-}
-
+  // ==========================================================
+  // OPEN ACTIVITY LOG
+  // ==========================================================
   Future<void> _openActivityLog() async {
     if (!mounted) {
       return;
     }
 
-    await Navigator.push(
+    await Navigator.push<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => const ActivityLogScreen(),
+      MaterialPageRoute<void>(
+        builder: (
+          BuildContext context,
+        ) {
+          return const ActivityLogScreen();
+        },
       ),
     );
   }
 
+  // ==========================================================
+  // UPDATE DATA SHARING
+  // ==========================================================
   Future<void> _updateDataSharing(
     bool value,
   ) async {
@@ -390,25 +860,89 @@ debugPrint('Finished addActivity');
     });
 
     try {
-      await _securityService.updateDataSharing(
-        value,
+      await _securityService
+          .updateDataSharing(value);
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        value
+            ? _localizations
+                .dataSharingEnabledMessage
+            : _localizations
+                .dataSharingDisabledMessage,
       );
-    } catch (_) {
+
+      if (activityLog) {
+        try {
+          await _activityLogService.addActivity(
+            action: value
+                ? 'Data Sharing Enabled'
+                : 'Data Sharing Disabled',
+            description: value
+                ? 'Analytics data sharing was enabled.'
+                : 'Analytics data sharing was disabled.',
+            iconName: 'privacy',
+          );
+        } catch (error) {
+          debugPrint(
+            'Unable to save data sharing activity: '
+            '$error',
+          );
+        }
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to update data sharing: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
       if (!mounted) {
         return;
       }
 
       setState(() {
-        dataSharing =
-            previousValue;
+        dataSharing = previousValue;
       });
 
       _showMessage(
-        'Unable to save data sharing setting.',
+        _localizations
+            .unableToUpdateDataSharing,
       );
     }
   }
 
+  // ==========================================================
+  // CLEAN LOCALIZED ERROR
+  // ==========================================================
+  String _cleanLocalizedError(
+    Object error, {
+    required String fallback,
+  }) {
+    final String message = error
+        .toString()
+        .replaceFirst(
+          'Exception: ',
+          '',
+        )
+        .trim();
+
+    if (message.isEmpty) {
+      return fallback;
+    }
+
+    return message;
+  }
+
+  // ==========================================================
+  // SHOW MESSAGE
+  // ==========================================================
   void _showMessage(
     String message,
   ) {
@@ -419,34 +953,54 @@ debugPrint('Finished addActivity');
     final ColorScheme colorScheme =
         Theme.of(context).colorScheme;
 
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
+    final ScaffoldMessengerState messenger =
+        ScaffoldMessenger.of(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
       SnackBar(
         content: Text(
           message,
         ),
         duration: const Duration(
-          milliseconds: 1500,
+          milliseconds: 2000,
         ),
+        behavior:
+            SnackBarBehavior.floating,
         backgroundColor:
             colorScheme.primary,
       ),
     );
   }
 
+  // ==========================================================
+  // BOTTOM NAVIGATION
+  // ==========================================================
   void _handleBottomNavTap(
     int index,
   ) {
+    if (index == selectedIndex) {
+      Navigator.pop(context);
+      return;
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (_) => MainScreen(
-          initialIndex: index,
-        ),
+      MaterialPageRoute<void>(
+        builder: (
+          BuildContext context,
+        ) {
+          return MainScreen(
+            initialIndex: index,
+          );
+        },
       ),
-      (route) => false,
+      (
+        Route<dynamic> route,
+      ) {
+        return false;
+      },
     );
   }
 
@@ -457,6 +1011,9 @@ debugPrint('Finished addActivity');
     final ThemeData theme =
         Theme.of(context);
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor:
           theme.scaffoldBackgroundColor,
@@ -466,9 +1023,12 @@ debugPrint('Finished addActivity');
       ),
       body: SafeArea(
         child: _isLoadingSettings
-            ? const Center(
+            ? Center(
                 child:
-                    CircularProgressIndicator(),
+                    CircularProgressIndicator(
+                  color: theme
+                      .colorScheme.primary,
+                ),
               )
             : SingleChildScrollView(
                 physics:
@@ -497,75 +1057,139 @@ debugPrint('Finished addActivity');
                       height: 14,
                     ),
 
+                    // ------------------------------------------
+                    // TWO-FACTOR AUTHENTICATION
+                    // ------------------------------------------
                     SecurityOptionTile(
                       icon:
                           Icons.shield_outlined,
                       iconColor:
                           Colors.deepPurpleAccent,
-                      title:
-                          'Two-Factor Auth',
+                      title: localizations
+                          .twoFactorAuth,
                       subtitle:
-                          twoFactorAuth
-                              ? 'Email verification enabled'
-                              : 'Verify using email OTP',
-                      trailing: _buildSwitch(
-                        value:
-                            twoFactorAuth,
-                        onChanged: (_) {
-                          _openTwoFactorAuthScreen();
-                        },
-                      ),
-                      onTap: () {
-                        _openTwoFactorAuthScreen();
-                      },
+                          _isOpeningTwoFactor
+                              ? localizations
+                                  .openingEmailVerification
+                              : twoFactorAuth
+                                  ? localizations
+                                      .emailVerificationEnabled
+                                  : localizations
+                                      .verifyUsingEmailOtp,
+                      trailing:
+                          _isOpeningTwoFactor
+                              ? const SizedBox(
+                                  width: 30,
+                                  height: 30,
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth:
+                                        2.5,
+                                  ),
+                                )
+                              : _buildSwitch(
+                                  value:
+                                      twoFactorAuth,
+                                  onChanged:
+                                      (_) async {
+                                    await _openTwoFactorAuthScreen();
+                                  },
+                                ),
+                      onTap:
+                          _isOpeningTwoFactor
+                              ? null
+                              : _openTwoFactorAuthScreen,
                     ),
 
+                    // ------------------------------------------
+                    // FACE ID / BIOMETRIC LOGIN
+                    // ------------------------------------------
                     SecurityOptionTile(
                       icon:
-                          Icons.fingerprint,
+                          _biometricIcon,
                       iconColor:
                           Colors.cyanAccent,
                       title:
-                          'Biometric Login',
+                          _biometricTitle,
                       subtitle:
-                          'Face ID / Fingerprint',
-                      trailing: _buildSwitch(
-                        value:
-                            biometricLogin,
-                        onChanged:
-                            _updateBiometric,
-                      ),
-                      onTap: () {
-                        _updateBiometric(
-                          !biometricLogin,
-                        );
-                      },
+                          _biometricSubtitle,
+                      trailing:
+                          _isUpdatingBiometric
+                              ? const SizedBox(
+                                  width: 30,
+                                  height: 30,
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth:
+                                        2.5,
+                                  ),
+                                )
+                              : _buildSwitch(
+                                  value:
+                                      biometricLogin,
+                                  onChanged:
+                                      !_biometricAvailable &&
+                                              !biometricLogin
+                                          ? null
+                                          : _updateBiometric,
+                                ),
+                      onTap:
+                          _isUpdatingBiometric ||
+                                  (!_biometricAvailable &&
+                                      !biometricLogin)
+                              ? null
+                              : () {
+                                  _updateBiometric(
+                                    !biometricLogin,
+                                  );
+                                },
                     ),
 
+                    // ------------------------------------------
+                    // ACTIVITY LOG
+                    // ------------------------------------------
                     SecurityOptionTile(
-                       icon: Icons.history,
-                         iconColor: Colors.amber,
-                          title: 'Activity Log',
-                          subtitle: activityLog
-                           ? 'View your account activity'
-                           : 'Activity tracking is disabled',
-                             trailing: _buildSwitch(
-                              value: activityLog,
-                             onChanged: _updateActivityLog,
-                             ),
-                               onTap: _openActivityLog,
-                             ),
+                      icon:
+                          Icons.history,
+                      iconColor:
+                          Colors.amber,
+                      title: localizations
+                          .activityLog,
+                      subtitle:
+                          activityLog
+                              ? localizations
+                                  .viewAccountActivity
+                              : localizations
+                                  .activityTrackingDisabled,
+                      trailing:
+                          _buildSwitch(
+                        value:
+                            activityLog,
+                        onChanged:
+                            _updateActivityLog,
+                      ),
+                      onTap:
+                          _openActivityLog,
+                    ),
 
+                    // ------------------------------------------
+                    // DATA SHARING
+                    // ------------------------------------------
                     SecurityOptionTile(
-                      icon: Icons
-                          .privacy_tip_outlined,
+                      icon:
+                          Icons.privacy_tip_outlined,
                       iconColor:
                           Colors.pinkAccent,
-                      title:
-                          'Data Sharing',
+                      title: localizations
+                          .dataSharing,
                       subtitle:
-                          'Share analytics with us',
-                      trailing: _buildSwitch(
+                          dataSharing
+                              ? localizations
+                                  .analyticsSharingEnabled
+                              : localizations
+                                  .shareAnalyticsWithUs,
+                      trailing:
+                          _buildSwitch(
                         value:
                             dataSharing,
                         onChanged:
@@ -584,10 +1208,12 @@ debugPrint('Finished addActivity');
     );
   }
 
+  // ==========================================================
+  // CUSTOM SWITCH
+  // ==========================================================
   Widget _buildSwitch({
     required bool value,
-    required ValueChanged<bool>
-        onChanged,
+    ValueChanged<bool>? onChanged,
   }) {
     final ColorScheme colorScheme =
         Theme.of(context).colorScheme;
@@ -600,8 +1226,7 @@ debugPrint('Finished addActivity');
       activeTrackColor:
           colorScheme.primary,
       inactiveThumbColor:
-          colorScheme
-              .onSurfaceVariant,
+          colorScheme.onSurfaceVariant,
       inactiveTrackColor:
           colorScheme.outlineVariant
               .withValues(

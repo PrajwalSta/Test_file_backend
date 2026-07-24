@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 class ProfileHeader extends StatelessWidget {
   final VoidCallback onEditPressed;
 
@@ -13,27 +15,35 @@ class ProfileHeader extends StatelessWidget {
     final ThemeData theme =
         Theme.of(context);
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return Row(
       children: [
         IconButton(
           onPressed: () {
             Navigator.pop(context);
           },
+          tooltip: MaterialLocalizations.of(
+            context,
+          ).backButtonTooltip,
           icon: const Icon(
             Icons.arrow_back_ios_new,
           ),
         ),
         Expanded(
           child: Text(
-            'Profile',
+            localizations.profile,
             textAlign: TextAlign.center,
-            style: theme.textTheme.headlineSmall?.copyWith(
+            style:
+                theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
         IconButton(
           onPressed: onEditPressed,
+          tooltip: localizations.editProfile,
           icon: const Icon(
             Icons.edit,
           ),

@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// ===============================================================
-/// PrimaryButton
-/// ---------------------------------------------------------------
-/// Main button used across the application.
-/// ===============================================================
-
 class PrimaryButton extends StatelessWidget {
   final String title;
   final VoidCallback onPressed;
@@ -22,35 +16,65 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final ColorScheme colorScheme =
+        Theme.of(context).colorScheme;
 
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: loading ? null : onPressed,
+        onPressed:
+            loading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+              colorScheme.primary,
+          foregroundColor:
+              colorScheme.onPrimary,
+          disabledBackgroundColor:
+              colorScheme.primary.withValues(
+            alpha: 0.65,
+          ),
+          disabledForegroundColor:
+              colorScheme.onPrimary,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(
+              14,
+            ),
+          ),
+        ),
         child: loading
             ? SizedBox(
                 height: 22,
                 width: 22,
-                child: CircularProgressIndicator(
+                child:
+                    CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: colorScheme.onPrimary,
+                  color:
+                      colorScheme.onPrimary,
                 ),
               )
             : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 18),
-                    const SizedBox(width: 8),
+                    Icon(
+                      icon,
+                      size: 18,
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
                   ],
                   Text(
                     title,
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
+                    style:
+                        const TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      fontWeight:
+                          FontWeight.w600,
                     ),
                   ),
                 ],

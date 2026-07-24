@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_constants.dart';
 import 'category_donut_chart.dart';
 import 'category_legend.dart';
@@ -14,8 +15,14 @@ class CategoryChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Container(
       height: 145,
@@ -36,20 +43,25 @@ class CategoryChartCard extends StatelessWidget {
             CrossAxisAlignment.start,
         children: [
           Text(
-            'By Category',
-            style: theme.textTheme.titleSmall?.copyWith(
+            localizations.byCategory,
+            style:
+                theme.textTheme.titleSmall?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(
+            height: 10,
+          ),
           Expanded(
             child: Row(
               children: [
                 CategoryDonutChart(
                   categoryData: categoryData,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(
+                  width: 8,
+                ),
                 Expanded(
                   child: CategoryLegend(
                     categoryData: categoryData,

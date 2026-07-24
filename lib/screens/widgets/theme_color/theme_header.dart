@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 class ThemeHeader extends StatelessWidget {
   final VoidCallback? onBack;
 
@@ -10,60 +12,112 @@ class ThemeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        10,
+        20,
+        0,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           // Header Row
           Row(
             children: [
               GestureDetector(
-                onTap: onBack ?? () => Navigator.pop(context),
+                onTap:
+                    onBack ??
+                    () =>
+                        Navigator.pop(
+                          context,
+                        ),
                 child: Container(
                   height: 42,
                   width: 42,
                   decoration: BoxDecoration(
                     color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius:
+                        BorderRadius.circular(
+                      12,
+                    ),
                     border: Border.all(
-                      color: theme.dividerColor.withValues(alpha: 0.4),
+                      color: theme
+                          .dividerColor
+                          .withValues(
+                        alpha: 0.4,
+                      ),
                     ),
                   ),
                   child: Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: colorScheme.onSurface,
+                    Icons
+                        .arrow_back_ios_new_rounded,
+                    color:
+                        colorScheme
+                            .onSurface,
                     size: 18,
                   ),
                 ),
               ),
 
-              const SizedBox(width: 14),
+              const SizedBox(
+                width: 14,
+              ),
 
-              Text(
-                "Theme Color",
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  localizations
+                      .themeColor,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow
+                          .ellipsis,
+                  style: theme
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(
+                    color:
+                        colorScheme
+                            .onSurface,
+                    fontWeight:
+                        FontWeight
+                            .w700,
+                  ),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(
+            height: 18,
+          ),
 
           Text(
-            "Choose your accent color. Changes apply\nacross the entire app instantly.",
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+            localizations
+                .themeColorDescription,
+            style: theme
+                .textTheme
+                .bodyMedium
+                ?.copyWith(
+              color: colorScheme
+                  .onSurfaceVariant,
               height: 1.5,
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(
+            height: 24,
+          ),
         ],
       ),
     );

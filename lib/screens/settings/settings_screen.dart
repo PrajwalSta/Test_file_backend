@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../providers/language_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../services/focus_mode_service.dart';
 import '../auth/login_screen.dart';
 import '../notifications/notifications_screen.dart';
@@ -11,15 +14,12 @@ import '../settings/focus_mode/focus_dnd_screen.dart';
 import '../settings/language/language_screen.dart';
 import '../settings/sleep_mode/sleep_mode_screen.dart';
 import '../theme/app_colors.dart';
-import '../theme/theme_provider.dart';
 import '../theme_color/theme_color_screen.dart';
 import '../widgets/settings/setting_tile.dart';
 import '../widgets/settings/switch_setting_tile.dart';
 import '../widgets/settings/toggle_tile.dart';
 
 class SettingsScreen extends StatefulWidget {
-  // This callback tells HomeScreen that
-  // Sleep Mode settings have changed.
   final VoidCallback onSleepSettingsUpdated;
 
   const SettingsScreen({
@@ -37,7 +37,6 @@ class _SettingsScreenState
   final FocusModeService _focusModeService =
       FocusModeService();
 
-  // Focus Mode values loaded from Supabase.
   bool focusModeEnabled = false;
   int selectedBreak = 25;
 
@@ -47,7 +46,6 @@ class _SettingsScreenState
   bool tiktokBlocked = false;
   bool whatsappBlocked = false;
 
-  // Do Not Disturb values.
   bool doNotDisturb = true;
 
   TimeOfDay dndStartTime =
@@ -68,11 +66,23 @@ class _SettingsScreenState
   @override
   void initState() {
     super.initState();
-
     _loadFocusModeSettings();
   }
 
-  // Load Focus Mode and DND values from Supabase.
+  String _getCurrentLanguageLabel(
+    String languageCode,
+    AppLocalizations localizations,
+  ) {
+    switch (languageCode) {
+      case 'ne':
+        return localizations.nepali;
+      case 'hi':
+        return localizations.hindi;
+      default:
+        return localizations.english;
+    }
+  }
+
   Future<void> _loadFocusModeSettings({
     bool showError = true,
   }) async {
@@ -87,34 +97,24 @@ class _SettingsScreenState
       setState(() {
         focusModeEnabled =
             settings.focusModeEnabled;
-
         selectedBreak =
             settings.breakIntervalMinutes;
-
         instagramBlocked =
             settings.blockInstagram;
-
         twitterBlocked =
             settings.blockTwitter;
-
         youtubeBlocked =
             settings.blockYoutube;
-
         tiktokBlocked =
             settings.blockTiktok;
-
         whatsappBlocked =
             settings.blockWhatsapp;
-
         doNotDisturb =
             settings.dndEnabled;
-
         dndStartTime =
             settings.dndStartTime;
-
         dndEndTime =
             settings.dndEndTime;
-
         isLoadingFocusSettings = false;
       });
     } catch (error) {
@@ -127,12 +127,18 @@ class _SettingsScreenState
       });
 
       if (showError) {
+        final AppLocalizations localizations =
+            AppLocalizations.of(context)!;
+
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
             SnackBar(
               content: Text(
-                'Unable to load Do Not Disturb settings: $error',
+                localizations
+                    .unableToLoadDndSettings(
+                  error.toString(),
+                ),
               ),
             ),
           );
@@ -140,7 +146,6 @@ class _SettingsScreenState
     }
   }
 
-  // Save DND switch while preserving all other Focus Mode values.
   Future<void> _updateDoNotDisturb(
     bool value,
   ) async {
@@ -185,14 +190,17 @@ class _SettingsScreenState
         return;
       }
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Text(
               doNotDisturb
-                  ? 'Do Not Disturb enabled'
-                  : 'Do Not Disturb disabled',
+                  ? localizations.dndEnabled
+                  : localizations.dndDisabled,
             ),
             behavior:
                 SnackBarBehavior.floating,
@@ -203,18 +211,22 @@ class _SettingsScreenState
         return;
       }
 
-      // Restore the old switch value if saving fails.
       setState(() {
         doNotDisturb =
             previousValue;
       });
+
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Text(
-              'Unable to update Do Not Disturb: $error',
+              localizations.unableToUpdateDnd(
+                error.toString(),
+              ),
             ),
           ),
         );
@@ -227,8 +239,6 @@ class _SettingsScreenState
     }
   }
 
-  // Open Focus Mode and reload the DND values
-  // after the user returns.
   Future<void> _openFocusModeScreen() async {
     await Navigator.push(
       context,
@@ -247,7 +257,6 @@ class _SettingsScreenState
     );
   }
 
-  // Open Sleep Mode settings.
   Future<void> _openSleepModeScreen() async {
     final bool? updated =
         await Navigator.push<bool>(
@@ -261,11 +270,15 @@ class _SettingsScreenState
     if (updated == true && mounted) {
       widget.onSleepSettingsUpdated();
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Sleep Mode settings updated',
+            localizations
+                .sleepModeSettingsUpdated,
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -274,9 +287,9 @@ class _SettingsScreenState
     }
   }
 
-  // Format time like 10 PM or 7:30 AM.
   String _formatShortTime(
     TimeOfDay time,
+    AppLocalizations localizations,
   ) {
     final int hour =
         time.hourOfPeriod == 0
@@ -285,8 +298,8 @@ class _SettingsScreenState
 
     final String period =
         time.period == DayPeriod.am
-            ? 'AM'
-            : 'PM';
+            ? localizations.am
+            : localizations.pm;
 
     if (time.minute == 0) {
       return '$hour $period';
@@ -300,26 +313,31 @@ class _SettingsScreenState
     return '$hour:$minute $period';
   }
 
-  String get _dndSubtitle {
+  String _getDndSubtitle(
+    AppLocalizations localizations,
+  ) {
     if (isLoadingFocusSettings) {
-      return 'Loading settings...';
+      return localizations.loadingSettings;
     }
 
     if (!doNotDisturb) {
-      return 'Off';
+      return localizations.off;
     }
 
-    return '${_formatShortTime(dndStartTime)} – '
-        '${_formatShortTime(dndEndTime)} · On';
+    return '${_formatShortTime(dndStartTime, localizations)} – '
+        '${_formatShortTime(dndEndTime, localizations)} · '
+        '${localizations.on}';
   }
 
-  // Show sign-out confirmation dialog.
   void signOutDialog() {
     final ThemeData theme =
         Theme.of(context);
 
     final ColorScheme colorScheme =
         theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
@@ -333,7 +351,7 @@ class _SettingsScreenState
                 BorderRadius.circular(18),
           ),
           title: Text(
-            'Sign Out',
+            localizations.signOut,
             style: TextStyle(
               color:
                   colorScheme.onSurface,
@@ -342,7 +360,7 @@ class _SettingsScreenState
             ),
           ),
           content: Text(
-            'Are you sure you want to sign out?',
+            localizations.signOutConfirmation,
             style: TextStyle(
               color: colorScheme
                   .onSurfaceVariant,
@@ -356,7 +374,7 @@ class _SettingsScreenState
                 );
               },
               child: Text(
-                'Cancel',
+                localizations.cancel,
                 style: TextStyle(
                   color: colorScheme
                       .onSurfaceVariant,
@@ -414,14 +432,16 @@ class _SettingsScreenState
                   ).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Sign out failed: $error',
+                        localizations.signOutFailed(
+                          error.toString(),
+                        ),
                       ),
                     ),
                   );
                 }
               },
               child: Text(
-                'Sign Out',
+                localizations.signOut,
                 style: TextStyle(
                   color:
                       colorScheme.error,
@@ -443,6 +463,12 @@ class _SettingsScreenState
 
     final ColorScheme colorScheme =
         theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final LanguageProvider languageProvider =
+        context.watch<LanguageProvider>();
 
     return Scaffold(
       backgroundColor:
@@ -477,7 +503,7 @@ class _SettingsScreenState
 
                       sectionTitleWidget(
                         context,
-                        'PROFILE',
+                        localizations.profileSection,
                       ),
 
                       SettingsGroup(
@@ -487,9 +513,10 @@ class _SettingsScreenState
                                 Icons.person_outline,
                             iconColor:
                                 colorScheme.primary,
-                            title: 'Profile',
+                            title:
+                                localizations.profile,
                             subtitle:
-                                'Name, photo, bio',
+                                localizations.profileSubtitle,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -509,9 +536,9 @@ class _SettingsScreenState
                             iconColor:
                                 colorScheme.secondary,
                             title:
-                                'Privacy & Security',
+                                localizations.privacyAndSecurity,
                             subtitle:
-                                'Password, 2FA, biometrics',
+                                localizations.privacySubtitle,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -527,7 +554,7 @@ class _SettingsScreenState
 
                       sectionTitleWidget(
                         context,
-                        'PREFERENCES',
+                        localizations.preferencesSection,
                       ),
 
                       SettingsGroup(
@@ -544,11 +571,11 @@ class _SettingsScreenState
                                 iconColor:
                                     colorScheme.primary,
                                 title:
-                                    'Dark Mode',
+                                    localizations.darkMode,
                                 subtitle:
                                     themeProvider.isDarkMode
-                                        ? 'On — dark interface'
-                                        : 'Off — light interface',
+                                        ? localizations.darkModeOn
+                                        : localizations.darkModeOff,
                                 value:
                                     themeProvider.isDarkMode,
                                 onChanged:
@@ -565,9 +592,9 @@ class _SettingsScreenState
                             iconColor:
                                 AppColors.yellow,
                             title:
-                                'Notifications',
+                                localizations.notifications,
                             subtitle:
-                                'Push, email, reminders',
+                                localizations.notificationsSubtitle,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -587,9 +614,9 @@ class _SettingsScreenState
                             iconColor:
                                 AppColors.orange,
                             title:
-                                'Theme Color',
+                                localizations.themeColor,
                             subtitle:
-                                'Customize app color scheme',
+                                localizations.themeColorSubtitle,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -609,17 +636,24 @@ class _SettingsScreenState
                             iconColor:
                                 colorScheme.secondary,
                             title:
-                                'Language',
+                                localizations.language,
                             subtitle:
-                                'English (US)',
-                            onTap: () {
-                              Navigator.push(
+                                _getCurrentLanguageLabel(
+                              languageProvider.languageCode,
+                              localizations,
+                            ),
+                            onTap: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) =>
                                       const LanguageScreen(),
                                 ),
                               );
+
+                              if (mounted) {
+                                setState(() {});
+                              }
                             },
                           ),
                         ],
@@ -627,7 +661,7 @@ class _SettingsScreenState
 
                       sectionTitleWidget(
                         context,
-                        'FOCUS MODES',
+                        localizations.focusModesSection,
                       ),
 
                       SettingsGroup(
@@ -638,9 +672,9 @@ class _SettingsScreenState
                             iconColor:
                                 colorScheme.primary,
                             title:
-                                'Focus Mode',
+                                localizations.focusMode,
                             subtitle:
-                                'Blocked apps, break intervals',
+                                localizations.focusModeSubtitle,
                             onTap:
                                 _openFocusModeScreen,
                           ),
@@ -653,9 +687,9 @@ class _SettingsScreenState
                             iconColor:
                                 AppColors.yellow,
                             title:
-                                'Sleep Mode',
+                                localizations.sleepMode,
                             subtitle:
-                                'Bedtime and wake-up schedule',
+                                localizations.sleepModeSubtitle,
                             onTap:
                                 _openSleepModeScreen,
                           ),
@@ -668,9 +702,11 @@ class _SettingsScreenState
                             iconColor:
                                 colorScheme.error,
                             title:
-                                'Do Not Disturb',
+                                localizations.doNotDisturb,
                             subtitle:
-                                _dndSubtitle,
+                                _getDndSubtitle(
+                              localizations,
+                            ),
                             value:
                                 doNotDisturb,
                             onChanged:
@@ -698,7 +734,7 @@ class _SettingsScreenState
                             size: 20,
                           ),
                           label: Text(
-                            'Sign Out',
+                            localizations.signOut,
                             style: TextStyle(
                               color:
                                   colorScheme.error,
@@ -763,7 +799,7 @@ class _SettingsScreenState
         bottom: 8,
       ),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: TextStyle(
           color:
               colorScheme.onSurfaceVariant,
@@ -815,6 +851,9 @@ class DemoPage extends StatelessWidget {
     final ColorScheme colorScheme =
         theme.colorScheme;
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor:
           theme.scaffoldBackgroundColor,
@@ -828,7 +867,7 @@ class DemoPage extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          '$title Page',
+          localizations.pageTitle(title),
           style: TextStyle(
             color:
                 colorScheme.onSurface,

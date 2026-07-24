@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../../models/profile/profile_model.dart';
 import '../../services/profile/profile_service.dart';
 import '../main_screen.dart';
@@ -30,7 +31,7 @@ class _ProfileScreenState
   ProfileModel? profile;
 
   bool isLoading = true;
-  String? errorMessage;
+  bool hasLoadError = false;
 
   @override
   void initState() {
@@ -44,7 +45,7 @@ class _ProfileScreenState
       if (mounted) {
         setState(() {
           isLoading = true;
-          errorMessage = null;
+          hasLoadError = false;
         });
       }
 
@@ -64,6 +65,7 @@ class _ProfileScreenState
       setState(() {
         profile = loadedProfile;
         isLoading = false;
+        hasLoadError = false;
       });
     } catch (error, stackTrace) {
       debugPrint(
@@ -80,8 +82,7 @@ class _ProfileScreenState
 
       setState(() {
         isLoading = false;
-        errorMessage =
-            'Unable to load profile';
+        hasLoadError = true;
       });
     }
   }
@@ -131,16 +132,21 @@ class _ProfileScreenState
       return;
     }
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     ScaffoldMessenger.of(context)
-        .showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Profile updated successfully',
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            localizations
+                .profileUpdatedSuccessfully,
+          ),
+          behavior:
+              SnackBarBehavior.floating,
         ),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
-    );
+      );
   }
 
   @override
@@ -149,6 +155,9 @@ class _ProfileScreenState
   ) {
     final ThemeData theme =
         Theme.of(context);
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor:
@@ -171,14 +180,17 @@ class _ProfileScreenState
               const EdgeInsets.all(
             AppConstants.screen,
           ),
-          child:
-              _buildBody(),
+          child: _buildBody(
+            localizations,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(
+    AppLocalizations localizations,
+  ) {
     if (isLoading) {
       return const Center(
         child:
@@ -186,14 +198,15 @@ class _ProfileScreenState
       );
     }
 
-    if (errorMessage != null) {
+    if (hasLoadError) {
       return Center(
         child: Column(
           mainAxisSize:
               MainAxisSize.min,
           children: [
             Text(
-              errorMessage!,
+              localizations
+                  .unableToLoadProfile,
               textAlign:
                   TextAlign.center,
             ),
@@ -206,8 +219,8 @@ class _ProfileScreenState
               icon: const Icon(
                 Icons.refresh,
               ),
-              label: const Text(
-                'Try Again',
+              label: Text(
+                localizations.tryAgain,
               ),
             ),
           ],
@@ -219,9 +232,12 @@ class _ProfileScreenState
         profile;
 
     if (currentProfile == null) {
-      return const Center(
+      return Center(
         child: Text(
-          'Profile data is unavailable',
+          localizations
+              .profileDataUnavailable,
+          textAlign:
+              TextAlign.center,
         ),
       );
     }
@@ -263,14 +279,19 @@ class _ProfileScreenState
               height: 28,
             ),
             ProfileStats(
-  streak: currentProfile.streak,
-  completedTasks:
-      currentProfile.completedTasks,
-  focusHours:
-      currentProfile.focusMinutes ~/ 60,
-  membership:
-      currentProfile.membership,
-),
+              streak:
+                  currentProfile.streak,
+              completedTasks:
+                  currentProfile
+                      .completedTasks,
+              focusHours:
+                  currentProfile
+                          .focusMinutes ~/
+                      60,
+              membership:
+                  currentProfile
+                      .membership,
+            ),
             const SizedBox(
               height: 30,
             ),

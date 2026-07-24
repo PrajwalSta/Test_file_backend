@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 class SleepModeSwitchCard
     extends StatelessWidget {
   final bool enabled;
@@ -19,6 +21,9 @@ class SleepModeSwitchCard
     final ColorScheme colorScheme =
         theme.colorScheme;
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return SwitchListTile(
       value: enabled,
       onChanged: onChanged,
@@ -36,16 +41,29 @@ class SleepModeSwitchCard
         Icons.nightlight_rounded,
         color: colorScheme.primary,
       ),
-      title: const Text(
-        'Enable Sleep Mode',
-        style: TextStyle(
+      title: Text(
+        localizations.enableSleepMode,
+        maxLines: 1,
+        overflow:
+            TextOverflow.ellipsis,
+        style: theme.textTheme.bodyLarge
+            ?.copyWith(
+          color: colorScheme.onSurface,
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         enabled
-            ? 'Sleep Mode is active'
-            : 'Sleep Mode is turned off',
+            ? localizations.sleepModeActive
+            : localizations.sleepModeOff,
+        maxLines: 2,
+        overflow:
+            TextOverflow.ellipsis,
+        style: theme.textTheme.bodyMedium
+            ?.copyWith(
+          color:
+              colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

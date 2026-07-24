@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
 class MonthlyFocusChart extends StatelessWidget {
@@ -13,74 +14,116 @@ class MonthlyFocusChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
 
-    final entries = monthlyData.entries.toList();
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final entries =
+        monthlyData.entries.toList();
 
     if (entries.isEmpty) {
-      return const Center(
-        child: Text("No data"),
+      return Center(
+        child: Text(
+          localizations.noData,
+          style: TextStyle(
+            color: colorScheme
+                .onSurfaceVariant,
+          ),
+        ),
       );
     }
 
     final values = entries
-        .map((e) => e.value / 60)
+        .map(
+          (e) => e.value / 60,
+        )
         .toList();
 
-    final maxY = values.reduce(
+    final maxY =
+        values.reduce(
               (a, b) => a > b ? a : b,
             ) +
-        1;
+            1;
 
     return LineChart(
       LineChartData(
         minX: 0,
-        maxX: (values.length - 1).toDouble(),
+        maxX:
+            (values.length - 1)
+                .toDouble(),
         minY: 0,
         maxY: maxY,
-        gridData: const FlGridData(
+        gridData:
+            const FlGridData(
           show: false,
         ),
-        borderData: FlBorderData(
+        borderData:
+            FlBorderData(
           show: false,
         ),
-        lineTouchData: const LineTouchData(
+        lineTouchData:
+            const LineTouchData(
           enabled: false,
         ),
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
+        titlesData:
+            FlTitlesData(
+          topTitles:
+              const AxisTitles(
             sideTitles:
-                SideTitles(showTitles: false),
+                SideTitles(
+              showTitles: false,
+            ),
           ),
-          leftTitles: const AxisTitles(
+          leftTitles:
+              const AxisTitles(
             sideTitles:
-                SideTitles(showTitles: false),
+                SideTitles(
+              showTitles: false,
+            ),
           ),
-          rightTitles: const AxisTitles(
+          rightTitles:
+              const AxisTitles(
             sideTitles:
-                SideTitles(showTitles: false),
+                SideTitles(
+              showTitles: false,
+            ),
           ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
+          bottomTitles:
+              AxisTitles(
+            sideTitles:
+                SideTitles(
               showTitles: true,
               reservedSize: 20,
               getTitlesWidget:
-                  (value, meta) {
-                final index = value.toInt();
+                  (
+                value,
+                meta,
+              ) {
+                final int index =
+                    value.toInt();
 
-                if (index >= entries.length) {
+                if (index >=
+                    entries.length) {
                   return const SizedBox();
                 }
 
                 return Text(
-                  entries[index].key,
+                  _localizedMonth(
+                    localizations,
+                    entries[index].key,
+                  ),
                   style: TextStyle(
                     color: colorScheme
                         .onSurfaceVariant,
                     fontSize: 10,
                     fontWeight:
-                        FontWeight.w500,
+                        FontWeight
+                            .w500,
                   ),
                 );
               },
@@ -92,17 +135,21 @@ class MonthlyFocusChart extends StatelessWidget {
             isCurved: true,
             curveSmoothness: 0.35,
             barWidth: 2,
-            color: AppColors.primaryLight,
-            dotData: const FlDotData(
+            color:
+                AppColors.primaryLight,
+            dotData:
+                const FlDotData(
               show: false,
             ),
-            belowBarData: BarAreaData(
+            belowBarData:
+                BarAreaData(
               show: true,
-              gradient: LinearGradient(
-                begin:
-                    Alignment.topCenter,
-                end:
-                    Alignment.bottomCenter,
+              gradient:
+                  LinearGradient(
+                begin: Alignment
+                    .topCenter,
+                end: Alignment
+                    .bottomCenter,
                 colors: [
                   AppColors.primary
                       .withValues(
@@ -126,5 +173,40 @@ class MonthlyFocusChart extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _localizedMonth(
+    AppLocalizations localizations,
+    String month,
+  ) {
+    switch (
+        month.trim().toLowerCase()) {
+      case 'jan':
+        return localizations.jan;
+      case 'feb':
+        return localizations.feb;
+      case 'mar':
+        return localizations.mar;
+      case 'apr':
+        return localizations.apr;
+      case 'may':
+        return localizations.may;
+      case 'jun':
+        return localizations.jun;
+      case 'jul':
+        return localizations.jul;
+      case 'aug':
+        return localizations.aug;
+      case 'sep':
+        return localizations.sep;
+      case 'oct':
+        return localizations.oct;
+      case 'nov':
+        return localizations.nov;
+      case 'dec':
+        return localizations.dec;
+      default:
+        return month;
+    }
   }
 }

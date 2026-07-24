@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 import '../../../models/schedule_model.dart';
 import '../../../services/schedule_service.dart';
+import '../../../services/schedule/schedule_csv_import_service.dart';
+import '../../../services/schedule/schedule_template_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../theme/app_text_styles.dart';
@@ -10,11 +14,16 @@ import 'category_selector.dart';
 import 'duration_field.dart';
 import 'focus_mode_selector.dart';
 import 'save_schedule_button.dart';
+import 'schedule_upload_card.dart';
 import 'time_picker_field.dart';
 import 'title_text_field.dart';
 
+typedef ScheduleSavedCallback = Future<void> Function(
+  ScheduleModel schedule,
+);
+
 class AddScheduleSheet extends StatefulWidget {
-  final ValueChanged<ScheduleModel> onScheduleSaved;
+  final ScheduleSavedCallback onScheduleSaved;
   final VoidCallback onClose;
 
   const AddScheduleSheet({
@@ -25,35 +34,19 @@ class AddScheduleSheet extends StatefulWidget {
 
   static Future<void> show({
     required BuildContext context,
-    required ValueChanged<ScheduleModel>
-        onScheduleSaved,
+    required ScheduleSavedCallback onScheduleSaved,
     VoidCallback? onClose,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (
-        BuildContext sheetContext,
-      ) {
+      builder: (BuildContext sheetContext) {
         return AddScheduleSheet(
-          onScheduleSaved: (
-            ScheduleModel newSchedule,
-          ) {
-            onScheduleSaved(
-              newSchedule,
-            );
-
-            Navigator.of(
-              sheetContext,
-            ).pop();
-          },
+          onScheduleSaved: onScheduleSaved,
           onClose: () {
             onClose?.call();
-
-            Navigator.of(
-              sheetContext,
-            ).pop();
+            Navigator.of(sheetContext).pop();
           },
         );
       },
@@ -66,17 +59,13 @@ class AddScheduleSheet extends StatefulWidget {
   }
 }
 
-class _AddScheduleSheetState
-    extends State<AddScheduleSheet> {
-  final GlobalKey<FormState> _formKey =
-      GlobalKey<FormState>();
+class _AddScheduleSheetState extends State<AddScheduleSheet> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final TextEditingController
-      _titleController =
+  final TextEditingController _titleController =
       TextEditingController();
 
-  final TextEditingController
-      _durationController =
+  final TextEditingController _durationController =
       TextEditingController(
     text: '60',
   );
@@ -84,17 +73,31 @@ class _AddScheduleSheetState
   final ScheduleService _scheduleService =
       ScheduleService();
 
+  final ScheduleCsvImportService _csvImportService =
+      ScheduleCsvImportService();
+
+  final ScheduleTemplateService _templateService =
+      ScheduleTemplateService();
+
   ScheduleCategory _selectedCategory =
       CategorySelector.categories.first;
 
-  String _selectedFocusMode =
-      'Study Mode';
+  String _selectedFocusMode = 'Study Mode';
 
   late TimeOfDay _selectedTime;
-
   late DateTime _selectedDate;
 
   bool _isSaving = false;
+  bool _isImporting = false;
+  bool _isDownloadingTemplate = false;
+
+  String? _selectedFileName;
+
+  bool get _isBusy {
+    return _isSaving ||
+        _isImporting ||
+        _isDownloadingTemplate;
+  }
 
   @override
   void initState() {
@@ -123,13 +126,19 @@ class _AddScheduleSheetState
   void dispose() {
     _titleController.dispose();
     _durationController.dispose();
-
     super.dispose();
   }
 
   Future<void> _selectTime() async {
+    if (_isBusy) {
+      return;
+    }
+
     final ThemeData theme =
         Theme.of(context);
+
+    final Color activeColor =
+        theme.colorScheme.primary;
 
     final TimeOfDay? selectedTime =
         await showTimePicker(
@@ -143,10 +152,24 @@ class _AddScheduleSheetState
           data: theme.copyWith(
             colorScheme:
                 theme.colorScheme.copyWith(
-              primary:
-                  AppColors.schedulePrimary,
-              secondary:
-                  AppColors.scheduleSecondary,
+              primary: activeColor,
+              secondary: activeColor,
+            ),
+            timePickerTheme:
+                TimePickerThemeData(
+              dialHandColor:
+                  activeColor,
+              hourMinuteColor:
+                  activeColor.withValues(
+                alpha: 0.15,
+              ),
+              hourMinuteTextColor:
+                  theme.colorScheme
+                      .onSurface,
+              dayPeriodColor:
+                  activeColor.withValues(
+                alpha: 0.15,
+              ),
             ),
           ),
           child: child!,
@@ -166,8 +189,15 @@ class _AddScheduleSheetState
   }
 
   Future<void> _selectDate() async {
+    if (_isBusy) {
+      return;
+    }
+
     final ThemeData theme =
         Theme.of(context);
+
+    final Color activeColor =
+        theme.colorScheme.primary;
 
     final DateTime today =
         DateTime.now();
@@ -197,10 +227,19 @@ class _AddScheduleSheetState
           data: theme.copyWith(
             colorScheme:
                 theme.colorScheme.copyWith(
-              primary:
-                  AppColors.schedulePrimary,
-              secondary:
-                  AppColors.scheduleSecondary,
+              primary: activeColor,
+              secondary: activeColor,
+            ),
+            datePickerTheme:
+                DatePickerThemeData(
+              todayBorder:
+                  BorderSide(
+                color: activeColor,
+              ),
+              todayForegroundColor:
+                  WidgetStatePropertyAll<Color>(
+                activeColor,
+              ),
             ),
           ),
           child: child!,
@@ -236,10 +275,9 @@ class _AddScheduleSheetState
             );
 
     final String period =
-        time.period ==
-                DayPeriod.am
-            ? 'AM'
-            : 'PM';
+        time.period == DayPeriod.am
+            ? AppLocalizations.of(context)!.am
+            : AppLocalizations.of(context)!.pm;
 
     return '${hour.toString().padLeft(2, '0')}:'
         '$minute $period';
@@ -249,17 +287,13 @@ class _AddScheduleSheetState
     DateTime date,
   ) {
     final String day =
-        date.day
-            .toString()
-            .padLeft(
+        date.day.toString().padLeft(
               2,
               '0',
             );
 
     final String month =
-        date.month
-            .toString()
-            .padLeft(
+        date.month.toString().padLeft(
               2,
               '0',
             );
@@ -297,8 +331,579 @@ class _AddScheduleSheetState
     );
   }
 
+  String _cleanError(
+    Object error,
+  ) {
+    return error
+        .toString()
+        .replaceFirst(
+          'Exception: ',
+          '',
+        );
+  }
+
+  ScheduleCategory? _findCategory(
+    String categoryName,
+  ) {
+    final String normalisedName =
+        categoryName.trim().toLowerCase();
+
+    for (
+      final ScheduleCategory category
+      in CategorySelector.categories
+    ) {
+      if (category.name.trim().toLowerCase() ==
+          normalisedName) {
+        return category;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _downloadCsvTemplate() async {
+    if (_isBusy) {
+      return;
+    }
+
+    setState(() {
+      _isDownloadingTemplate = true;
+    });
+
+    try {
+      await _templateService.downloadTemplate();
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        AppLocalizations.of(context)!.csvTemplateReady,
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'CSV TEMPLATE ERROR: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        AppLocalizations.of(context)!.unableToPrepareTemplate(
+          _cleanError(error),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDownloadingTemplate = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _importCsvFile() async {
+    if (_isBusy) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    final User? currentUser =
+        Supabase.instance.client.auth.currentUser;
+
+    if (currentUser == null) {
+      _showMessage(
+        AppLocalizations.of(context)!.loginBeforeImportingSchedules,
+      );
+      return;
+    }
+
+    try {
+      final CsvScheduleParseResult? result =
+          await _csvImportService.pickCsvFile();
+
+      if (result == null || !mounted) {
+        return;
+      }
+
+      setState(() {
+        _selectedFileName = result.fileName;
+      });
+
+      final List<CsvScheduleData> validSchedules =
+          <CsvScheduleData>[];
+
+      final List<String> allErrors =
+          List<String>.from(
+        result.errors,
+      );
+
+      for (
+        final CsvScheduleData schedule
+        in result.schedules
+      ) {
+        final ScheduleCategory? category =
+            _findCategory(
+          schedule.category,
+        );
+
+        if (category == null) {
+          allErrors.add(
+            AppLocalizations.of(context)!
+                .unknownCategoryAtRow(
+              schedule.rowNumber,
+              schedule.category,
+            ),
+          );
+          continue;
+        }
+
+        validSchedules.add(
+          schedule,
+        );
+      }
+
+      if (validSchedules.isEmpty) {
+        await _showImportErrors(
+          allErrors,
+        );
+        return;
+      }
+
+      final bool confirmed =
+          await _showImportPreview(
+        fileName: result.fileName,
+        schedules: validSchedules,
+        skippedCount: allErrors.length,
+      );
+
+      if (!confirmed || !mounted) {
+        return;
+      }
+
+      setState(() {
+        _isImporting = true;
+      });
+
+      int importedCount = 0;
+
+      ScheduleModel? lastImportedSchedule;
+
+      final List<String> databaseErrors =
+          <String>[];
+
+      for (
+        final CsvScheduleData csvSchedule
+        in validSchedules
+      ) {
+        try {
+          final ScheduleCategory? category =
+              _findCategory(
+            csvSchedule.category,
+          );
+
+          if (category == null) {
+            throw Exception(
+              AppLocalizations.of(context)!.unknownCategory,
+            );
+          }
+
+          final TimeOfDay importedTime =
+              TimeOfDay.fromDateTime(
+            csvSchedule.scheduleDateTime,
+          );
+
+          final String formattedTime =
+              _formatTime(
+            importedTime,
+          );
+
+          final Map<String, dynamic> insertedRow =
+              await _scheduleService.addSchedule(
+            title: csvSchedule.title,
+            time: formattedTime,
+            scheduleDateTime:
+                csvSchedule.scheduleDateTime,
+            durationMinutes:
+                csvSchedule.durationMinutes,
+            category: category.name,
+            focusMode: csvSchedule.focusMode,
+          );
+
+          final String? scheduleId =
+              insertedRow['id']?.toString();
+
+          if (scheduleId == null ||
+              scheduleId.isEmpty) {
+            throw Exception(
+              AppLocalizations.of(context)!.scheduleIdNotReturned,
+            );
+          }
+
+          final ScheduleModel newSchedule =
+              ScheduleModel(
+            id: scheduleId,
+            emoji: category.emoji,
+            title: csvSchedule.title,
+            time: formattedTime,
+            scheduleDate:
+                csvSchedule.scheduleDateTime,
+            category: category.name,
+            categoryColor: category.color,
+            focusMode: csvSchedule.focusMode,
+            durationMinutes:
+                csvSchedule.durationMinutes,
+            completed:
+                insertedRow['completed'] == true,
+            notificationId:
+                _parseNotificationId(
+              insertedRow['notification_id'],
+            ),
+          );
+
+          lastImportedSchedule =
+              newSchedule;
+
+          importedCount++;
+        } catch (error) {
+          databaseErrors.add(
+            AppLocalizations.of(context)!
+                .rowError(
+              csvSchedule.rowNumber,
+              _cleanError(error),
+            ),
+          );
+        }
+      }
+
+      allErrors.addAll(
+        databaseErrors,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (allErrors.isNotEmpty) {
+        await _showImportErrors(
+          allErrors,
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      if (importedCount == 0 ||
+          lastImportedSchedule == null) {
+        _showMessage(
+          AppLocalizations.of(context)!.noSchedulesImported,
+        );
+        return;
+      }
+
+      await widget.onScheduleSaved(
+        lastImportedSchedule,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        allErrors.isEmpty
+            ? AppLocalizations.of(context)!
+                .schedulesImportedSuccessfully(
+                importedCount,
+              )
+            : AppLocalizations.of(context)!
+                .schedulesImportedWithSkipped(
+                importedCount,
+                allErrors.length,
+              ),
+      );
+
+      widget.onClose();
+    } catch (error, stackTrace) {
+      debugPrint(
+        'CSV IMPORT ERROR: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        AppLocalizations.of(context)!.unableToImportCsv(
+          _cleanError(error),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isImporting = false;
+        });
+      }
+    }
+  }
+
+  Future<bool> _showImportPreview({
+    required String fileName,
+    required List<CsvScheduleData> schedules,
+    required int skippedCount,
+  }) async {
+    final bool? confirmed =
+        await showDialog<bool>(
+      context: context,
+      builder: (
+        BuildContext dialogContext,
+      ) {
+        final AppLocalizations localizations =
+            AppLocalizations.of(dialogContext)!;
+
+        final int previewCount =
+            schedules.length > 5
+                ? 5
+                : schedules.length;
+
+        return AlertDialog(
+          title: Text(
+            localizations.importSchedulesQuestion,
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize:
+                  MainAxisSize.min,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fileName,
+                  style: const TextStyle(
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                Text(
+                  localizations.validSchedulesFound(
+                    schedules.length,
+                  ),
+                ),
+                if (skippedCount > 0) ...[
+                  const SizedBox(
+                    height: 4,
+                  ),
+                  Text(
+                    localizations.rowsWillBeSkipped(
+                      skippedCount,
+                    ),
+                    style: const TextStyle(
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
+                const SizedBox(
+                  height: 12,
+                ),
+                ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(
+                    maxHeight: 340,
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: previewCount,
+                    itemBuilder: (
+                      BuildContext context,
+                      int index,
+                    ) {
+                      final CsvScheduleData
+                          schedule =
+                          schedules[index];
+
+                      return ListTile(
+                        contentPadding:
+                            EdgeInsets.zero,
+                        leading:
+                            const CircleAvatar(
+                          child: Icon(
+                            Icons
+                                .event_note_rounded,
+                          ),
+                        ),
+                        title: Text(
+                          schedule.title,
+                        ),
+                        subtitle: Text(
+                          '${_formatDisplayDate(
+                            schedule
+                                .scheduleDateTime,
+                          )} • '
+                          '${_formatTime(
+                            TimeOfDay
+                                .fromDateTime(
+                              schedule
+                                  .scheduleDateTime,
+                            ),
+                          )}\n'
+                          '${schedule.category} • '
+                          '${localizations.minutesShort(
+                            schedule.durationMinutes,
+                          )}',
+                        ),
+                        isThreeLine: true,
+                      );
+                    },
+                  ),
+                ),
+                if (schedules.length >
+                    previewCount) ...[
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  Text(
+                    localizations.andMore(
+                      schedules.length - previewCount,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(
+                  dialogContext,
+                ).pop(false);
+              },
+              child: Text(
+                localizations.cancel,
+              ),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(
+                  dialogContext,
+                ).pop(true);
+              },
+              icon: const Icon(
+                Icons.upload_rounded,
+              ),
+              label: Text(
+                localizations.importCount(
+                  schedules.length,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
+  }
+
+  Future<void> _showImportErrors(
+    List<String> errors,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (
+        BuildContext dialogContext,
+      ) {
+        final AppLocalizations localizations =
+            AppLocalizations.of(dialogContext)!;
+
+        return AlertDialog(
+          title: Text(
+            localizations.importProblems,
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: errors.isEmpty
+                ? Text(
+                    localizations.noValidSchedulesFound,
+                  )
+                : ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(
+                      maxHeight: 420,
+                    ),
+                    child:
+                        ListView.separated(
+                      shrinkWrap: true,
+                      itemCount:
+                          errors.length,
+                      separatorBuilder: (
+                        BuildContext context,
+                        int index,
+                      ) {
+                        return const Divider();
+                      },
+                      itemBuilder: (
+                        BuildContext context,
+                        int index,
+                      ) {
+                        return Row(
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
+                          children: [
+                            const Icon(
+                              Icons
+                                  .error_outline_rounded,
+                              color:
+                                  Colors.orange,
+                              size: 20,
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            Expanded(
+                              child: Text(
+                                errors[index],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(
+                  dialogContext,
+                ).pop();
+              },
+              child: Text(
+                localizations.close,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _saveSchedule() async {
-    if (_isSaving) {
+    if (_isBusy) {
       return;
     }
 
@@ -317,9 +922,8 @@ class _AddScheduleSheetState
 
     if (title.isEmpty) {
       _showMessage(
-        'Please enter a schedule title.',
+        AppLocalizations.of(context)!.enterScheduleTitle,
       );
-
       return;
     }
 
@@ -331,40 +935,30 @@ class _AddScheduleSheetState
     if (duration == null ||
         duration <= 0) {
       _showMessage(
-        'Please enter a valid duration.',
+        AppLocalizations.of(context)!.enterValidDuration,
       );
-
       return;
     }
 
     final User? currentUser =
-        Supabase
-            .instance
-            .client
-            .auth
-            .currentUser;
+        Supabase.instance.client.auth.currentUser;
 
     if (currentUser == null) {
       _showMessage(
-        'Please log in before saving a schedule.',
+        AppLocalizations.of(context)!.loginBeforeSavingSchedule,
       );
-
       return;
     }
 
     final DateTime scheduleDateTime =
         _buildScheduleDateTime();
 
-    final DateTime currentTime =
-        DateTime.now();
-
     if (!scheduleDateTime.isAfter(
-      currentTime,
+      DateTime.now(),
     )) {
       _showMessage(
-        'Please select a future date and time.',
+        AppLocalizations.of(context)!.selectFutureDateTime,
       );
-
       return;
     }
 
@@ -381,42 +975,33 @@ class _AddScheduleSheetState
       debugPrint(
         'Saving schedule...',
       );
-
       debugPrint(
         'User ID: ${currentUser.id}',
       );
-
       debugPrint(
         'Title: $title',
       );
-
       debugPrint(
         'Time: $formattedTime',
       );
-
       debugPrint(
         'Scheduled at: '
         '${scheduleDateTime.toIso8601String()}',
       );
-
       debugPrint(
         'Duration: $duration',
       );
-
       debugPrint(
         'Category: '
         '${_selectedCategory.name}',
       );
-
       debugPrint(
         'Focus mode: '
         '$_selectedFocusMode',
       );
 
-      final Map<String, dynamic>
-          insertedRow =
-          await _scheduleService
-              .addSchedule(
+      final Map<String, dynamic> insertedRow =
+          await _scheduleService.addSchedule(
         title: title,
         time: formattedTime,
         scheduleDateTime:
@@ -435,13 +1020,12 @@ class _AddScheduleSheetState
       );
 
       final String? scheduleId =
-          insertedRow['id']
-              ?.toString();
+          insertedRow['id']?.toString();
 
       if (scheduleId == null ||
           scheduleId.isEmpty) {
         throw Exception(
-          'Schedule was saved, but no schedule ID was returned.',
+          AppLocalizations.of(context)!.scheduleIdNotReturned,
         );
       }
 
@@ -467,8 +1051,7 @@ class _AddScheduleSheetState
                 true,
         notificationId:
             _parseNotificationId(
-          insertedRow[
-              'notification_id'],
+          insertedRow['notification_id'],
         ),
       );
 
@@ -476,25 +1059,28 @@ class _AddScheduleSheetState
         return;
       }
 
-      widget.onScheduleSaved(
+      await widget.onScheduleSaved(
         newSchedule,
       );
+
+      if (!mounted) {
+        return;
+      }
+
+      widget.onClose();
     } on PostgrestException catch (error, stackTrace) {
       debugPrint(
         'SUPABASE SAVE ERROR: '
         '${error.message}',
       );
-
       debugPrint(
         'SUPABASE ERROR CODE: '
         '${error.code}',
       );
-
       debugPrint(
         'SUPABASE ERROR DETAILS: '
         '${error.details}',
       );
-
       debugPrint(
         'SUPABASE ERROR HINT: '
         '${error.hint}',
@@ -509,8 +1095,9 @@ class _AddScheduleSheetState
       }
 
       _showMessage(
-        'Database error: '
-        '${error.message}',
+        AppLocalizations.of(context)!.databaseError(
+          error.message,
+        ),
       );
     } catch (error, stackTrace) {
       debugPrint(
@@ -527,8 +1114,9 @@ class _AddScheduleSheetState
       }
 
       _showMessage(
-        'Unable to save schedule: '
-        '$error',
+        AppLocalizations.of(context)!.unableToSaveSchedule(
+          _cleanError(error),
+        ),
       );
     } finally {
       if (mounted) {
@@ -559,9 +1147,18 @@ class _AddScheduleSheetState
   Widget build(
     BuildContext context,
   ) {
+    final ThemeData theme =
+        Theme.of(context);
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final bool isDarkMode =
-        Theme.of(context).brightness ==
+        theme.brightness ==
             Brightness.dark;
+
+    final Color activeColor =
+        theme.colorScheme.primary;
 
     final MediaQueryData mediaQuery =
         MediaQuery.of(context);
@@ -593,8 +1190,10 @@ class _AddScheduleSheetState
 
     final Color labelColor =
         isDarkMode
-            ? AppColors.textSecondaryDark
-            : AppColors.textSecondaryLight;
+            ? AppColors
+                .textSecondaryDark
+            : AppColors
+                .textSecondaryLight;
 
     final Color closeButtonColor =
         isDarkMode
@@ -621,7 +1220,7 @@ class _AddScheduleSheetState
       child: Container(
         constraints: BoxConstraints(
           maxHeight:
-              screenHeight * 0.86,
+              screenHeight * 0.92,
         ),
         decoration: BoxDecoration(
           color: sheetColor,
@@ -676,22 +1275,20 @@ class _AddScheduleSheetState
                 children: [
                   Expanded(
                     child: Text(
-                      'Add Schedule',
+                      localizations.addSchedule,
                       style: AppTextStyles
                           .sectionTitleDark
                           .copyWith(
-                        color:
-                            titleColor,
+                        color: titleColor,
                         fontSize: 19,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed:
-                        _isSaving
+                        _isBusy
                             ? null
-                            : widget
-                                .onClose,
+                            : widget.onClose,
                     style:
                         IconButton.styleFrom(
                       backgroundColor:
@@ -712,8 +1309,7 @@ class _AddScheduleSheetState
                     ScrollViewKeyboardDismissBehavior
                         .onDrag,
                 padding:
-                    const EdgeInsets
-                        .fromLTRB(
+                    const EdgeInsets.fromLTRB(
                   18,
                   4,
                   18,
@@ -723,11 +1319,74 @@ class _AddScheduleSheetState
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        CrossAxisAlignment.start,
                     children: [
+                      ScheduleUploadCard(
+                        isDarkMode:
+                            isDarkMode,
+                        isImporting:
+                            _isImporting,
+                        isDownloading:
+                            _isDownloadingTemplate,
+                        selectedFileName:
+                            _selectedFileName,
+                        onUploadPressed:
+                            _isBusy
+                                ? null
+                                : _importCsvFile,
+                        onDownloadPressed:
+                            _isBusy
+                                ? null
+                                : _downloadCsvTemplate,
+                      ),
+                      const SizedBox(
+                        height: 22,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: labelColor
+                                  .withValues(
+                                alpha: 0.25,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets
+                                    .symmetric(
+                              horizontal: 12,
+                            ),
+                            child: Text(
+                              localizations.orAddManually,
+                              style: TextStyle(
+                                color:
+                                    labelColor,
+                                fontSize: 11,
+                                fontWeight:
+                                    FontWeight
+                                        .bold,
+                                letterSpacing:
+                                    0.7,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: labelColor
+                                  .withValues(
+                                alpha: 0.25,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 22,
+                      ),
                       _SectionLabel(
-                        text: 'Title',
+                        text: localizations.title,
                         color: labelColor,
                       ),
                       const SizedBox(
@@ -741,7 +1400,7 @@ class _AddScheduleSheetState
                         height: 18,
                       ),
                       _SectionLabel(
-                        text: 'Category',
+                        text: localizations.category,
                         color: labelColor,
                       ),
                       const SizedBox(
@@ -755,7 +1414,7 @@ class _AddScheduleSheetState
                           ScheduleCategory
                               category,
                         ) {
-                          if (_isSaving) {
+                          if (_isBusy) {
                             return;
                           }
 
@@ -769,7 +1428,7 @@ class _AddScheduleSheetState
                         height: 18,
                       ),
                       _SectionLabel(
-                        text: 'Date',
+                        text: localizations.date,
                         color: labelColor,
                       ),
                       const SizedBox(
@@ -777,7 +1436,7 @@ class _AddScheduleSheetState
                       ),
                       InkWell(
                         onTap:
-                            _isSaving
+                            _isBusy
                                 ? null
                                 : _selectDate,
                         borderRadius:
@@ -791,13 +1450,11 @@ class _AddScheduleSheetState
                           padding:
                               const EdgeInsets
                                   .symmetric(
-                            horizontal:
-                                14,
+                            horizontal: 14,
                           ),
                           decoration:
                               BoxDecoration(
-                            color:
-                                inputColor,
+                            color: inputColor,
                             borderRadius:
                                 BorderRadius
                                     .circular(
@@ -805,21 +1462,19 @@ class _AddScheduleSheetState
                             ),
                             border:
                                 Border.all(
-                              color: AppColors
-                                  .schedulePrimary
+                              color: activeColor
                                   .withValues(
-                                alpha:
-                                    0.20,
+                                alpha: 0.35,
                               ),
                             ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons
                                     .calendar_month_rounded,
-                                color: AppColors
-                                    .schedulePrimary,
+                                color:
+                                    activeColor,
                               ),
                               const SizedBox(
                                 width: 12,
@@ -829,12 +1484,10 @@ class _AddScheduleSheetState
                                   _formatDisplayDate(
                                     _selectedDate,
                                   ),
-                                  style:
-                                      TextStyle(
+                                  style: TextStyle(
                                     color:
                                         titleColor,
-                                    fontSize:
-                                        15,
+                                    fontSize: 15,
                                     fontWeight:
                                         FontWeight
                                             .w500,
@@ -856,8 +1509,7 @@ class _AddScheduleSheetState
                       ),
                       Row(
                         crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
+                            CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Column(
@@ -867,7 +1519,7 @@ class _AddScheduleSheetState
                               children: [
                                 _SectionLabel(
                                   text:
-                                      'Start Time',
+                                      localizations.startTime,
                                   color:
                                       labelColor,
                                 ),
@@ -877,9 +1529,10 @@ class _AddScheduleSheetState
                                 TimePickerField(
                                   selectedTime:
                                       _selectedTime,
-                                  onTap: _isSaving
-                                      ? () {}
-                                      : _selectTime,
+                                  onTap:
+                                      _isBusy
+                                          ? () {}
+                                          : _selectTime,
                                 ),
                               ],
                             ),
@@ -895,7 +1548,7 @@ class _AddScheduleSheetState
                               children: [
                                 _SectionLabel(
                                   text:
-                                      'Duration (min)',
+                                      localizations.durationMinutes,
                                   color:
                                       labelColor,
                                 ),
@@ -915,8 +1568,7 @@ class _AddScheduleSheetState
                         height: 18,
                       ),
                       _SectionLabel(
-                        text:
-                            'Focus Mode',
+                        text: localizations.focusMode,
                         color: labelColor,
                       ),
                       const SizedBox(
@@ -929,7 +1581,7 @@ class _AddScheduleSheetState
                             (
                           String mode,
                         ) {
-                          if (_isSaving) {
+                          if (_isBusy) {
                             return;
                           }
 
@@ -946,7 +1598,7 @@ class _AddScheduleSheetState
                         isLoading:
                             _isSaving,
                         onPressed:
-                            _isSaving
+                            _isBusy
                                 ? null
                                 : _saveSchedule,
                       ),
@@ -962,8 +1614,7 @@ class _AddScheduleSheetState
   }
 }
 
-class _SectionLabel
-    extends StatelessWidget {
+class _SectionLabel extends StatelessWidget {
   final String text;
   final Color color;
 

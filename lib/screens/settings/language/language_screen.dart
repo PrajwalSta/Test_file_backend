@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../data/language_data.dart';
 import '../../../models/language_model.dart';
 import '../../../providers/language_provider.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_durations.dart';
 import '../../theme/app_spacing.dart';
 import '../../main_screen.dart';
@@ -48,17 +48,18 @@ class _LanguageScreenState
         return;
       }
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Text(
-              'Language changed to ${language.name}',
+              localizations.languageChanged,
             ),
-            duration:
-                AppDurations.snackBar,
-            behavior:
-                SnackBarBehavior.floating,
+            duration: AppDurations.snackBar,
+            behavior: SnackBarBehavior.floating,
           ),
         );
     } catch (_) {
@@ -73,8 +74,7 @@ class _LanguageScreenState
             content: const Text(
               'Unable to save language selection.',
             ),
-            behavior:
-                SnackBarBehavior.floating,
+            behavior: SnackBarBehavior.floating,
           ),
         );
     } finally {
@@ -105,9 +105,26 @@ class _LanguageScreenState
     final ThemeData theme =
         Theme.of(context);
 
-    final LanguageProvider
-        languageProvider =
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final LanguageProvider languageProvider =
         context.watch<LanguageProvider>();
+
+    final List<LanguageModel> localizedLanguageList = [
+      LanguageModel(
+        name: localizations.english,
+        code: 'en',
+      ),
+      LanguageModel(
+        name: localizations.nepali,
+        code: 'ne',
+      ),
+      LanguageModel(
+        name: localizations.hindi,
+        code: 'hi',
+      ),
+    ];
 
     return Scaffold(
       backgroundColor:
@@ -124,13 +141,17 @@ class _LanguageScreenState
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: [
-              const LanguageAppBar(),
+              LanguageAppBar(
+                title: localizations.language,
+              ),
 
               const SizedBox(
                 height: AppSpacing.lg,
               ),
 
-              const LanguageHeader(),
+              LanguageHeader(
+                subtitle: localizations.selectLanguage,
+              ),
 
               const SizedBox(
                 height: AppSpacing.md,
@@ -144,7 +165,7 @@ class _LanguageScreenState
                           const BouncingScrollPhysics(),
                       child: LanguageList(
                         languages:
-                            languageList,
+                            localizedLanguageList,
                         selectedLanguageCode:
                             languageProvider
                                 .languageCode,

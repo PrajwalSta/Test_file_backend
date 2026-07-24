@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../models/badge_model.dart';
 import '../../../services/profile/badge_service.dart';
 import 'badge_card.dart';
@@ -20,9 +21,28 @@ class _BadgesSectionState
       BadgeService();
 
   bool _isLoading = true;
-  String? _errorMessage;
+  bool _hasLoadError = false;
 
-  List<BadgeModel> _badges = [];
+  List<Map<String, dynamic>> _badgeRows = [];
+
+  static const Map<String, String>
+      _badgeEmojis = {
+    'early_bird': '🌅',
+    'night_owl': '🦉',
+    'streak_7': '🔥',
+    'focus_100': '⚡',
+    'planner_pro': '📅',
+    'zen_master': '🧘',
+  };
+
+  static const List<String> _badgeOrder = [
+    'early_bird',
+    'night_owl',
+    'streak_7',
+    'focus_100',
+    'planner_pro',
+    'zen_master',
+  ];
 
   @override
   void initState() {
@@ -32,90 +52,32 @@ class _BadgesSectionState
   }
 
   Future<void> _loadBadges() async {
-    try {
+    if (mounted) {
       setState(() {
         _isLoading = true;
-        _errorMessage = null;
+        _hasLoadError = false;
       });
+    }
 
+    try {
       await _badgeService.checkBadges();
 
       final List<Map<String, dynamic>>
           badgeRows =
           await _badgeService.getBadges();
 
-      final Map<String, String> badgeEmojis = {
-        'early_bird': '🌅',
-        'night_owl': '🦉',
-        'streak_7': '🔥',
-        'focus_100': '⚡',
-        'planner_pro': '📅',
-        'zen_master': '🧘',
-      };
-
-      final List<String> badgeOrder = [
-        'early_bird',
-        'night_owl',
-        'streak_7',
-        'focus_100',
-        'planner_pro',
-        'zen_master',
-      ];
-
-      final List<BadgeModel> loadedBadges =
-          badgeOrder.map(
-        (String badgeKey) {
-          final Map<String, dynamic> badgeRow =
-              badgeRows.firstWhere(
-            (Map<String, dynamic> row) {
-              return row['badge_key']
-                      ?.toString() ==
-                  badgeKey;
-            },
-            orElse: () {
-              return {
-                'badge_key':
-                    badgeKey,
-                'badge_name':
-                    _defaultBadgeName(
-                  badgeKey,
-                ),
-                'unlocked':
-                    false,
-              };
-            },
-          );
-
-          return BadgeModel(
-            emoji:
-                badgeEmojis[badgeKey] ??
-                    '🏅',
-            title:
-                badgeRow['badge_name']
-                        ?.toString() ??
-                    _defaultBadgeName(
-                      badgeKey,
-                    ),
-            earned:
-                badgeRow['unlocked']
-                        as bool? ??
-                    false,
-          );
-        },
-      ).toList();
-
       if (!mounted) {
         return;
       }
 
       setState(() {
-        _badges = loadedBadges;
+        _badgeRows = badgeRows;
         _isLoading = false;
+        _hasLoadError = false;
       });
     } catch (error) {
       debugPrint(
-        'Unable to load badges: '
-        '$error',
+        'Unable to load badges: $error',
       );
 
       if (!mounted) {
@@ -124,62 +86,105 @@ class _BadgesSectionState
 
       setState(() {
         _isLoading = false;
-        _errorMessage =
-            'Unable to load badges';
+        _hasLoadError = true;
       });
     }
   }
 
-  String _defaultBadgeName(
+  String _localizedBadgeName(
+    AppLocalizations localizations,
     String badgeKey,
   ) {
     switch (badgeKey) {
       case 'early_bird':
-        return 'Early Bird';
+        return localizations.earlyBird;
 
       case 'night_owl':
-        return 'Night Owl';
+        return localizations.nightOwl;
 
       case 'streak_7':
-        return 'Streak 7';
+        return localizations.streakSeven;
 
       case 'focus_100':
-        return 'Focus 100h';
+        return localizations.focusOneHundredHours;
 
       case 'planner_pro':
-        return 'Planner Pro';
+        return localizations.plannerPro;
 
       case 'zen_master':
-        return 'Zen Master';
+        return localizations.zenMaster;
 
       default:
-        return 'Badge';
+        return localizations.badge;
     }
+  }
+
+  List<BadgeModel> _buildLocalizedBadges(
+    AppLocalizations localizations,
+  ) {
+    return _badgeOrder.map(
+      (String badgeKey) {
+        final Map<String, dynamic> badgeRow =
+            _badgeRows.firstWhere(
+          (Map<String, dynamic> row) {
+            return row['badge_key']
+                    ?.toString() ==
+                badgeKey;
+          },
+          orElse: () {
+            return <String, dynamic>{
+              'badge_key': badgeKey,
+              'unlocked': false,
+            };
+          },
+        );
+
+        return BadgeModel(
+          emoji:
+              _badgeEmojis[badgeKey] ??
+                  '🏅',
+          title: _localizedBadgeName(
+            localizations,
+            badgeKey,
+          ),
+          earned:
+              badgeRow['unlocked']
+                      as bool? ??
+                  false,
+        );
+      },
+    ).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final ColorScheme colorScheme =
         Theme.of(context).colorScheme;
 
     if (_isLoading) {
       return const Center(
         child: Padding(
-          padding: EdgeInsets.all(
-            24,
-          ),
+          padding: EdgeInsets.all(24),
           child:
               CircularProgressIndicator(),
         ),
       );
     }
 
-    if (_errorMessage != null) {
+    if (_hasLoadError) {
       return Center(
         child: Column(
+          mainAxisSize:
+              MainAxisSize.min,
           children: [
             Text(
-              _errorMessage!,
+              localizations
+                  .unableToLoadBadges,
+              textAlign:
+                  TextAlign.center,
               style: TextStyle(
                 color:
                     colorScheme.error,
@@ -189,15 +194,12 @@ class _BadgesSectionState
               height: 12,
             ),
             TextButton.icon(
-              onPressed:
-                  _loadBadges,
-              icon:
-                  const Icon(
+              onPressed: _loadBadges,
+              icon: const Icon(
                 Icons.refresh,
               ),
-              label:
-                  const Text(
-                'Try again',
+              label: Text(
+                localizations.tryAgain,
               ),
             ),
           ],
@@ -205,8 +207,13 @@ class _BadgesSectionState
       );
     }
 
+    final List<BadgeModel> badges =
+        _buildLocalizedBadges(
+      localizations,
+    );
+
     final int earnedCount =
-        _badges
+        badges
             .where(
               (BadgeModel badge) =>
                   badge.earned,
@@ -222,7 +229,8 @@ class _BadgesSectionState
           Row(
             children: [
               Text(
-                'BADGES',
+                localizations.badges
+                    .toUpperCase(),
                 style: TextStyle(
                   color: colorScheme
                       .onSurfaceVariant,
@@ -232,8 +240,10 @@ class _BadgesSectionState
               ),
               const Spacer(),
               Text(
-                '$earnedCount/'
-                '${_badges.length} earned',
+                localizations.badgesEarned(
+                  earnedCount,
+                  badges.length,
+                ),
                 style: TextStyle(
                   color:
                       colorScheme.primary,
@@ -267,7 +277,7 @@ class _BadgesSectionState
                 physics:
                     const NeverScrollableScrollPhysics(),
                 itemCount:
-                    _badges.length,
+                    badges.length,
                 gridDelegate:
                     SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount:
@@ -285,7 +295,7 @@ class _BadgesSectionState
                 ) {
                   return BadgeCard(
                     badge:
-                        _badges[index],
+                        badges[index],
                   );
                 },
               );

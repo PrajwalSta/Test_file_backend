@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 
@@ -14,17 +15,30 @@ class DailyFocusChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final ThemeData theme =
+        Theme.of(context);
 
-    final entries = dailyData.entries.toList();
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final bool isDark =
+        theme.brightness == Brightness.dark;
+
+    final List<MapEntry<String, double>> entries =
+        dailyData.entries.toList();
 
     final double highestHours = entries.isEmpty
         ? 0
         : entries
-            .map((entry) => entry.value / 60)
-            .reduce((a, b) => a > b ? a : b);
+            .map(
+              (entry) => entry.value / 60,
+            )
+            .reduce(
+              (a, b) => a > b ? a : b,
+            );
 
     final double maxY = highestHours <= 1
         ? 1
@@ -36,7 +50,8 @@ class DailyFocusChart extends StatelessWidget {
     return Container(
       height: 185,
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
+      padding:
+          const EdgeInsets.fromLTRB(
         16,
         15,
         16,
@@ -44,11 +59,13 @@ class DailyFocusChart extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(
+        borderRadius:
+            BorderRadius.circular(
           AppConstants.cardRadius,
         ),
         border: Border.all(
-          color: theme.dividerColor.withValues(
+          color: theme.dividerColor
+              .withValues(
             alpha: 0.5,
           ),
         ),
@@ -58,18 +75,25 @@ class DailyFocusChart extends StatelessWidget {
             CrossAxisAlignment.start,
         children: [
           Text(
-            'Daily Focus Hours',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
+            localizations.dailyFocusHours,
+            style: theme
+                .textTheme.titleSmall
+                ?.copyWith(
+              color:
+                  colorScheme.onSurface,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(
+            height: 16,
+          ),
           Expanded(
             child: entries.isEmpty
                 ? Center(
                     child: Text(
-                      'No focus data yet',
+                      localizations
+                          .noFocusDataYet,
                       style: theme
                           .textTheme.bodySmall
                           ?.copyWith(
@@ -83,7 +107,8 @@ class DailyFocusChart extends StatelessWidget {
                       minY: 0,
                       maxY: maxY,
                       alignment:
-                          BarChartAlignment.spaceAround,
+                          BarChartAlignment
+                              .spaceAround,
                       gridData:
                           const FlGridData(
                         show: false,
@@ -97,10 +122,12 @@ class DailyFocusChart extends StatelessWidget {
                         enabled: true,
                         touchTooltipData:
                             BarTouchTooltipData(
-                          getTooltipColor: (_) =>
-                              colorScheme
-                                  .inverseSurface,
-                          getTooltipItem: (
+                          getTooltipColor:
+                              (_) =>
+                                  colorScheme
+                                      .inverseSurface,
+                          getTooltipItem:
+                              (
                             group,
                             groupIndex,
                             rod,
@@ -113,7 +140,8 @@ class DailyFocusChart extends StatelessWidget {
                                     .onInverseSurface,
                                 fontSize: 10,
                                 fontWeight:
-                                    FontWeight.w600,
+                                    FontWeight
+                                        .w600,
                               ),
                             );
                           },
@@ -125,37 +153,48 @@ class DailyFocusChart extends StatelessWidget {
                             const AxisTitles(
                           sideTitles:
                               SideTitles(
-                            showTitles: false,
+                            showTitles:
+                                false,
                           ),
                         ),
                         leftTitles:
                             const AxisTitles(
                           sideTitles:
                               SideTitles(
-                            showTitles: false,
+                            showTitles:
+                                false,
                           ),
                         ),
                         rightTitles:
                             const AxisTitles(
                           sideTitles:
                               SideTitles(
-                            showTitles: false,
+                            showTitles:
+                                false,
                           ),
                         ),
                         bottomTitles:
                             AxisTitles(
                           sideTitles:
                               SideTitles(
-                            showTitles: true,
-                            reservedSize: 24,
+                            showTitles:
+                                true,
+                            reservedSize:
+                                24,
                             getTitlesWidget:
-                                (value, meta) {
-                              final index =
-                                  value.toInt();
+                                (
+                              value,
+                              meta,
+                            ) {
+                              final int index =
+                                  value
+                                      .toInt();
 
-                              if (index < 0 ||
+                              if (index <
+                                      0 ||
                                   index >=
-                                      entries.length) {
+                                      entries
+                                          .length) {
                                 return const SizedBox
                                     .shrink();
                               }
@@ -167,13 +206,20 @@ class DailyFocusChart extends StatelessWidget {
                                   top: 7,
                                 ),
                                 child: Text(
-                                  entries[index].key,
-                                  style: TextStyle(
+                                  _localizedDay(
+                                    localizations,
+                                    entries[index]
+                                        .key,
+                                  ),
+                                  style:
+                                      TextStyle(
                                     color: colorScheme
                                         .onSurfaceVariant,
-                                    fontSize: 10,
+                                    fontSize:
+                                        10,
                                     fontWeight:
-                                        FontWeight.w500,
+                                        FontWeight
+                                            .w500,
                                   ),
                                 ),
                               );
@@ -189,7 +235,8 @@ class DailyFocusChart extends StatelessWidget {
                               entries[index];
 
                           final double hours =
-                              item.value / 60;
+                              item.value /
+                                  60;
 
                           final bool
                               isHighlighted =
@@ -201,7 +248,8 @@ class DailyFocusChart extends StatelessWidget {
                             barRods: [
                               BarChartRodData(
                                 toY: hours,
-                                width: 19,
+                                width:
+                                    19,
                                 borderRadius:
                                     const BorderRadius
                                         .vertical(
@@ -213,22 +261,20 @@ class DailyFocusChart extends StatelessWidget {
                                 gradient:
                                     isHighlighted
                                         ? const LinearGradient(
-                                            begin: Alignment
-                                                .bottomCenter,
-                                            end: Alignment
-                                                .topCenter,
+                                            begin:
+                                                Alignment.bottomCenter,
+                                            end:
+                                                Alignment.topCenter,
                                             colors: [
-                                              AppColors
-                                                  .cyan,
-                                              AppColors
-                                                  .primaryLight,
+                                              AppColors.cyan,
+                                              AppColors.primaryLight,
                                             ],
                                           )
                                         : LinearGradient(
-                                            begin: Alignment
-                                                .bottomCenter,
-                                            end: Alignment
-                                                .topCenter,
+                                            begin:
+                                                Alignment.bottomCenter,
+                                            end:
+                                                Alignment.topCenter,
                                             colors: isDark
                                                 ? const [
                                                     Color(
@@ -260,22 +306,56 @@ class DailyFocusChart extends StatelessWidget {
     );
   }
 
+  String _localizedDay(
+    AppLocalizations localizations,
+    String day,
+  ) {
+    switch (day.trim().toLowerCase()) {
+      case 'mon':
+        return localizations.mon;
+
+      case 'tue':
+        return localizations.tue;
+
+      case 'wed':
+        return localizations.wed;
+
+      case 'thu':
+        return localizations.thu;
+
+      case 'fri':
+        return localizations.fri;
+
+      case 'sat':
+        return localizations.sat;
+
+      case 'sun':
+        return localizations.sun;
+
+      default:
+        return day;
+    }
+  }
+
   int _findHighestDayIndex(
-    List<MapEntry<String, double>> entries,
+    List<MapEntry<String, double>>
+        entries,
   ) {
     if (entries.isEmpty) {
       return -1;
     }
 
     int highestIndex = 0;
-    double highestValue = entries.first.value;
+    double highestValue =
+        entries.first.value;
 
     for (int index = 1;
         index < entries.length;
         index++) {
       if (entries[index].value >
           highestValue) {
-        highestValue = entries[index].value;
+        highestValue =
+            entries[index].value;
         highestIndex = index;
       }
     }

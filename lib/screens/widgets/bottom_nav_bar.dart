@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../l10n/app_localizations.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final ValueChanged<int> onTap;
 
   const BottomNavBar({
     super.key,
@@ -13,75 +14,114 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return BottomNavigationBar(
-    //   currentIndex: currentIndex,
-    //   onTap: onTap,
-    //   type: BottomNavigationBarType.fixed,
-    //   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    //   selectedItemColor: Colors.deepPurple,
-    //   unselectedItemColor: Colors.grey,
-    //   items: const [
-    //     BottomNavigationBarItem(
-    //       icon: Icon(Icons.home_outlined),
-    //       activeIcon: Icon(Icons.home),
-    //       label: 'Home',
-    //     ),
-    //     BottomNavigationBarItem(
-    //       icon: Icon(Icons.schedule_outlined),
-    //       activeIcon: Icon(Icons.schedule),
-    //       label: 'Schedule',
-    //     ),
-    //     BottomNavigationBarItem(
-    //       icon: Icon(Icons.bar_chart_outlined),
-    //       activeIcon: Icon(Icons.bar_chart),
-    //       label: 'Stats',
-    //     ),
-    //     BottomNavigationBarItem(
-    //       icon: Icon(Icons.access_time_outlined),
-    //       activeIcon: Icon(Icons.access_time),
-    //       label: 'Clocks',
-    //     ),
-    //     BottomNavigationBarItem(
-    //       icon: Icon(Icons.settings_outlined),
-    //       activeIcon: Icon(Icons.settings),
-    //       label: 'Settings',
-    //     ),
-    //   ],
-    // );
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final bool isDark =
+        theme.brightness ==
+            Brightness.dark;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return BottomNavigationBar(
-  currentIndex: currentIndex,
-  onTap: onTap,
-  type: BottomNavigationBarType.fixed,
-  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-  selectedItemColor: Colors.deepPurple,
-  unselectedItemColor: Colors.grey,
-  items: [
-    BottomNavigationBarItem(
-      icon: const Icon(Icons.home_outlined),
-      activeIcon: const Icon(Icons.home),
-      label: AppLocalizations.of(context)!.home,
-    ),
-    BottomNavigationBarItem(
-      icon: const Icon(Icons.schedule_outlined),
-      activeIcon: const Icon(Icons.schedule),
-      label: AppLocalizations.of(context)!.schedule,
-    ),
-    BottomNavigationBarItem(
-      icon: const Icon(Icons.bar_chart_outlined),
-      activeIcon: const Icon(Icons.bar_chart),
-      label: AppLocalizations.of(context)!.statistics,
-    ),
-    BottomNavigationBarItem(
-      icon: const Icon(Icons.access_time_outlined),
-      activeIcon: const Icon(Icons.access_time),
-      label: AppLocalizations.of(context)!.clocks,
-    ),
-    BottomNavigationBarItem(
-      icon: const Icon(Icons.settings_outlined),
-      activeIcon: const Icon(Icons.settings),
-      label: AppLocalizations.of(context)!.settings,
-    ),
-  ],
-);
+      currentIndex: currentIndex,
+      onTap: onTap,
+      type: BottomNavigationBarType.fixed,
+
+      backgroundColor: isDark
+          ? const Color(0xff0D0E20)
+          : Colors.white,
+
+      selectedItemColor:
+          colorScheme.primary,
+
+      unselectedItemColor:
+          colorScheme.onSurfaceVariant,
+
+      selectedIconTheme: IconThemeData(
+        color: colorScheme.primary,
+        size: 26,
+      ),
+
+      unselectedIconTheme: IconThemeData(
+        color:
+            colorScheme.onSurfaceVariant,
+        size: 24,
+      ),
+
+      selectedLabelStyle:
+          const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+
+      unselectedLabelStyle:
+          const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+      ),
+
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
+
+      elevation: 8,
+
+      items: [
+        BottomNavigationBarItem(
+          icon: const Icon(
+            Icons.home_outlined,
+          ),
+          activeIcon: const Icon(
+            Icons.home,
+          ),
+          label: localizations.home,
+        ),
+
+        BottomNavigationBarItem(
+          icon: const Icon(
+            Icons.schedule_outlined,
+          ),
+          activeIcon: const Icon(
+            Icons.schedule,
+          ),
+          label: localizations.schedule,
+        ),
+
+        BottomNavigationBarItem(
+          icon: const Icon(
+            Icons.bar_chart_outlined,
+          ),
+          activeIcon: const Icon(
+            Icons.bar_chart,
+          ),
+          label:
+              localizations.statistics,
+        ),
+
+        BottomNavigationBarItem(
+          icon: const Icon(
+            Icons.access_time_outlined,
+          ),
+          activeIcon: const Icon(
+            Icons.access_time,
+          ),
+          label: localizations.clocks,
+        ),
+
+        BottomNavigationBarItem(
+          icon: const Icon(
+            Icons.settings_outlined,
+          ),
+          activeIcon: const Icon(
+            Icons.settings,
+          ),
+          label: localizations.settings,
+        ),
+      ],
+    );
   }
 }

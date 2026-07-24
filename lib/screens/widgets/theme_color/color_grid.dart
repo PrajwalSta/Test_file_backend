@@ -18,29 +18,59 @@ class ColorGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        int crossAxisCount = 3;
+      builder: (
+        BuildContext context,
+        BoxConstraints constraints,
+      ) {
+        final double availableWidth =
+            constraints.maxWidth;
 
-        if (constraints.maxWidth < 360) {
+        int crossAxisCount = 3;
+        double childAspectRatio = 0.95;
+
+        if (availableWidth < 280) {
+          crossAxisCount = 1;
+          childAspectRatio = 1.8;
+        } else if (availableWidth < 420) {
           crossAxisCount = 2;
+          childAspectRatio = 1.02;
         }
 
         return GridView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          physics:
+              const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
           itemCount: colors.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate:
+              SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 14,
             mainAxisSpacing: 14,
-            childAspectRatio: 0.95,
+            childAspectRatio:
+                childAspectRatio,
           ),
-          itemBuilder: (context, index) {
+          itemBuilder: (
+            BuildContext context,
+            int index,
+          ) {
+            final ThemeColorModel themeColor =
+                colors[index];
+
+            final bool isSelected =
+                selectedIndex == index;
+
             return ColorCard(
-              color: colors[index],
-              isSelected: selectedIndex == index,
-              onTap: () => onSelected(index),
+              key: ValueKey<String>(
+                '${themeColor.title}-$index',
+              ),
+              color: themeColor,
+              isSelected: isSelected,
+              onTap: () {
+                if (!isSelected) {
+                  onSelected(index);
+                }
+              },
             );
           },
         );

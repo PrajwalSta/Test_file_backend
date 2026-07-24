@@ -1,13 +1,21 @@
+// 
 import 'package:flutter/material.dart';
 
 class ThemeColorModel {
   final String title;
-  final Color color;
+  final String keyName;
+  final Color primaryColor;
+  final Color secondaryColor;
   final List<Color>? gradient;
 
-  ThemeColorModel({
+  const ThemeColorModel({
     required this.title,
-    required this.color,
+    required this.keyName,
+    required this.primaryColor,
+    required this.secondaryColor,
     this.gradient,
   });
+
+  // Keeps existing code compatible.
+  Color get color => primaryColor;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../theme/app_constants.dart';
 import 'custom_switch.dart';
 import 'time_picker_box.dart';
@@ -11,8 +12,11 @@ class DndCard extends StatelessWidget {
   final TimeOfDay startTime;
   final TimeOfDay endTime;
 
-  final ValueChanged<TimeOfDay> onStartTimeChanged;
-  final ValueChanged<TimeOfDay> onEndTimeChanged;
+  final ValueChanged<TimeOfDay>
+      onStartTimeChanged;
+
+  final ValueChanged<TimeOfDay>
+      onEndTimeChanged;
 
   const DndCard({
     super.key,
@@ -27,42 +31,69 @@ class DndCard extends StatelessWidget {
   Future<void> _selectStartTime(
     BuildContext context,
   ) async {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final TimeOfDay? selectedTime =
         await showTimePicker(
       context: context,
       initialTime: startTime,
+      helpText:
+          localizations.selectDndStartTime,
+      cancelText:
+          localizations.cancel,
+      confirmText:
+          localizations.ok,
     );
 
     if (selectedTime == null) {
       return;
     }
 
-    onStartTimeChanged(selectedTime);
+    onStartTimeChanged(
+      selectedTime,
+    );
   }
 
   Future<void> _selectEndTime(
     BuildContext context,
   ) async {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final TimeOfDay? selectedTime =
         await showTimePicker(
       context: context,
       initialTime: endTime,
+      helpText:
+          localizations.selectDndEndTime,
+      cancelText:
+          localizations.cancel,
+      confirmText:
+          localizations.ok,
     );
 
     if (selectedTime == null) {
       return;
     }
 
-    onEndTimeChanged(selectedTime);
+    onEndTimeChanged(
+      selectedTime,
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final ThemeData theme =
         Theme.of(context);
 
     final ColorScheme colorScheme =
         theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     final String formattedStartTime =
         startTime.format(context);
@@ -80,7 +111,8 @@ class DndCard extends StatelessWidget {
         borderRadius:
             BorderRadius.circular(20),
         border: Border.all(
-          color: theme.dividerColor.withValues(
+          color: theme.dividerColor
+              .withValues(
             alpha: 0.4,
           ),
         ),
@@ -93,7 +125,11 @@ class DndCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Do Not Disturb',
+                  localizations
+                      .doNotDisturb,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
                   style: theme
                       .textTheme
                       .titleMedium
@@ -105,6 +141,11 @@ class DndCard extends StatelessWidget {
                   ),
                 ),
               ),
+
+              const SizedBox(
+                width: 12,
+              ),
+
               CustomSwitch(
                 value: enabled,
                 onChanged: onChanged,
@@ -119,23 +160,36 @@ class DndCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: enabled
-                      ? () =>
-                          _selectStartTime(
-                            context,
-                          )
-                      : null,
-                  behavior:
-                      HitTestBehavior.opaque,
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity:
-                          enabled ? 1 : 0.5,
-                      child: TimePickerBox(
-                        title: 'Start',
-                        time:
-                            formattedStartTime,
+                child: Semantics(
+                  button: true,
+                  enabled: enabled,
+                  label:
+                      '${localizations.start}: $formattedStartTime',
+                  child: GestureDetector(
+                    onTap: enabled
+                        ? () {
+                            _selectStartTime(
+                              context,
+                            );
+                          }
+                        : null,
+                    behavior:
+                        HitTestBehavior.opaque,
+                    child: IgnorePointer(
+                      child: AnimatedOpacity(
+                        duration:
+                            const Duration(
+                          milliseconds: 200,
+                        ),
+                        opacity:
+                            enabled ? 1 : 0.5,
+                        child:
+                            TimePickerBox(
+                          title:
+                              localizations.start,
+                          time:
+                              formattedStartTime,
+                        ),
                       ),
                     ),
                   ),
@@ -147,23 +201,36 @@ class DndCard extends StatelessWidget {
               ),
 
               Expanded(
-                child: GestureDetector(
-                  onTap: enabled
-                      ? () =>
-                          _selectEndTime(
-                            context,
-                          )
-                      : null,
-                  behavior:
-                      HitTestBehavior.opaque,
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity:
-                          enabled ? 1 : 0.5,
-                      child: TimePickerBox(
-                        title: 'End',
-                        time:
-                            formattedEndTime,
+                child: Semantics(
+                  button: true,
+                  enabled: enabled,
+                  label:
+                      '${localizations.end}: $formattedEndTime',
+                  child: GestureDetector(
+                    onTap: enabled
+                        ? () {
+                            _selectEndTime(
+                              context,
+                            );
+                          }
+                        : null,
+                    behavior:
+                        HitTestBehavior.opaque,
+                    child: IgnorePointer(
+                      child: AnimatedOpacity(
+                        duration:
+                            const Duration(
+                          milliseconds: 200,
+                        ),
+                        opacity:
+                            enabled ? 1 : 0.5,
+                        child:
+                            TimePickerBox(
+                          title:
+                              localizations.end,
+                          time:
+                              formattedEndTime,
+                        ),
                       ),
                     ),
                   ),

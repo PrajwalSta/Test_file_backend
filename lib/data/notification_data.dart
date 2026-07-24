@@ -6,12 +6,14 @@ import '../screens/theme/app_colors.dart';
 class NotificationData {
   NotificationData._();
 
-  static List<NotificationSetting> channels = [
+  static final List<NotificationSetting> channels =
+      <NotificationSetting>[
     NotificationSetting(
       icon: Icons.notifications_none,
       color: AppColors.primary,
       title: 'Push Notifications',
-      subtitle: 'Real-time alerts on your device',
+      subtitle:
+          'Real-time alerts on your device',
       enabled: true,
     ),
     NotificationSetting(
@@ -23,7 +25,8 @@ class NotificationData {
     ),
   ];
 
-  static List<NotificationSetting> alerts = [
+  static final List<NotificationSetting> alerts =
+      <NotificationSetting>[
     NotificationSetting(
       icon: Icons.schedule,
       color: AppColors.orange,
@@ -54,7 +57,8 @@ class NotificationData {
     ),
   ];
 
-  static List<NotificationSetting> display = [
+  static final List<NotificationSetting> display =
+      <NotificationSetting>[
     NotificationSetting(
       icon: Icons.volume_up_outlined,
       color: AppColors.primary,
@@ -63,7 +67,8 @@ class NotificationData {
       enabled: true,
     ),
     NotificationSetting(
-      icon: Icons.circle_notifications_outlined,
+      icon:
+          Icons.circle_notifications_outlined,
       color: AppColors.pink,
       title: 'App Badges',
       subtitle: 'Unread count on icon',

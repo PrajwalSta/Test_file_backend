@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_constants.dart';
+
 class ScheduleItem extends StatelessWidget {
   final String title;
   final String time;
@@ -14,39 +16,69 @@ class ScheduleItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(
+        bottom: 10,
+      ),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+            BorderRadius.circular(
+          AppConstants.largeRadius,
+        ),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.4),
+          color: theme.dividerColor
+              .withValues(
+            alpha: 0.4,
+          ),
         ),
       ),
       child: Material(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        child: ListTile(
-          leading: Text(
-            emoji,
-            style: const TextStyle(
-              fontSize: 24,
-            ),
+        color: Colors.transparent,
+        borderRadius:
+            BorderRadius.circular(
+          AppConstants.largeRadius,
+        ),
+        child: InkWell(
+          borderRadius:
+              BorderRadius.circular(
+            AppConstants.largeRadius,
           ),
-          title: Text(
-            title,
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
+          onTap: () {},
+          child: ListTile(
+            leading: Text(
+              emoji,
+              style: const TextStyle(
+                fontSize: 24,
+              ),
             ),
-          ),
-          subtitle: Text(
-            time,
-            style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
+            title: Text(
+              title,
+              maxLines: 1,
+              overflow:
+                  TextOverflow.ellipsis,
+              style: TextStyle(
+                color:
+                    colorScheme.onSurface,
+                fontWeight:
+                    FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              time,
+              maxLines: 1,
+              overflow:
+                  TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colorScheme
+                    .onSurfaceVariant,
+              ),
             ),
           ),
         ),

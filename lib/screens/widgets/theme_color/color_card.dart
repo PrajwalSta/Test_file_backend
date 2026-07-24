@@ -16,75 +16,143 @@ class ColorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(
-          vertical: 18,
-          horizontal: 12,
-        ),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isSelected
-                ? colorScheme.primary
-                : theme.dividerColor.withValues(alpha: 0.5),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Color Circle
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color.gradient == null ? color.color : null,
-                gradient: color.gradient == null
-                    ? null
-                    : LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: color.gradient!,
-                      ),
-              ),
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: color.title,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius:
+              BorderRadius.circular(18),
+          child: AnimatedContainer(
+            duration: const Duration(
+              milliseconds: 250,
             ),
-
-            const SizedBox(height: 14),
-
-            // Theme Name
-            Text(
-              color.title,
-              style: TextStyle(
+            curve: Curves.easeInOut,
+            padding:
+                const EdgeInsets.symmetric(
+              vertical: 12,
+              horizontal: 10,
+            ),
+            decoration: BoxDecoration(
+              color: colorScheme
+                  .surfaceContainerHighest,
+              borderRadius:
+                  BorderRadius.circular(18),
+              border: Border.all(
                 color: isSelected
-                    ? colorScheme.onSurface
-                    : colorScheme.onSurfaceVariant,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                    ? color.color
+                    : colorScheme
+                        .outlineVariant
+                        .withValues(
+                          alpha: 0.45,
+                        ),
+                width:
+                    isSelected ? 2.5 : 1,
               ),
             ),
+            child: Column(
+              mainAxisSize:
+                  MainAxisSize.min,
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(
+                    milliseconds: 250,
+                  ),
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        color.gradient == null
+                            ? color.color
+                            : null,
+                    gradient:
+                        color.gradient == null
+                            ? null
+                            : LinearGradient(
+                                begin:
+                                    Alignment.topLeft,
+                                end: Alignment
+                                    .bottomRight,
+                                colors:
+                                    color.gradient!,
+                              ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: color.color
+                                  .withValues(
+                                alpha: 0.30,
+                              ),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(
+                      milliseconds: 200,
+                    ),
+                    child: isSelected
+                        ? const Icon(
+                            Icons.check_rounded,
+                            key:
+                                ValueKey<String>(
+                              'selected',
+                            ),
+                            color: Colors.white,
+                            size: 28,
+                          )
+                        : const SizedBox(
+                            key:
+                                ValueKey<String>(
+                              'not-selected',
+                            ),
+                          ),
+                  ),
+                ),
 
-            const SizedBox(height: 8),
+                const SizedBox(
+                  height: 10,
+                ),
 
-            // Selected Icon
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 250),
-              opacity: isSelected ? 1 : 0,
-              child: Icon(
-                Icons.check_circle_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
+                Flexible(
+                  child: Text(
+                    color.title,
+                    maxLines: 2,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    textAlign:
+                        TextAlign.center,
+                    style: TextStyle(
+                      color: isSelected
+                          ? colorScheme
+                              .onSurface
+                          : colorScheme
+                              .onSurfaceVariant,
+                      fontSize: 14,
+                      fontWeight:
+                          isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

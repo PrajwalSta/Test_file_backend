@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class LanguageAppBar extends StatelessWidget {
-  const LanguageAppBar({super.key});
+  final String title;
+
+  const LanguageAppBar({
+    super.key,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,7 @@ class LanguageAppBar extends StatelessWidget {
         const SizedBox(width: 14),
 
         Text(
-          "Language",
+          title,
           style: theme.textTheme.headlineSmall?.copyWith(
             color: colorScheme.onSurface,
             fontSize: 24,

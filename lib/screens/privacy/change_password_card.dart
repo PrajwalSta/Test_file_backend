@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/validators.dart';
 import '../widgets/privacy/common/custom_card.dart';
 import '../widgets/privacy/common/custom_text_field.dart';
@@ -41,8 +42,11 @@ class _ChangePasswordCardState
   bool _expanded = false;
   bool _loading = false;
 
-  String _strengthText = '';
-  Color _strengthColor = Colors.transparent;
+  PasswordStrength _passwordStrength =
+      PasswordStrength.none;
+
+  AppLocalizations get _localizations =>
+      AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -94,21 +98,57 @@ class _ChangePasswordCardState
       return;
     }
 
+    PasswordStrength strength;
+
+    if (password.isEmpty) {
+      strength = PasswordStrength.none;
+    } else if (password.length < 6) {
+      strength = PasswordStrength.weak;
+    } else if (password.length < 10) {
+      strength = PasswordStrength.medium;
+    } else {
+      strength = PasswordStrength.strong;
+    }
+
+    if (_passwordStrength == strength) {
+      return;
+    }
+
     setState(() {
-      if (password.isEmpty) {
-        _strengthText = '';
-        _strengthColor = Colors.transparent;
-      } else if (password.length < 6) {
-        _strengthText = 'Weak Password';
-        _strengthColor = Colors.red;
-      } else if (password.length < 10) {
-        _strengthText = 'Medium Password';
-        _strengthColor = Colors.orange;
-      } else {
-        _strengthText = 'Strong Password';
-        _strengthColor = Colors.green;
-      }
+      _passwordStrength = strength;
     });
+  }
+
+  String get _strengthText {
+    switch (_passwordStrength) {
+      case PasswordStrength.weak:
+        return _localizations.weakPassword;
+
+      case PasswordStrength.medium:
+        return _localizations.mediumPassword;
+
+      case PasswordStrength.strong:
+        return _localizations.strongPassword;
+
+      case PasswordStrength.none:
+        return '';
+    }
+  }
+
+  Color get _strengthColor {
+    switch (_passwordStrength) {
+      case PasswordStrength.weak:
+        return Colors.red;
+
+      case PasswordStrength.medium:
+        return Colors.orange;
+
+      case PasswordStrength.strong:
+        return Colors.green;
+
+      case PasswordStrength.none:
+        return Colors.transparent;
+    }
   }
 
   Future<void> _updatePassword() async {
@@ -123,13 +163,11 @@ class _ChangePasswordCardState
     }
 
     if (widget.onUpdatePassword == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Password update service is not connected.',
-          ),
-        ),
+      _showMessage(
+        _localizations
+            .passwordUpdateServiceNotConnected,
       );
+
       return;
     }
 
@@ -147,12 +185,9 @@ class _ChangePasswordCardState
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Password updated successfully',
-          ),
-        ),
+      _showMessage(
+        _localizations
+            .passwordUpdatedSuccessfully,
       );
 
       _currentController.clear();
@@ -161,8 +196,8 @@ class _ChangePasswordCardState
 
       setState(() {
         _expanded = false;
-        _strengthText = '';
-        _strengthColor = Colors.transparent;
+        _passwordStrength =
+            PasswordStrength.none;
       });
 
       _arrowController.reverse();
@@ -176,12 +211,14 @@ class _ChangePasswordCardState
           .replaceFirst(
             'Exception: ',
             '',
-          );
+          )
+          .trim();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-        ),
+      _showMessage(
+        message.isEmpty
+            ? _localizations
+                .unableToUpdatePassword
+            : message,
       );
     } finally {
       if (mounted) {
@@ -192,19 +229,54 @@ class _ChangePasswordCardState
     }
   }
 
+  void _showMessage(
+    String message,
+  ) {
+    if (!mounted) {
+      return;
+    }
+
+    final ScaffoldMessengerState messenger =
+        ScaffoldMessenger.of(context);
+
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+        ),
+        behavior:
+            SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedSize(
-      duration: const Duration(
-        milliseconds: 250,
-      ),
-      curve: Curves.easeInOut,
-      child: CustomCard(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            _buildExpandedForm(),
-          ],
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    return Semantics(
+      container: true,
+      label: localizations.changePassword,
+      child: AnimatedSize(
+        duration: const Duration(
+          milliseconds: 250,
+        ),
+        curve: Curves.easeInOut,
+        child: CustomCard(
+          child: Column(
+            children: [
+              _buildHeader(
+                context,
+                localizations,
+              ),
+              _buildExpandedForm(
+                localizations,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -212,6 +284,7 @@ class _ChangePasswordCardState
 
   Widget _buildHeader(
     BuildContext context,
+    AppLocalizations localizations,
   ) {
     final ThemeData theme =
         Theme.of(context);
@@ -219,71 +292,89 @@ class _ChangePasswordCardState
     final ColorScheme colorScheme =
         theme.colorScheme;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: _loading ? null : _toggleCard,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 4,
-        ),
-        child: Row(
-          children: [
-            _buildIconBox(context),
+    return Semantics(
+      button: true,
+      expanded: _expanded,
+      child: InkWell(
+        borderRadius:
+            BorderRadius.circular(14),
+        onTap: _loading
+            ? null
+            : _toggleCard,
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(
+            vertical: 4,
+          ),
+          child: Row(
+            children: [
+              _buildIconBox(context),
 
-            const SizedBox(width: 14),
+              const SizedBox(
+                width: 14,
+              ),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Change Password',
-                    style: theme
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(
-                      color:
-                          colorScheme.onSurface,
-                      fontWeight:
-                          FontWeight.w700,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localizations
+                          .changePassword,
+                      style: theme
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(
+                        color:
+                            colorScheme.onSurface,
+                        fontWeight:
+                            FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Update your login password',
-                    style: theme
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(
-                      color: colorScheme
-                          .onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            RotationTransition(
-              turns: Tween<double>(
-                begin: 0,
-                end: 0.5,
-              ).animate(
-                _arrowController,
+                    const SizedBox(
+                      height: 4,
+                    ),
+
+                    Text(
+                      localizations
+                          .updateLoginPassword,
+                      style: theme
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                        color: colorScheme
+                            .onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Icon(
-                Icons.keyboard_arrow_down,
-                color: colorScheme
-                    .onSurfaceVariant,
+
+              RotationTransition(
+                turns: Tween<double>(
+                  begin: 0,
+                  end: 0.5,
+                ).animate(
+                  _arrowController,
+                ),
+                child: Icon(
+                  Icons.keyboard_arrow_down,
+                  color: colorScheme
+                      .onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildExpandedForm() {
+  Widget _buildExpandedForm(
+    AppLocalizations localizations,
+  ) {
     return AnimatedCrossFade(
       duration: const Duration(
         milliseconds: 250,
@@ -291,7 +382,8 @@ class _ChangePasswordCardState
       crossFadeState: _expanded
           ? CrossFadeState.showSecond
           : CrossFadeState.showFirst,
-      firstChild: const SizedBox.shrink(),
+      firstChild:
+          const SizedBox.shrink(),
       secondChild: Padding(
         padding: const EdgeInsets.only(
           top: 20,
@@ -303,12 +395,14 @@ class _ChangePasswordCardState
               CustomTextField(
                 controller:
                     _currentController,
-                hintText:
-                    'Current Password',
+                hintText: localizations
+                    .currentPassword,
                 prefixIcon:
                     Icons.lock_outline,
                 isPassword: true,
-                validator: (value) {
+                validator: (
+                  String? value,
+                ) {
                   return Validators
                       .validatePassword(
                     value ?? '',
@@ -316,15 +410,21 @@ class _ChangePasswordCardState
                 },
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               CustomTextField(
-                controller: _newController,
-                hintText: 'New Password',
+                controller:
+                    _newController,
+                hintText:
+                    localizations.newPassword,
                 prefixIcon:
                     Icons.lock_reset,
                 isPassword: true,
-                validator: (value) {
+                validator: (
+                  String? value,
+                ) {
                   return Validators
                       .validatePassword(
                     value ?? '',
@@ -332,23 +432,29 @@ class _ChangePasswordCardState
                 },
               ),
 
-              if (_strengthText.isNotEmpty)
-                ...[
-                  const SizedBox(height: 8),
-                  _buildStrengthMessage(),
-                ],
+              if (_passwordStrength !=
+                  PasswordStrength.none) ...[
+                const SizedBox(
+                  height: 8,
+                ),
+                _buildStrengthMessage(),
+              ],
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               CustomTextField(
                 controller:
                     _confirmController,
-                hintText:
-                    'Confirm Password',
+                hintText: localizations
+                    .confirmPassword,
                 prefixIcon: Icons
                     .lock_person_outlined,
                 isPassword: true,
-                validator: (value) {
+                validator: (
+                  String? value,
+                ) {
                   return Validators
                       .validateConfirmPassword(
                     _newController.text,
@@ -357,10 +463,13 @@ class _ChangePasswordCardState
                 },
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(
+                height: 24,
+              ),
 
               PrimaryButton(
-                title: 'Update Password',
+                title: localizations
+                    .updatePassword,
                 icon: Icons
                     .check_circle_outline,
                 loading: _loading,
@@ -380,23 +489,32 @@ class _ChangePasswordCardState
   Widget _buildStrengthMessage() {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Row(
-        children: [
-          Icon(
-            Icons.shield,
-            color: _strengthColor,
-            size: 16,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            _strengthText,
-            style: TextStyle(
+      child: Semantics(
+        label: _strengthText,
+        child: Row(
+          children: [
+            Icon(
+              Icons.shield,
               color: _strengthColor,
-              fontWeight:
-                  FontWeight.w600,
+              size: 16,
             ),
-          ),
-        ],
+
+            const SizedBox(
+              width: 6,
+            ),
+
+            Flexible(
+              child: Text(
+                _strengthText,
+                style: TextStyle(
+                  color: _strengthColor,
+                  fontWeight:
+                      FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -412,7 +530,9 @@ class _ChangePasswordCardState
       width: 42,
       decoration: BoxDecoration(
         color: colorScheme.secondary
-            .withValues(alpha: 0.15),
+            .withValues(
+          alpha: 0.15,
+        ),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -421,4 +541,11 @@ class _ChangePasswordCardState
       ),
     );
   }
+}
+
+enum PasswordStrength {
+  none,
+  weak,
+  medium,
+  strong,
 }

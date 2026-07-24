@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../models/activity_model.dart';
 import '../../../services/profile/activity_service.dart';
 import 'activity_tile.dart';
@@ -20,9 +21,10 @@ class _RecentActivityState
       ActivityService();
 
   bool _isLoading = true;
-  String? _errorMessage;
+  bool _hasLoadError = false;
 
-  List<ActivityModel> _activities = [];
+  List<Map<String, dynamic>>
+      _activityRows = [];
 
   @override
   void initState() {
@@ -36,7 +38,7 @@ class _RecentActivityState
       if (mounted) {
         setState(() {
           _isLoading = true;
-          _errorMessage = null;
+          _hasLoadError = false;
         });
       }
 
@@ -45,53 +47,14 @@ class _RecentActivityState
           await _activityService
               .getRecentActivities();
 
-      final List<ActivityModel>
-          loadedActivities =
-          activityRows.map(
-        (Map<String, dynamic> activity) {
-          final String activityType =
-              activity['activity_type']
-                      ?.toString() ??
-                  '';
-
-          final String? createdAtValue =
-              activity['created_at']
-                  ?.toString();
-
-          final DateTime? createdAt =
-              createdAtValue == null
-                  ? null
-                  : DateTime.tryParse(
-                      createdAtValue,
-                    )?.toLocal();
-
-          return ActivityModel(
-            emoji:
-                activity['icon']
-                        ?.toString() ??
-                    _getActivityEmoji(
-                      activityType,
-                    ),
-            title:
-                activity['title']
-                        ?.toString() ??
-                    'Activity',
-            time:
-                _formatActivityTime(
-              createdAt,
-            ),
-          );
-        },
-      ).toList();
-
       if (!mounted) {
         return;
       }
 
       setState(() {
-        _activities =
-            loadedActivities;
+        _activityRows = activityRows;
         _isLoading = false;
+        _hasLoadError = false;
       });
     } catch (error) {
       debugPrint(
@@ -105,10 +68,57 @@ class _RecentActivityState
 
       setState(() {
         _isLoading = false;
-        _errorMessage =
-            'Unable to load recent activity';
+        _hasLoadError = true;
       });
     }
+  }
+
+  List<ActivityModel> _buildLocalizedActivities(
+    AppLocalizations localizations,
+  ) {
+    return _activityRows.map(
+      (Map<String, dynamic> activity) {
+        final String activityType =
+            activity['activity_type']
+                    ?.toString() ??
+                '';
+
+        final String rawTitle =
+            activity['title']
+                    ?.toString()
+                    .trim() ??
+                '';
+
+        final String? createdAtValue =
+            activity['created_at']
+                ?.toString();
+
+        final DateTime? createdAt =
+            createdAtValue == null
+                ? null
+                : DateTime.tryParse(
+                    createdAtValue,
+                  )?.toLocal();
+
+        return ActivityModel(
+          emoji:
+              activity['icon']
+                      ?.toString() ??
+                  _getActivityEmoji(
+                    activityType,
+                  ),
+          title: _getLocalizedActivityTitle(
+            localizations,
+            activityType,
+            rawTitle,
+          ),
+          time: _formatActivityTime(
+            localizations,
+            createdAt,
+          ),
+        );
+      },
+    ).toList();
   }
 
   String _getActivityEmoji(
@@ -144,7 +154,45 @@ class _RecentActivityState
     }
   }
 
+  String _getLocalizedActivityTitle(
+    AppLocalizations localizations,
+    String activityType,
+    String rawTitle,
+  ) {
+    switch (activityType) {
+      case 'schedule_added':
+        return localizations.scheduleAddedActivity;
+
+      case 'schedule_completed':
+        return localizations.scheduleCompletedActivity;
+
+      case 'schedule_deleted':
+        return localizations.scheduleDeletedActivity;
+
+      case 'focus_completed':
+        return localizations.focusCompletedActivity;
+
+      case 'badge_unlocked':
+        return localizations.badgeUnlockedActivity;
+
+      case 'membership_changed':
+        return localizations.membershipChangedActivity;
+
+      case 'level_up':
+        return localizations.levelUpActivity;
+
+      case 'streak_updated':
+        return localizations.streakUpdatedActivity;
+
+      default:
+        return rawTitle.isNotEmpty
+            ? rawTitle
+            : localizations.activity;
+    }
+  }
+
   String _formatActivityTime(
+    AppLocalizations localizations,
     DateTime? createdAt,
   ) {
     if (createdAt == null) {
@@ -159,24 +207,31 @@ class _RecentActivityState
       createdAt,
     );
 
-    if (difference.inSeconds < 60) {
-      return 'Just now';
+    if (difference.isNegative ||
+        difference.inSeconds < 60) {
+      return localizations.justNow;
     }
 
     if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return localizations.minutesAgo(
+        difference.inMinutes,
+      );
     }
 
     if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return localizations.hoursAgo(
+        difference.inHours,
+      );
     }
 
     if (difference.inDays == 1) {
-      return 'Yesterday';
+      return localizations.yesterday;
     }
 
     if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return localizations.daysAgo(
+        difference.inDays,
+      );
     }
 
     return '${createdAt.day.toString().padLeft(2, '0')}/'
@@ -186,8 +241,16 @@ class _RecentActivityState
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final ColorScheme colorScheme =
         Theme.of(context).colorScheme;
+
+    final List<ActivityModel> activities =
+        _buildLocalizedActivities(
+      localizations,
+    );
 
     return SizedBox(
       width: double.infinity,
@@ -197,25 +260,27 @@ class _RecentActivityState
         children: [
           Row(
             children: [
-              Text(
-                'RECENT ACTIVITY',
-                style: TextStyle(
-                  color: colorScheme
-                      .onSurfaceVariant,
-                  fontWeight:
-                      FontWeight.bold,
+              Expanded(
+                child: Text(
+                  localizations
+                      .recentActivity
+                      .toUpperCase(),
+                  style: TextStyle(
+                    color: colorScheme
+                        .onSurfaceVariant,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
                 ),
               ),
-              const Spacer(),
               IconButton(
                 onPressed:
                     _isLoading
                         ? null
                         : _loadActivities,
-                tooltip:
-                    'Refresh activity',
-                icon:
-                    const Icon(
+                tooltip: localizations
+                    .refreshActivity,
+                icon: const Icon(
                   Icons.refresh,
                 ),
               ),
@@ -234,12 +299,17 @@ class _RecentActivityState
                     CircularProgressIndicator(),
               ),
             )
-          else if (_errorMessage != null)
+          else if (_hasLoadError)
             Center(
               child: Column(
+                mainAxisSize:
+                    MainAxisSize.min,
                 children: [
                   Text(
-                    _errorMessage!,
+                    localizations
+                        .unableToLoadRecentActivity,
+                    textAlign:
+                        TextAlign.center,
                     style: TextStyle(
                       color:
                           colorScheme.error,
@@ -251,19 +321,18 @@ class _RecentActivityState
                   TextButton.icon(
                     onPressed:
                         _loadActivities,
-                    icon:
-                        const Icon(
+                    icon: const Icon(
                       Icons.refresh,
                     ),
-                    label:
-                        const Text(
-                      'Try again',
+                    label: Text(
+                      localizations
+                          .tryAgain,
                     ),
                   ),
                 ],
               ),
             )
-          else if (_activities.isEmpty)
+          else if (activities.isEmpty)
             Container(
               width: double.infinity,
               padding:
@@ -282,7 +351,8 @@ class _RecentActivityState
                 ),
               ),
               child: Text(
-                'No recent activity yet.',
+                localizations
+                    .noRecentActivity,
                 textAlign:
                     TextAlign.center,
                 style: TextStyle(
@@ -297,7 +367,7 @@ class _RecentActivityState
               physics:
                   const NeverScrollableScrollPhysics(),
               itemCount:
-                  _activities.length,
+                  activities.length,
               separatorBuilder: (
                 BuildContext context,
                 int index,
@@ -312,7 +382,7 @@ class _RecentActivityState
               ) {
                 return ActivityTile(
                   activity:
-                      _activities[index],
+                      activities[index],
                 );
               },
             ),

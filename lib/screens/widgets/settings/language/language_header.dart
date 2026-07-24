@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 
 class LanguageHeader extends StatelessWidget {
-  const LanguageHeader({super.key});
+  final String subtitle;
+
+  const LanguageHeader({
+    super.key,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Text(
-      "Select your preferred display language.",
+      subtitle,
       style: TextStyle(
         color: colorScheme.onSurfaceVariant,
         fontSize: 12,

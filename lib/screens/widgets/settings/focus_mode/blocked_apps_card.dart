@@ -5,7 +5,10 @@ import 'blocked_app_tile.dart';
 
 class BlockedAppsCard extends StatelessWidget {
   final List<BlockedAppModel> apps;
-  final Function(int index, bool value) onChanged;
+  final void Function(
+    int index,
+    bool value,
+  ) onChanged;
 
   const BlockedAppsCard({
     super.key,
@@ -15,29 +18,56 @@ class BlockedAppsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final ThemeData theme =
+        Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.4),
+    if (apps.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: Container(
+        width: double.infinity,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius:
+              BorderRadius.circular(20),
+          border: Border.all(
+            color: theme.dividerColor
+                .withValues(
+              alpha: 0.4,
+            ),
+          ),
         ),
-      ),
-      child: Column(
-        children: List.generate(
-          apps.length,
-          (index) {
-            return BlockedAppTile(
-              app: apps[index],
-              showDivider: index != apps.length - 1,
-              onChanged: (value) {
-                onChanged(index, value);
-              },
-            );
-          },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: List<Widget>.generate(
+            apps.length,
+            (int index) {
+              final BlockedAppModel app =
+                  apps[index];
+
+              return BlockedAppTile(
+                key: ValueKey<String>(
+                  app.name,
+                ),
+                app: app,
+                showDivider:
+                    index != apps.length - 1,
+                onChanged: (
+                  bool value,
+                ) {
+                  onChanged(
+                    index,
+                    value,
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

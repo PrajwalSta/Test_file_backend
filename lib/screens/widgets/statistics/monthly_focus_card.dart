@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_constants.dart';
 import 'monthly_focus_chart.dart';
 
@@ -13,8 +14,14 @@ class MonthlyFocusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Container(
       height: 145,
@@ -36,16 +43,20 @@ class MonthlyFocusCard extends StatelessWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
-            'Monthly Focus',
-            style: theme.textTheme.titleSmall?.copyWith(
+            localizations.monthlyFocus,
+            style:
+                theme.textTheme.titleSmall?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(
+            height: 9,
+          ),
           Expanded(
             child: MonthlyFocusChart(
               monthlyData: monthlyData,

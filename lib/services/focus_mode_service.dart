@@ -15,7 +15,6 @@ class FocusModeService {
         'User must be logged in.',
       );
     }
-
     return user.id;
   }
 

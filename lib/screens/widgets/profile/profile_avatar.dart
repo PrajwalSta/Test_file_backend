@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 class ProfileAvatar extends StatelessWidget {
   final String fullName;
   final String bio;
@@ -21,6 +23,9 @@ class ProfileAvatar extends StatelessWidget {
     final ThemeData theme =
         Theme.of(context);
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final bool hasAvatar =
         avatarUrl != null &&
         avatarUrl!.trim().isNotEmpty;
@@ -28,12 +33,12 @@ class ProfileAvatar extends StatelessWidget {
     final String displayName =
         fullName.trim().isNotEmpty
             ? fullName.trim()
-            : 'Project User';
+            : localizations.projectUser;
 
     final String displayBio =
         bio.trim().isNotEmpty
             ? bio.trim()
-            : 'Focused on building better habits ✨';
+            : localizations.defaultBio;
 
     return Center(
       child: Column(
@@ -42,7 +47,8 @@ class ProfileAvatar extends StatelessWidget {
             width: 104,
             height: 104,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
+              borderRadius:
+                  BorderRadius.circular(28),
               border: Border.all(
                 color:
                     theme.colorScheme.primary,
@@ -50,7 +56,8 @@ class ProfileAvatar extends StatelessWidget {
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(26),
+              borderRadius:
+                  BorderRadius.circular(26),
               child: hasAvatar
                   ? Image.network(
                       avatarUrl!,
@@ -70,26 +77,38 @@ class ProfileAvatar extends StatelessWidget {
                     ),
             ),
           ),
+
           const SizedBox(height: 18),
+
           Text(
             displayName,
             textAlign: TextAlign.center,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+            style: theme
+                .textTheme.headlineSmall
+                ?.copyWith(
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 6),
+
           Text(
             displayBio,
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color:
-                  theme.colorScheme.onSurfaceVariant,
+            style: theme
+                .textTheme.bodyMedium
+                ?.copyWith(
+              color: theme.colorScheme
+                  .onSurfaceVariant,
             ),
           ),
+
           const SizedBox(height: 14),
+
           Container(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 8,
             ),
@@ -97,15 +116,17 @@ class ProfileAvatar extends StatelessWidget {
               color: Colors.amber.withValues(
                 alpha: 0.18,
               ),
-              borderRadius: BorderRadius.circular(
+              borderRadius:
+                  BorderRadius.circular(
                 30,
               ),
             ),
             child: Text(
-              '🏆 $membership Member • Level $level',
+              '🏆 $membership ${localizations.member} • ${localizations.level} $level',
               style: const TextStyle(
                 color: Colors.amber,
-                fontWeight: FontWeight.bold,
+                fontWeight:
+                    FontWeight.bold,
               ),
             ),
           ),
@@ -118,12 +139,13 @@ class ProfileAvatar extends StatelessWidget {
     ThemeData theme,
   ) {
     return Container(
-      color: theme.colorScheme.primaryContainer,
+      color: theme
+          .colorScheme.primaryContainer,
       child: Icon(
         Icons.person,
         size: 52,
-        color:
-            theme.colorScheme.onPrimaryContainer,
+        color: theme.colorScheme
+            .onPrimaryContainer,
       ),
     );
   }

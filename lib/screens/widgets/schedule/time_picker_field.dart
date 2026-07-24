@@ -14,23 +14,13 @@ class TimePickerField extends StatelessWidget {
     required this.onTap,
   });
 
-  String _formatTime(TimeOfDay time) {
-    final int hour =
-        time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-
-    final String minute =
-        time.minute.toString().padLeft(2, '0');
-
-    final String period =
-        time.period == DayPeriod.am ? 'AM' : 'PM';
-
-    return '${hour.toString().padLeft(2, '0')}:$minute $period';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme =
+        Theme.of(context);
+
     final bool isDarkMode =
-        Theme.of(context).brightness == Brightness.dark;
+        theme.brightness == Brightness.dark;
 
     final Color fillColor = isDarkMode
         ? AppColors.scheduleInputDark
@@ -48,6 +38,16 @@ class TimePickerField extends StatelessWidget {
         ? AppColors.textSecondaryDark
         : AppColors.textSecondaryLight;
 
+    final String formattedTime =
+        MaterialLocalizations.of(context)
+            .formatTimeOfDay(
+      selectedTime,
+      alwaysUse24HourFormat:
+          MediaQuery.alwaysUse24HourFormatOf(
+        context,
+      ),
+    );
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -56,13 +56,15 @@ class TimePickerField extends StatelessWidget {
           AppConstants.scheduleInputRadius,
         ),
         child: Container(
-          height: AppConstants.scheduleInputHeight,
+          height:
+              AppConstants.scheduleInputHeight,
           padding: const EdgeInsets.symmetric(
             horizontal: 14,
           ),
           decoration: BoxDecoration(
             color: fillColor,
-            borderRadius: BorderRadius.circular(
+            borderRadius:
+                BorderRadius.circular(
               AppConstants.scheduleInputRadius,
             ),
             border: Border.all(
@@ -73,14 +75,18 @@ class TimePickerField extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  _formatTime(selectedTime),
+                  formattedTime,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
                   style: textStyle,
                 ),
               ),
               Icon(
                 Icons.schedule_rounded,
                 color: iconColor,
-                size: AppConstants.smallIconSize,
+                size:
+                    AppConstants.smallIconSize,
               ),
             ],
           ),

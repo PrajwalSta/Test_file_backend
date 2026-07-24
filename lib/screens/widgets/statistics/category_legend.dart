@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
 class CategoryLegend extends StatelessWidget {
@@ -10,45 +11,95 @@ class CategoryLegend extends StatelessWidget {
     required this.categoryData,
   });
 
+  String _localizedCategory(
+    AppLocalizations localizations,
+    String category,
+  ) {
+    switch (category.trim().toLowerCase()) {
+      case 'work':
+        return localizations.work;
+
+      case 'study':
+        return localizations.study;
+
+      case 'health':
+        return localizations.health;
+
+      case 'personal':
+        return localizations.personal;
+
+      case 'social':
+        return localizations.social;
+
+      case 'exercise':
+        return localizations.exercise;
+
+      default:
+        return category;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
-    final entries = categoryData.entries
-        .where((entry) => entry.value > 0)
-        .toList();
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final List<MapEntry<String, double>> entries =
+        categoryData.entries
+            .where(
+              (MapEntry<String, double> entry) =>
+                  entry.value > 0,
+            )
+            .toList();
 
     if (entries.isEmpty) {
       return Center(
         child: Text(
-          'No data',
+          localizations.noData,
           style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
+            color:
+                colorScheme.onSurfaceVariant,
             fontSize: 11,
           ),
         ),
       );
     }
 
-    final double total = entries.fold(
+    final double total =
+        entries.fold<double>(
       0,
-      (sum, entry) => sum + entry.value,
+      (
+        double sum,
+        MapEntry<String, double> entry,
+      ) {
+        return sum + entry.value;
+      },
     );
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment:
+          MainAxisAlignment.center,
       children: List.generate(
         entries.length,
-        (index) {
-          final entry = entries[index];
+        (int index) {
+          final MapEntry<String, double> entry =
+              entries[index];
 
-          final percentage = total == 0
-              ? 0
-              : ((entry.value / total) * 100).round();
+          final int percentage =
+              total == 0
+                  ? 0
+                  : ((entry.value / total) * 100)
+                      .round();
 
           return Padding(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               vertical: 3,
             ),
             child: Row(
@@ -65,24 +116,35 @@ class CategoryLegend extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(
+                  width: 6,
+                ),
                 Expanded(
                   child: Text(
-                    entry.key,
-                    overflow: TextOverflow.ellipsis,
+                    _localizedCategory(
+                      localizations,
+                      entry.key,
+                    ),
+                    overflow:
+                        TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
+                      color: colorScheme
+                          .onSurfaceVariant,
                       fontSize: 9,
                     ),
                   ),
                 ),
-                const SizedBox(width: 5),
+                const SizedBox(
+                  width: 5,
+                ),
                 Text(
                   '$percentage%',
                   style: TextStyle(
-                    color: colorScheme.onSurface,
+                    color:
+                        colorScheme.onSurface,
                     fontSize: 9,
-                    fontWeight: FontWeight.w600,
+                    fontWeight:
+                        FontWeight.w600,
                   ),
                 ),
               ],
@@ -98,24 +160,28 @@ class CategoryLegend extends StatelessWidget {
     int index,
     ThemeData theme,
   ) {
-    switch (category.toLowerCase()) {
+    switch (category.trim().toLowerCase()) {
       case 'work':
-        return AppColors.primaryLight;
+        return AppColors.scheduleWork;
 
       case 'study':
-        return AppColors.cyan;
+        return AppColors.scheduleStudy;
 
       case 'health':
-        return Colors.green;
+        return AppColors.scheduleHealth;
 
       case 'personal':
-        return Colors.orange;
+        return AppColors.schedulePersonal;
+
+      case 'social':
+        return AppColors.scheduleSocial;
 
       case 'exercise':
         return Colors.redAccent;
 
       default:
-        final colors = [
+        final List<Color> colors =
+            <Color>[
           theme.colorScheme.primary,
           theme.colorScheme.secondary,
           theme.colorScheme.tertiary,
@@ -124,7 +190,8 @@ class CategoryLegend extends StatelessWidget {
           Colors.teal,
         ];
 
-        return colors[index % colors.length];
+        return colors[
+            index % colors.length];
     }
   }
 }

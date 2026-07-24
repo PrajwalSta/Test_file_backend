@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-class SleepSaveButton
-    extends StatelessWidget {
+import '../../../../l10n/app_localizations.dart';
+
+class SleepSaveButton extends StatelessWidget {
   final bool isSaving;
   final VoidCallback onPressed;
 
@@ -13,6 +14,9 @@ class SleepSaveButton
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return SizedBox(
       width: double.infinity,
       height: 52,
@@ -33,8 +37,8 @@ class SleepSaveButton
               ),
         label: Text(
           isSaving
-              ? 'Saving...'
-              : 'Save Settings',
+              ? localizations.saving
+              : localizations.saveSettings,
         ),
       ),
     );

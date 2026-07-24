@@ -2,36 +2,30 @@
   "@@locale": "ne",
 
   "appName": "फोकस ग्लो",
-  "@appName": {},
+  "@appName": {
+    "description": "Application name"
+  },
 
   "home": "गृह",
   "schedule": "तालिका",
-  "@schedule": {},
   "statistics": "तथ्याङ्क",
-  "@statistics": {},
   "clocks": "घडीहरू",
-  "@clocks": {},
   "settings": "सेटिङ",
-  "@settings": {},
 
   "notifications": "सूचनाहरू",
-  "@notifications": {},
   "themeColor": "थिम रङ",
-  "@themeColor": {},
   "language": "भाषा",
-  "@language": {},
   "profile": "प्रोफाइल",
   "privacyAndSecurity": "गोपनीयता र सुरक्षा",
   "focusAndDnd": "फोकस र डु नट डिस्टर्ब",
-  "@focusAndDnd": {},
   "sleepMode": "निद्रा मोड",
 
   "save": "सेभ गर्नुहोस्",
-  "@save": {},
   "cancel": "रद्द गर्नुहोस्",
   "delete": "मेटाउनुहोस्",
   "add": "थप्नुहोस्",
   "tryAgain": "फेरि प्रयास गर्नुहोस्",
+  "close": "बन्द गर्नुहोस्",
 
   "english": "अङ्ग्रेजी",
   "nepali": "नेपाली",
@@ -42,9 +36,65 @@
   "goodMorning": "शुभ प्रभात",
   "goodAfternoon": "शुभ दिउँसो",
   "goodEvening": "शुभ साँझ",
-  "project": "परियोजना",
 
+  "project": "परियोजना",
   "todaysProgress": "आजको प्रगति",
+  "todaysSchedule": "आजको तालिका",
+
+  "today": "आज",
+  "tomorrow": "भोलि",
+
+  "monday": "सोमबार",
+  "tuesday": "मङ्गलबार",
+  "wednesday": "बुधबार",
+  "thursday": "बिहीबार",
+  "friday": "शुक्रबार",
+  "saturday": "शनिबार",
+  "sunday": "आइतबार",
+
+  "totalFocusTime": "कुल फोकस समय",
+  "focusTime": "फोकस समय",
+  "focusHours": "फोकस घण्टा",
+  "tasksDone": "सम्पन्न कार्यहरू",
+  "totalTasks": "कुल कार्यहरू",
+  "completed": "सम्पन्न",
+  "completedTasksTitle": "सम्पन्न कार्यहरू",
+  "completionRate": "सम्पन्न दर",
+  "dailyFocusHours": "दैनिक फोकस घण्टा",
+  "byCategory": "श्रेणीअनुसार",
+  "monthlyFocus": "मासिक फोकस",
+  "productivityInsights": "तपाईंको उत्पादकता विवरण",
+
+  "profileSection": "प्रोफाइल",
+  "preferencesSection": "प्राथमिकताहरू",
+  "focusModesSection": "फोकस मोडहरू",
+
+  "profileSubtitle": "नाम, फोटो र परिचय",
+  "privacySubtitle": "पासवर्ड, 2FA र बायोमेट्रिक्स",
+
+  "darkMode": "डार्क मोड",
+  "darkModeOn": "चालु — डार्क इन्टरफेस",
+  "darkModeOff": "बन्द — लाइट इन्टरफेस",
+
+  "notificationsSubtitle": "पुश, इमेल र रिमाइन्डर",
+  "themeColorSubtitle": "एपको रङ योजना परिवर्तन गर्नुहोस्",
+
+  "focusMode": "फोकस मोड",
+  "focusModeSubtitle": "ब्लक गरिएका एप र विश्राम अन्तराल",
+
+  "sleepModeSubtitle": "सुत्ने र उठ्ने समय",
+
+  "doNotDisturb": "डु नट डिस्टर्ब",
+  "loadingSettings": "सेटिङ लोड हुँदैछ...",
+
+  "on": "चालु",
+  "off": "बन्द",
+
+  "am": "बिहान",
+  "pm": "साँझ",
+
+  "dndEnabled": "डु नट डिस्टर्ब चालु गरियो",
+  "dndDisabled": "डु नट डिस्टर्ब बन्द गरियो",
 
   "tasksCompleted": "{total} मध्ये {completed} कार्य पूरा भयो",
   "@tasksCompleted": {
@@ -58,38 +108,40 @@
     }
   },
 
-  "focusTime": "फोकस समय",
-  "tasksDone": "पूरा भएका कार्य",
-  "todaysSchedule": "आजको तालिका",
-
-  "today": "आज",
-  "tomorrow": "भोलि",
+  "pleaseLoginToViewStatistics": "तथ्याङ्क हेर्न कृपया लगइन गर्नुहोस्।",
+  "unableToLoadStatistics": "तथ्याङ्क लोड गर्न सकिएन।",
 
   "untitled": "शीर्षक छैन",
-  "studyMode": "अध्ययन मोड",
 
-  "off": "बन्द",
+  "studyMode": "अध्ययन मोड",
+  "workMode": "काम मोड",
   "sleeping": "सुतिरहेको",
 
+  "loginToViewSchedules": "तालिका हेर्न कृपया लगइन गर्नुहोस्।",
   "pleaseLoginToViewSchedules": "तालिका हेर्न कृपया लगइन गर्नुहोस्।",
   "unableToLoadSchedules": "तालिका लोड गर्न सकिएन।",
-
-  "scheduleIdMissing": "तालिकाको डेटाबेस आईडी उपलब्ध छैन।",
-
-  "loginBeforeUpdating": "अपडेट गर्नुअघि कृपया लगइन गर्नुहोस्।",
-
-  "loginBeforeDeleting": "मेटाउनुअघि कृपया लगइन गर्नुहोस्।",
 
   "databaseError": "डाटाबेस त्रुटि: {message}",
   "@databaseError": {
     "placeholders": {
       "message": {
-        "type": "String"
+        "type": "Object"
       }
     }
   },
 
-  "scheduleAddedSuccessfully": "{title} सफलतापूर्वक थपियो",
+  "scheduleAdded": "तालिका थपियो",
+
+  "scheduleAddedBody": "\"{title}\" तपाईंको तालिकामा थपियो।",
+  "@scheduleAddedBody": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+
+  "scheduleAddedSuccessfully": "तालिका सफलतापूर्वक थपियो: {title}",
   "@scheduleAddedSuccessfully": {
     "placeholders": {
       "title": {
@@ -97,6 +149,14 @@
       }
     }
   },
+
+  "scheduleIdMissing": "तालिकाको डाटाबेस ID उपलब्ध छैन।",
+
+  "loginBeforeUpdating": "अपडेट गर्नुअघि कृपया लगइन गर्नुहोस्।",
+  "loginBeforeUpdatingSchedule": "तालिका अपडेट गर्नुअघि कृपया लगइन गर्नुहोस्।",
+
+  "loginBeforeDeleting": "मेटाउनुअघि कृपया लगइन गर्नुहोस्।",
+  "loginBeforeDeletingSchedule": "तालिका मेटाउनुअघि कृपया लगइन गर्नुहोस्।",
 
   "taskCompleted": "{title} पूरा भयो",
   "@taskCompleted": {
@@ -107,8 +167,10 @@
     }
   },
 
-  "taskMarkedIncomplete": "{title} अपूर्णको रूपमा चिन्ह लगाइयो",
-  "@taskMarkedIncomplete": {
+  "taskReopened": "कार्य पुनः खोलियो",
+
+  "taskReopenedBody": "\"{title}\" लाई अपूर्णको रूपमा चिन्ह लगाइयो।",
+  "@taskReopenedBody": {
     "placeholders": {
       "title": {
         "type": "String"
@@ -116,7 +178,31 @@
     }
   },
 
-  "updateFailed": "अपडेट असफल: {message}",
+  "taskMarkedCompleted": "\"{title}\" कार्य सम्पन्न भयो। सम्पन्न कार्य: {count}",
+  "@taskMarkedCompleted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "taskMarkedIncomplete": "\"{title}\" कार्य अपूर्णको रूपमा चिन्ह लगाइयो। सम्पन्न कार्य: {count}",
+  "@taskMarkedIncomplete": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "updateFailed": "अपडेट असफल भयो: {message}",
   "@updateFailed": {
     "placeholders": {
       "message": {
@@ -125,7 +211,16 @@
     }
   },
 
-  "deleteFailed": "मेटाउन असफल: {message}",
+  "unableToUpdateSchedule": "तालिका अपडेट गर्न सकिएन: {message}",
+  "@unableToUpdateSchedule": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "deleteFailed": "मेटाउन असफल भयो: {message}",
   "@deleteFailed": {
     "placeholders": {
       "message": {
@@ -134,11 +229,16 @@
     }
   },
 
-  "unableToUpdateSchedule": "तालिका अपडेट गर्न सकिएन।",
+  "unableToDeleteSchedule": "तालिका मेटाउन सकिएन: {message}",
+  "@unableToDeleteSchedule": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
 
-  "unableToDeleteSchedule": "तालिका मेटाउन सकिएन।",
-
-  "scheduleDeletedSuccessfully": "{title} सफलतापूर्वक मेटाइयो",
+  "scheduleDeletedSuccessfully": "तालिका सफलतापूर्वक मेटाइयो: {title}",
   "@scheduleDeletedSuccessfully": {
     "placeholders": {
       "title": {
@@ -147,7 +247,7 @@
     }
   },
 
-  "scheduleSelected": "{title} चयन गरियो",
+  "scheduleSelected": "चयन गरिएको तालिका: {title}",
   "@scheduleSelected": {
     "placeholders": {
       "title": {
@@ -157,6 +257,7 @@
   },
 
   "taskCompletedNotificationTitle": "🎉 कार्य पूरा भयो",
+  "@taskCompletedNotificationTitle": {},
 
   "taskCompletedNotificationBody": "{title} सफलतापूर्वक पूरा भयो।",
   "@taskCompletedNotificationBody": {
@@ -168,6 +269,7 @@
   },
 
   "scheduleCancelledNotificationTitle": "तालिका रद्द गरियो",
+  "@scheduleCancelledNotificationTitle": {},
 
   "scheduleCancelledNotificationBody": "{title} तपाईंको तालिकाबाट हटाइएको छ।",
   "@scheduleCancelledNotificationBody": {
@@ -176,5 +278,754 @@
         "type": "String"
       }
     }
+  },
+
+  "unableToLoadDndSettings": "डु नट डिस्टर्ब सेटिङ लोड गर्न सकिएन: {message}",
+  "@unableToLoadDndSettings": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unableToUpdateDnd": "डु नट डिस्टर्ब अपडेट गर्न सकिएन: {message}",
+  "@unableToUpdateDnd": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "sleepModeSettingsUpdated": "निद्रा मोड सेटिङ अपडेट भयो",
+
+  "signOut": "साइन आउट",
+  "signOutConfirmation": "के तपाईं साइन आउट गर्न निश्चित हुनुहुन्छ?",
+
+  "signOutFailed": "साइन आउट असफल भयो: {message}",
+  "@signOutFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "pageTitle": "{title} पृष्ठ",
+  "@pageTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "addSchedule": "तालिका थप्नुहोस्",
+  "orAddManually": "वा म्यानुअल रूपमा थप्नुहोस्",
+  "title": "शीर्षक",
+  "category": "श्रेणी",
+  "date": "मिति",
+  "startTime": "सुरु हुने समय",
+  "durationMinutes": "अवधि (मिनेट)",
+
+  "csvTemplateReady": "CSV टेम्प्लेट तयार छ।",
+
+  "unableToPrepareTemplate": "टेम्प्लेट तयार गर्न सकिएन: {message}",
+  "@unableToPrepareTemplate": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "loginBeforeImportingSchedules": "तालिकाहरू आयात गर्नुअघि कृपया लगइन गर्नुहोस्।",
+  "noSchedulesImported": "कुनै तालिका आयात भएन।",
+
+  "unableToImportCsv": "CSV फाइल आयात गर्न सकिएन: {message}",
+  "@unableToImportCsv": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "importSchedulesQuestion": "तालिकाहरू आयात गर्ने?",
+  "importProblems": "आयातसम्बन्धी समस्याहरू",
+  "noValidSchedulesFound": "कुनै मान्य तालिका फेला परेन।",
+
+  "validSchedulesFound": "{count} वटा मान्य तालिका फेला परे।",
+  "@validSchedulesFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "rowsWillBeSkipped": "{count} वटा पङ्क्ति छोडिनेछन्।",
+  "@rowsWillBeSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "minutesShort": "{count} मिनेट",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "andMore": "र थप {count} वटा।",
+  "@andMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "importCount": "{count} आयात गर्नुहोस्",
+  "@importCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "unknownCategory": "अज्ञात श्रेणी।",
+
+  "unknownCategoryAtRow": "पङ्क्ति {row}: अज्ञात श्रेणी \"{category}\"।",
+  "@unknownCategoryAtRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+
+  "rowError": "पङ्क्ति {row}: {message}",
+  "@rowError": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "schedulesImportedSuccessfully": "{count} वटा तालिका सफलतापूर्वक आयात भए।",
+  "@schedulesImportedSuccessfully": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "schedulesImportedWithSkipped": "{count} वटा तालिका सफलतापूर्वक आयात भए, {skipped} वटा छोडिए।",
+  "@schedulesImportedWithSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+
+  "enterScheduleTitle": "कृपया तालिकाको शीर्षक प्रविष्ट गर्नुहोस्।",
+  "enterValidDuration": "कृपया मान्य अवधि प्रविष्ट गर्नुहोस्।",
+  "loginBeforeSavingSchedule": "तालिका सेभ गर्नुअघि कृपया लगइन गर्नुहोस्।",
+  "selectFutureDateTime": "कृपया भविष्यको मिति र समय चयन गर्नुहोस्।",
+  "scheduleIdNotReturned": "तालिका ID फिर्ता आएन।",
+
+  "unableToSaveSchedule": "तालिका सेभ गर्न सकिएन: {message}",
+  "@unableToSaveSchedule": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "noSchedulesAvailable": "कुनै तालिका उपलब्ध छैन",
+
+  "all": "सबै",
+  "work": "काम",
+  "study": "अध्ययन",
+  "health": "स्वास्थ्य",
+  "personal": "व्यक्तिगत",
+  "social": "सामाजिक",
+  "exercise": "व्यायाम",
+
+  "durationRequired": "अवधि प्रविष्ट गर्नु आवश्यक छ",
+  "enterValidNumber": "मान्य संख्या प्रविष्ट गर्नुहोस्",
+
+  "minimumDuration": "न्यूनतम अवधि {minutes} मिनेट हो",
+  "@minimumDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "maximumDuration": "अधिकतम अवधि {minutes} मिनेट हो",
+  "@maximumDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "deleteSchedule": "तालिका मेटाउनुहोस्",
+  "deepWork": "गहन काम",
+  "readingMode": "पढाइ मोड",
+  "exerciseMode": "व्यायाम मोड",
+  "noFocusMode": "फोकस मोड छैन",
+  "custom": "अनुकूलित",
+
+  "user": "प्रयोगकर्ता",
+
+  "notificationsUnread": "{count} अपठित सूचनाहरू",
+  "@notificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "noSchedulesForToday": "आजका लागि कुनै तालिका छैन",
+  "pressAddToCreateSchedule": "तालिका बनाउन थप्नुहोस् थिच्नुहोस्।",
+
+  "scheduleUpdateFailed": "तालिका अद्यावधिक भएन। कृपया RLS नीति जाँच गर्नुहोस्।",
+  "scheduleDeleteFailed": "तालिका मेटिएन। कृपया RLS नीति जाँच गर्नुहोस्।",
+
+  "importSchedule": "तालिका आयात गर्नुहोस्",
+  "uploadCsvDescription": "एकैपटक धेरै तालिका थप्न CSV फाइल अपलोड गर्नुहोस्।",
+
+  "selectedFile": "चयन गरिएको: {fileName}",
+  "@selectedFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "preparingTemplate": "टेम्प्लेट तयार हुँदैछ...",
+  "downloadTemplate": "टेम्प्लेट डाउनलोड गर्नुहोस्",
+  "uploadFile": "फाइल अपलोड गर्नुहोस्",
+
+  "scheduleTitleRequired": "कृपया तालिकाको शीर्षक लेख्नुहोस्",
+
+  "minimumTitleLength": "शीर्षकमा कम्तीमा {count} अक्षर हुनुपर्छ",
+  "@minimumTitleLength": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "scheduleTitleHint": "जस्तै: गहन कार्य सत्र",
+  "durationHint": "६०",
+  "saveSchedule": "तालिका सेभ गर्नुहोस्",
+
+  "noData": "कुनै डाटा छैन",
+  "noFocusDataYet": "अहिलेसम्म कुनै फोकस डाटा छैन",
+
+  "mon": "सोम",
+  "tue": "मङ्गल",
+  "wed": "बुध",
+  "thu": "बिही",
+  "fri": "शुक्र",
+  "sat": "शनि",
+  "sun": "आइत",
+
+  "jan": "जन",
+  "feb": "फेब",
+  "mar": "मार्च",
+  "apr": "अप्रिल",
+  "may": "मे",
+  "jun": "जुन",
+  "jul": "जुलाई",
+  "aug": "अग",
+  "sep": "सेप",
+  "oct": "अक्टो",
+  "nov": "नोभ",
+  "dec": "डिस",
+
+  "taskDone": "कार्य पूरा",
+  "tasksDonePlural": "कार्यहरू पूरा",
+  "hoursShort": "घण्टा",
+  "minutesAbbreviation": "मि",
+
+  "addWorldClock": "विश्व घडी थप्नुहोस्",
+  "worldClocks": "विश्व घडीहरू",
+  "searchCityCountryTimezone": "सहर, देश वा समय क्षेत्र खोज्नुहोस्",
+  "clearSearch": "खोज खाली गर्नुहोस्",
+  "noCityFound": "कुनै सहर भेटिएन",
+  "tryAnotherCityCountryTimezone": "अर्को सहर, देश वा समय क्षेत्र खोज्नुहोस्।",
+  "isAlreadyAdded": "पहिले नै थपिएको छ",
+  "added": "थपियो",
+  "removed": "हटाइयो",
+  "unableToLoadWorldClocks": "विश्व घडीहरू लोड गर्न सकिएन",
+  "unableToAddClock": "घडी थप्न सकिएन",
+  "unableToRemoveClock": "घडी हटाउन सकिएन",
+  "thisClockCannotBeDeleted": "यो घडी मेटाउन सकिँदैन।",
+  "deleteClock": "घडी मेटाउने?",
+  "fromYourWorldClocks": "लाई तपाईंको विश्व घडीबाट मेटाउने?",
+  "noWorldClocksAdded": "कुनै विश्व घडी थपिएको छैन",
+  "tapPlusToAddCity": "सहर खोज्न र थप्न + बटन थिच्नुहोस्।",
+  "searchCity": "सहर खोज्नुहोस्",
+  "saving": "सेभ हुँदैछ...",
+  "saveSettings": "सेटिङहरू सेभ गर्नुहोस्",
+
+  "unableToLoadProfile": "प्रोफाइल लोड गर्न सकिएन",
+  "profileUpdatedSuccessfully": "प्रोफाइल सफलतापूर्वक अपडेट भयो",
+  "profileDataUnavailable": "प्रोफाइल डाटा उपलब्ध छैन",
+
+  "citySydney": "सिड्नी",
+  "cityMelbourne": "मेलबर्न",
+  "cityBrisbane": "ब्रिस्बेन",
+  "cityPerth": "पर्थ",
+  "cityAdelaide": "एडिलेड",
+  "cityDarwin": "डार्विन",
+  "cityHobart": "होबार्ट",
+
+  "cityKathmandu": "काठमाडौं",
+  "cityPokhara": "पोखरा",
+
+  "cityNewDelhi": "नयाँ दिल्ली",
+  "cityMumbai": "मुम्बई",
+  "cityBengaluru": "बेङ्गलुरु",
+  "cityChennai": "चेन्नई",
+
+  "cityTokyo": "टोकियो",
+  "cityOsaka": "ओसाका",
+  "citySeoul": "सिओल",
+  "cityBeijing": "बेइजिङ",
+  "cityShanghai": "साङ्घाई",
+  "cityHongKong": "हङकङ",
+  "citySingapore": "सिङ्गापुर",
+  "cityBangkok": "बैंकक",
+  "cityJakarta": "जकार्ता",
+  "cityManila": "मनिला",
+  "cityKualaLumpur": "क्वालालम्पुर",
+  "cityDhaka": "ढाका",
+  "cityKarachi": "कराँची",
+  "cityColombo": "कोलम्बो",
+  "cityDubai": "दुबई",
+
+  "cityLondon": "लन्डन",
+  "cityParis": "पेरिस",
+  "cityBerlin": "बर्लिन",
+  "cityRome": "रोम",
+  "cityMadrid": "म्याड्रिड",
+  "cityAmsterdam": "एम्स्टर्डम",
+  "cityZurich": "ज्युरिख",
+  "cityAthens": "एथेन्स",
+  "cityIstanbul": "इस्तानबुल",
+
+  "cityNewYork": "न्युयोर्क",
+  "cityLosAngeles": "लस एन्जलस",
+  "cityChicago": "शिकागो",
+  "cityDenver": "डेनभर",
+  "cityHonolulu": "होनोलुलु",
+
+  "cityToronto": "टोरोन्टो",
+  "cityVancouver": "भ्यानकुभर",
+
+  "citySaoPaulo": "साओ पाउलो",
+  "cityBuenosAires": "ब्युनस आयर्स",
+
+  "cityCairo": "काइरो",
+  "cityNairobi": "नैरोबी",
+  "cityJohannesburg": "जोहानेसबर्ग",
+
+  "cityAuckland": "अकल्यान्ड",
+  "cityWellington": "वेलिङ्टन",
+
+  "countryAustralia": "अस्ट्रेलिया",
+  "countryNepal": "नेपाल",
+  "countryIndia": "भारत",
+  "countryJapan": "जापान",
+  "countrySouthKorea": "दक्षिण कोरिया",
+  "countryChina": "चीन",
+  "countryHongKong": "हङकङ",
+  "countrySingapore": "सिङ्गापुर",
+  "countryThailand": "थाइल्यान्ड",
+  "countryIndonesia": "इन्डोनेसिया",
+  "countryPhilippines": "फिलिपिन्स",
+  "countryMalaysia": "मलेसिया",
+  "countryBangladesh": "बङ्गलादेश",
+  "countryPakistan": "पाकिस्तान",
+  "countrySriLanka": "श्रीलङ्का",
+  "countryUnitedArabEmirates": "संयुक्त अरब इमिरेट्स",
+  "countryUnitedKingdom": "संयुक्त अधिराज्य",
+  "countryFrance": "फ्रान्स",
+  "countryGermany": "जर्मनी",
+  "countryItaly": "इटाली",
+  "countrySpain": "स्पेन",
+  "countryNetherlands": "नेदरल्यान्ड्स",
+  "countrySwitzerland": "स्विट्जरल्यान्ड",
+  "countryGreece": "ग्रीस",
+  "countryTurkiye": "टर्की",
+  "countryUnitedStates": "संयुक्त राज्य अमेरिका",
+  "countryCanada": "क्यानडा",
+  "countryBrazil": "ब्राजिल",
+  "countryArgentina": "अर्जेन्टिना",
+  "countryEgypt": "इजिप्ट",
+  "countryKenya": "केन्या",
+  "countrySouthAfrica": "दक्षिण अफ्रिका",
+  "countryNewZealand": "न्युजिल्यान्ड",
+  "editProfile": "प्रोफाइल सम्पादन गर्नुहोस्",
+  "days": "दिन",
+"done": "सम्पन्न",
+"hours": "घण्टा",
+"membership": "सदस्यता",
+"projectUser": "परियोजना प्रयोगकर्ता",
+"defaultBio": "राम्रो बानी विकासमा केन्द्रित ✨",
+"member": "सदस्य",
+"level": "स्तर",
+"badges": "ब्याजहरू",
+"badge": "ब्याज",
+"earlyBird": "बिहानी सक्रिय",
+"nightOwl": "राति सक्रिय",
+"streakSeven": "७ दिनको निरन्तरता",
+"focusOneHundredHours": "१०० घण्टा फोकस",
+"plannerPro": "योजना विशेषज्ञ",
+"zenMaster": "जेन मास्टर",
+"unableToLoadBadges": "ब्याजहरू लोड गर्न सकिएन",
+"badgesEarned": "{total} मध्ये {earned} प्राप्त",
+"@badgesEarned": {
+  "placeholders": {
+    "earned": {
+      "type": "int"
+    },
+    "total": {
+      "type": "int"
+    }
   }
+},
+"recentActivity": "हालको गतिविधि",
+"refreshActivity": "गतिविधि पुनः लोड गर्नुहोस्",
+"unableToLoadRecentActivity": "हालको गतिविधि लोड गर्न सकिएन",
+"noRecentActivity": "अहिलेसम्म कुनै हालको गतिविधि छैन।",
+"activity": "गतिविधि",
+"scheduleAddedActivity": "तालिका थपियो",
+"scheduleCompletedActivity": "तालिका सम्पन्न भयो",
+"scheduleDeletedActivity": "तालिका मेटाइयो",
+"focusCompletedActivity": "फोकस सत्र सम्पन्न भयो",
+"badgeUnlockedActivity": "ब्याज प्राप्त भयो",
+"membershipChangedActivity": "सदस्यता परिवर्तन भयो",
+"levelUpActivity": "स्तर बढ्यो",
+"streakUpdatedActivity": "निरन्तरता अद्यावधिक भयो",
+"justNow": "भर्खरै",
+"yesterday": "हिजो",
+"minutesAgo": "{count} मिनेट अघि",
+"@minutesAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"hoursAgo": "{count} घण्टा अघि",
+"@hoursAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"daysAgo": "{count} दिन अघि",
+"@daysAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"editProfile": "प्रोफाइल सम्पादन गर्नुहोस्",
+"fullName": "पूरा नाम",
+"bio": "परिचय",
+"saveChanges": "परिवर्तनहरू सेभ गर्नुहोस्",
+"pleaseEnterYourName": "कृपया आफ्नो नाम प्रविष्ट गर्नुहोस्",
+"unableToUpdateProfile": "प्रोफाइल अद्यावधिक गर्न सकिएन",
+"livePreview": "प्रत्यक्ष पूर्वावलोकन",
+"primary": "प्राथमिक",
+"secondary": "द्वितीयक",
+"primaryButtonPreview": "प्राथमिक बटनको पूर्वावलोकन",
+"secondaryButtonPreview": "द्वितीयक बटनको पूर्वावलोकन",
+"accentColorPreviewDescription": "तपाईंले चयन गर्नुभएको एक्सेन्ट रङ एपभरिका बटन, आइकन, बोर्डर र चयन गरिएका नियन्त्रणहरूमा यसरी देखिनेछ।",
+"themeColorDescription": "आफ्नो एक्सेन्ट रङ चयन गर्नुहोस्। परिवर्तनहरू तुरुन्तै सम्पूर्ण एपमा लागू हुनेछन्।",
+"purple": "बैजनी",
+"ocean": "महासागर",
+"sunset": "सूर्यास्त",
+"forest": "वन",
+"rose": "गुलाबी",
+"gold": "सुनौलो",
+
+"themeApplied": "{themeName} थिम लागू गरियो",
+"@themeApplied": {
+  "placeholders": {
+    "themeName": {
+      "type": "String"
+    }
+  }
+},
+
+"unableToSaveThemeColor": "थिम रङ सेभ गर्न सकिएन",
+"saving": "सेभ हुँदैछ...",
+"saveSettings": "सेटिङहरू सेभ गर्नुहोस्",
+"enableSleepMode": "निद्रा मोड सक्षम गर्नुहोस्",
+"sleepModeActive": "निद्रा मोड सक्रिय छ",
+"sleepModeOff": "निद्रा मोड बन्द छ",
+"sleepSchedule": "निद्रा तालिका",
+"sleepScheduleDescription": "नियमित निद्रा दिनचर्या कायम राख्न आफ्नो सुत्ने र उठ्ने समय सेट गर्नुहोस्।",
+"bedtime": "सुत्ने समय",
+"wakeUpTime": "उठ्ने समय",
+"selectBedtime": "सुत्ने समय चयन गर्नुहोस्",
+"selectWakeUpTime": "उठ्ने समय चयन गर्नुहोस्",
+"sleepModeSettingsSaved": "निद्रा मोड सेटिङहरू सेभ गरियो।",
+"unableToLoadSleepModeSettings": "निद्रा मोड सेटिङहरू लोड गर्न सकिएन।",
+"unableToSaveSleepModeSettings": "निद्रा मोड सेटिङहरू सेभ गर्न सकिएन।",
+"ok": "ठीक छ",
+"blockedApps": "ब्लक गरिएका एपहरू",
+"unableToLoadFocusModeSettings": "फोकस मोड सेटिङहरू लोड गर्न सकिएन।",
+"unableToSaveFocusModeSettings": "फोकस मोड सेटिङहरू सेभ गर्न सकिएन।",
+"breakInterval": "विश्राम अन्तराल",
+"minutesAbbreviation": "मि",
+"doNotDisturb": "डु नट डिस्टर्ब",
+"start": "सुरु",
+"end": "अन्त्य",
+"selectDndStartTime": "डु नट डिस्टर्ब सुरु हुने समय चयन गर्नुहोस्",
+"selectDndEndTime": "डु नट डिस्टर्ब अन्त्य हुने समय चयन गर्नुहोस्",
+"focusModeDescription": "काम गर्दा ध्यान भंग गर्ने एपहरू रोक्नुहोस्",
+"emailVerification": "इमेल प्रमाणीकरण",
+"emailVerificationEnabled": "इमेल प्रमाणीकरण सक्षम छ",
+"emailVerified": "तपाईंको इमेल प्रमाणीकरण गरिएको छ।",
+"verificationEnabledFor": "{email} का लागि प्रमाणीकरण सक्षम छ।",
+"@verificationEnabledFor": {
+  "placeholders": {
+    "email": {
+      "type": "String"
+    }
+  }
+},
+"disableEmailVerification": "इमेल प्रमाणीकरण असक्षम गर्नुहोस्",
+"disabling": "असक्षम हुँदैछ...",
+"verifyYourEmail": "आफ्नो इमेल प्रमाणीकरण गर्नुहोस्",
+"verificationCodeWillBeSent": "तपाईंको इमेलमा प्रमाणीकरण कोड पठाइनेछ।",
+"sixDigitCodeWillBeSentTo": "हामी {email} मा छ अङ्कको कोड पठाउनेछौँ।",
+"@sixDigitCodeWillBeSentTo": {
+  "placeholders": {
+    "email": {
+      "type": "String"
+    }
+  }
+},
+"sending": "पठाउँदैछ...",
+"sendCode": "कोड पठाउनुहोस्",
+"resendCode": "कोड पुनः पठाउनुहोस्",
+"sixDigitVerificationCode": "छ अङ्कको प्रमाणीकरण कोड",
+"verifyAndEnable": "प्रमाणीकरण गरी सक्षम गर्नुहोस्",
+"sessionExpiredLoginAgain": "तपाईंको सत्र समाप्त भएको छ। कृपया फेरि लगइन गर्नुहोस्।",
+"noEmailConnected": "तपाईंको खातामा कुनै इमेल ठेगाना जोडिएको छैन।",
+"verificationCodeSent": "प्रमाणीकरण कोड पठाइएको छ। सबैभन्दा नयाँ कोड मात्र प्रयोग गर्नुहोस्।",
+"waitBeforeRequestingCode": "अर्को कोड अनुरोध गर्नुअघि करिब ६० सेकेन्ड पर्खनुहोस्।",
+"sendVerificationCodeFirst": "पहिले प्रमाणीकरण कोड पठाउनुहोस्।",
+"enterCompleteSixDigitCode": "पूरा छ अङ्कको कोड प्रविष्ट गर्नुहोस्।",
+"verificationCodeExpired": "कोड अमान्य वा म्याद सकिएको छ। कोड पठाउनुहोस् थिचेर नयाँ इमेलको कोड प्रयोग गर्नुहोस्।",
+"verificationCodeIncorrect": "प्रमाणीकरण कोड गलत छ। सबैभन्दा नयाँ इमेल जाँच गर्नुहोस्।",
+"verificationCodeNotConfirmed": "प्रमाणीकरण कोड पुष्टि गर्न सकिएन।",
+"verifiedEmailMismatch": "प्रमाणित इमेल हालको खातासँग मेल खाँदैन।",
+"unableToLoadEmailVerificationSettings": "इमेल प्रमाणीकरण सेटिङहरू लोड गर्न सकिएन।",
+"unableToSendVerificationCode": "प्रमाणीकरण कोड पठाउन सकिएन।",
+"unableToVerifyVerificationCode": "प्रमाणीकरण कोड प्रमाणित गर्न सकिएन।",
+"unableToDisableEmailVerification": "इमेल प्रमाणीकरण असक्षम गर्न सकिएन।",
+"unableToLoadSecuritySettings": "सुरक्षा सेटिङहरू लोड गर्न सकिएन।",
+"faceIdLogin": "फेस आईडी लगइन",
+"fingerprintLogin": "फिङ्गरप्रिन्ट लगइन",
+"biometricLogin": "बायोमेट्रिक लगइन",
+"checkingAuthentication": "प्रमाणीकरण जाँच हुँदैछ...",
+"faceIdLoginEnabled": "फेस आईडी लगइन सक्षम छ",
+"unlockUsingFaceId": "फेस आईडी प्रयोग गरेर अनलक गर्नुहोस्",
+"fingerprintLoginEnabled": "फिङ्गरप्रिन्ट लगइन सक्षम छ",
+"unlockUsingFingerprint": "फिङ्गरप्रिन्ट प्रयोग गरेर अनलक गर्नुहोस्",
+"biometricUnavailable": "फेस आईडी वा फिङ्गरप्रिन्ट उपलब्ध छैन",
+"faceIdOrFingerprint": "फेस आईडी / फिङ्गरप्रिन्ट",
+"faceId": "फेस आईडी",
+"fingerprint": "फिङ्गरप्रिन्ट",
+"biometric": "बायोमेट्रिक",
+"twoFactorAuth": "दुई-चरण प्रमाणीकरण",
+"openingEmailVerification": "इमेल प्रमाणीकरण खोलिँदैछ...",
+"emailVerificationEnabled": "इमेल प्रमाणीकरण सक्षम छ",
+"verifyUsingEmailOtp": "इमेल ओटीपी प्रयोग गरेर प्रमाणीकरण गर्नुहोस्",
+"emailVerificationEnabledSuccessfully": "इमेल प्रमाणीकरण सफलतापूर्वक सक्षम गरियो।",
+"emailVerificationDisabled": "इमेल प्रमाणीकरण असक्षम गरियो।",
+"unableToOpenEmailVerification": "इमेल प्रमाणीकरण खोल्न सकिएन।",
+"enterCurrentPassword": "कृपया आफ्नो हालको पासवर्ड प्रविष्ट गर्नुहोस्।",
+"enterNewPassword": "कृपया नयाँ पासवर्ड प्रविष्ट गर्नुहोस्।",
+"newPasswordMustBeDifferent": "नयाँ पासवर्ड हालको पासवर्डभन्दा फरक हुनुपर्छ।",
+"currentPasswordIncorrect": "तपाईंको हालको पासवर्ड गलत छ।",
+"unableToUpdatePassword": "पासवर्ड अपडेट गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+"biometricLoginDisabled": "{authenticationName} लगइन असक्षम गरियो।",
+"@biometricLoginDisabled": {
+  "placeholders": {
+    "authenticationName": {
+      "type": "String"
+    }
+  }
+},
+"biometricLoginEnabled": "{authenticationName} लगइन सफलतापूर्वक सक्षम गरियो।",
+"@biometricLoginEnabled": {
+  "placeholders": {
+    "authenticationName": {
+      "type": "String"
+    }
+  }
+},
+"sessionExpiredBeforeBiometric": "तपाईंको सत्र समाप्त भएको छ। बायोमेट्रिक लगइन सक्षम गर्नुअघि फेरि लगइन गर्नुहोस्।",
+"configureBiometricsFirst": "फेस आईडी वा फिङ्गरप्रिन्ट उपलब्ध छैन। पहिले आफ्नो डिभाइस सेटिङमा बायोमेट्रिक सेटअप गर्नुहोस्।",
+"noBiometricAuthenticationEnrolled": "कुनै बायोमेट्रिक प्रमाणीकरण सेटअप गरिएको छैन। डिभाइस सेटिङमा फेस आईडी, टच आईडी वा फिङ्गरप्रिन्ट सेटअप गर्नुहोस्।",
+"biometricVerificationFailed": "बायोमेट्रिक प्रमाणीकरण सफल भएन।",
+"unableToUpdateBiometricLogin": "बायोमेट्रिक लगइन अपडेट गर्न सकिएन।",
+"activityLog": "गतिविधि लग",
+"viewAccountActivity": "आफ्नो खाता गतिविधि हेर्नुहोस्",
+"activityTrackingDisabled": "गतिविधि ट्र्याकिङ असक्षम छ",
+"activityLogEnabledMessage": "गतिविधि लग सक्षम गरियो।",
+"activityLogDisabledMessage": "गतिविधि लग असक्षम गरियो।",
+"unableToUpdateActivityLog": "गतिविधि लग अपडेट गर्न सकिएन।",
+"dataSharing": "डेटा साझेदारी",
+"analyticsSharingEnabled": "एनालिटिक्स साझेदारी सक्षम छ",
+"shareAnalyticsWithUs": "हामीसँग एनालिटिक्स साझेदारी गर्नुहोस्",
+"dataSharingEnabledMessage": "डेटा साझेदारी सक्षम गरियो।",
+"dataSharingDisabledMessage": "डेटा साझेदारी असक्षम गरियो।",
+"unableToUpdateDataSharing": "डेटा साझेदारी अपडेट गर्न सकिएन।",
+"changePassword": "पासवर्ड परिवर्तन गर्नुहोस्",
+"updateLoginPassword": "आफ्नो लगइन पासवर्ड अपडेट गर्नुहोस्",
+"currentPassword": "हालको पासवर्ड",
+"newPassword": "नयाँ पासवर्ड",
+"confirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
+"updatePassword": "पासवर्ड अपडेट गर्नुहोस्",
+"weakPassword": "कमजोर पासवर्ड",
+"mediumPassword": "मध्यम पासवर्ड",
+"strongPassword": "बलियो पासवर्ड",
+"passwordUpdateServiceNotConnected": "पासवर्ड अपडेट सेवा जडान गरिएको छैन।",
+"passwordUpdatedSuccessfully": "पासवर्ड सफलतापूर्वक अपडेट गरियो",
+"clearActivityLog": "गतिविधि लग खाली गर्नुहोस्",
+"clearActivityLogQuestion": "गतिविधि लग खाली गर्ने?",
+"allActivityRecordsDeleted": "सबै गतिविधि रेकर्डहरू मेटाइनेछन्।",
+"clear": "खाली गर्नुहोस्",
+"activityLogCleared": "गतिविधि लग खाली गरियो।",
+"unableToLoadActivityLog": "गतिविधि लग लोड गर्न सकिएन।",
+"unableToClearActivityLog": "गतिविधि लग खाली गर्न सकिएन।",
+"noActivityRecordedYet": "अहिलेसम्म कुनै गतिविधि रेकर्ड गरिएको छैन।",
+"justNow": "भर्खरै",
+"minutesAgo": "{count, plural, =1{१ मिनेटअघि} other{{count} मिनेटअघि}}",
+"@minutesAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"hoursAgo": "{count, plural, =1{१ घण्टाअघि} other{{count} घण्टाअघि}}",
+"@hoursAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"daysAgo": "{count, plural, =1{१ दिनअघि} other{{count} दिनअघि}}",
+"@daysAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"focusAndDnd": "फोकस र डु नट डिस्टर्ब",
+"back": "पछाडि",
+"pleaseLogInToViewNotifications": "सूचनाहरू हेर्न कृपया लगइन गर्नुहोस्।",
+"unableToLoadNotifications": "सूचनाहरू लोड गर्न सकिएन।",
+"unableToMarkNotificationAsRead": "सूचनालाई पढिएको रूपमा चिन्ह लगाउन सकिएन",
+"unableToMarkNotificationAsUnread": "सूचनालाई नपढिएको रूपमा चिन्ह लगाउन सकिएन",
+"allNotificationsMarkedAsRead": "सबै सूचनाहरू पढिएको रूपमा चिन्ह लगाइयो।",
+"unableToMarkAllAsRead": "सबैलाई पढिएको रूपमा चिन्ह लगाउन सकिएन",
+"notificationDeleted": "सूचना मेटाइयो।",
+"unableToDeleteNotification": "सूचना मेटाउन सकिएन",
+"deleteAllNotificationsQuestion": "सबै सूचनाहरू मेटाउने?",
+"deleteAllNotificationsDescription": "यसले तपाईंको इनबक्सबाट सबै सूचनाहरू स्थायी रूपमा हटाउनेछ।",
+"deleteAll": "सबै मेटाउनुहोस्",
+"allNotificationsDeleted": "सबै सूचनाहरू मेटाइयो।",
+"unableToDeleteAllNotifications": "सबै सूचनाहरू मेटाउन सकिएन",
+"markAsUnread": "नपढिएको रूपमा चिन्ह लगाउनुहोस्",
+"markAsRead": "पढिएको रूपमा चिन्ह लगाउनुहोस्",
+"deleteNotification": "सूचना मेटाउनुहोस्",
+"todayWithTime": "आज • {time}",
+"@todayWithTime": {
+  "placeholders": {
+    "time": {
+      "type": "String"
+    }
+  }
+},
+"yesterdayWithTime": "हिजो • {time}",
+"@yesterdayWithTime": {
+  "placeholders": {
+    "time": {
+      "type": "String"
+    }
+  }
+},
+"markAllRead": "सबैलाई पढिएको बनाउनुहोस्",
+"refresh": "रिफ्रेस गर्नुहोस्",
+"tryAgain": "फेरि प्रयास गर्नुहोस्",
+"noNotificationsYet": "अहिलेसम्म कुनै सूचना छैन",
+"notificationInboxEmptyDescription": "तपाईंका तालिका रिमाइन्डर र कार्य अपडेटहरू यहाँ देखिनेछन्।",
+"notification": "सूचना",
+"moreOptions": "थप विकल्पहरू",
+"notificationChannels": "सूचना माध्यमहरू",
+"notificationAlerts": "अलर्टहरू",
+"notificationDisplay": "प्रदर्शन",
+"couldNotLoadNotificationSettings": "सूचना सेटिङहरू लोड गर्न सकिएन।",
+"couldNotSaveNotificationSetting": "सूचना सेटिङ सेभ गर्न सकिएन।",
+"pushNotifications": "पुश सूचनाहरू",
+"emailNotifications": "इमेल सूचनाहरू",
+"scheduleReminders": "तालिका रिमाइन्डरहरू",
+"breakAlerts": "विश्राम अलर्टहरू",
+"achievements": "उपलब्धिहरू",
+"weeklyReport": "साप्ताहिक रिपोर्ट",
+"notificationSounds": "सूचना ध्वनिहरू",
+"appBadges": "एप ब्याजहरू",
+"realTimeAlertsOnYourDevice": "तपाईंको उपकरणमा तत्काल अलर्टहरू",
+"digestToYourInbox": "तपाईंको इनबक्समा सारांश",
+"beforeEventsStart": "कार्यक्रम सुरु हुनुअघि",
+"remindToTakeBreaks": "विश्राम लिन सम्झाउनुहोस्",
+"badgesAndMilestones": "ब्याज र उपलब्धिका चरणहरू",
+"sundaySummaryEmail": "आइतबारको सारांश इमेल",
+"audioForAlerts": "अलर्टका लागि ध्वनि",
+"unreadCountOnIcon": "आइकनमा नपढिएका सूचनाको संख्या"
 }

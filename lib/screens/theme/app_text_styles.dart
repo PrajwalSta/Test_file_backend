@@ -78,7 +78,11 @@ class AppTextStyles {
     fontSize: 11,
   );
 
-  static TextStyle? get buttonText => null;
+  static const TextStyle buttonText = TextStyle(
+    color: Colors.white,
+    fontWeight: FontWeight.bold,
+    fontSize: 14,
+  );
 
   //theme screen text styles
   static const button = TextStyle(

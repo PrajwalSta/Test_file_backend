@@ -46,6 +46,90 @@ class ScheduleService {
     );
   }
 
+  String _cleanText(
+    String value,
+  ) {
+    return value.trim();
+  }
+
+  String _createReminderKey(
+    String scheduleId,
+  ) {
+    return 'schedule_reminder_$scheduleId';
+  }
+
+  void _validateScheduleInput({
+    required String title,
+    required String time,
+    required DateTime scheduleDateTime,
+    required int durationMinutes,
+    required String category,
+    required String focusMode,
+  }) {
+    if (_cleanText(title).isEmpty) {
+      throw Exception(
+        'Schedule title cannot be empty.',
+      );
+    }
+
+    if (_cleanText(time).isEmpty) {
+      throw Exception(
+        'Schedule time cannot be empty.',
+      );
+    }
+
+    if (durationMinutes <= 0) {
+      throw Exception(
+        'Duration must be greater than zero.',
+      );
+    }
+
+    if (_cleanText(category).isEmpty) {
+      throw Exception(
+        'Schedule category cannot be empty.',
+      );
+    }
+
+    if (_cleanText(focusMode).isEmpty) {
+      throw Exception(
+        'Focus mode cannot be empty.',
+      );
+    }
+
+    final DateTime localScheduleTime =
+        scheduleDateTime.isUtc
+            ? scheduleDateTime.toLocal()
+            : scheduleDateTime;
+
+    if (!localScheduleTime.isAfter(
+      DateTime.now(),
+    )) {
+      throw Exception(
+        'Please select a future date and time.',
+      );
+    }
+  }
+
+  int? _parseNotificationId(
+    dynamic value,
+  ) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    return int.tryParse(
+      value.toString(),
+    );
+  }
+
   // ==========================================================
   // ADD NEW SCHEDULE
   // ==========================================================
@@ -57,16 +141,36 @@ class ScheduleService {
     required String category,
     required String focusMode,
   }) async {
+    _validateScheduleInput(
+      title: title,
+      time: time,
+      scheduleDateTime:
+          scheduleDateTime,
+      durationMinutes:
+          durationMinutes,
+      category: category,
+      focusMode: focusMode,
+    );
+
     final User user =
         _currentUser;
 
-    if (!scheduleDateTime.isAfter(
-      DateTime.now(),
-    )) {
-      throw Exception(
-        'Please select a future date and time.',
-      );
-    }
+    final String cleanTitle =
+        _cleanText(title);
+
+    final String cleanTime =
+        _cleanText(time);
+
+    final String cleanCategory =
+        _cleanText(category);
+
+    final String cleanFocusMode =
+        _cleanText(focusMode);
+
+    final DateTime localScheduleTime =
+        scheduleDateTime.isUtc
+            ? scheduleDateTime.toLocal()
+            : scheduleDateTime;
 
     debugPrint(
       'Current Supabase user: ${user.email}',
@@ -82,16 +186,18 @@ class ScheduleService {
               .from('schedules')
               .insert({
                 'user_id': user.id,
-                'title': title,
-                'time': time,
+                'title': cleanTitle,
+                'time': cleanTime,
                 'scheduled_at':
-                    scheduleDateTime
+                    localScheduleTime
                         .toUtc()
                         .toIso8601String(),
                 'duration_minutes':
                     durationMinutes,
-                'category': category,
-                'focus_mode': focusMode,
+                'category':
+                    cleanCategory,
+                'focus_mode':
+                    cleanFocusMode,
                 'completed': false,
               })
               .select()
@@ -109,9 +215,9 @@ class ScheduleService {
         scheduleId: scheduleId,
         notificationId:
             notificationId,
-        title: title,
+        title: cleanTitle,
         scheduleDateTime:
-            scheduleDateTime,
+            localScheduleTime,
       );
 
       await _supabase
@@ -131,14 +237,14 @@ class ScheduleService {
 
       await _activityService
           .logScheduleAdded(
-        title,
+        cleanTitle,
       );
 
       debugPrint(
         'Schedule created successfully.',
       );
 
-      return {
+      return <String, dynamic>{
         ...schedule,
         'notification_id':
             notificationId,
@@ -150,9 +256,13 @@ class ScheduleService {
       );
 
       rethrow;
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint(
         'Add schedule error: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
       );
 
       rethrow;
@@ -160,7 +270,125 @@ class ScheduleService {
   }
 
   // ==========================================================
+  // ADD MULTIPLE SCHEDULES
+  // ==========================================================
+  Future<Map<String, dynamic>>
+      addMultipleSchedules({
+    required List<Map<String, dynamic>>
+        schedules,
+  }) async {
+    if (schedules.isEmpty) {
+      return <String, dynamic>{
+        'imported': 0,
+        'failed': 0,
+        'rows': <Map<String, dynamic>>[],
+        'errors': <String>[],
+      };
+    }
+
+    final List<Map<String, dynamic>>
+        insertedRows =
+        <Map<String, dynamic>>[];
+
+    final List<String> errors =
+        <String>[];
+
+    for (
+      int index = 0;
+      index < schedules.length;
+      index++
+    ) {
+      final Map<String, dynamic> row =
+          schedules[index];
+
+      try {
+        final dynamic rawDateTime =
+            row['schedule_date_time'];
+
+        if (rawDateTime == null) {
+          throw Exception(
+            'Schedule date and time are missing.',
+          );
+        }
+
+        final DateTime scheduleDateTime;
+
+        if (rawDateTime is DateTime) {
+          scheduleDateTime =
+              rawDateTime.isUtc
+                  ? rawDateTime.toLocal()
+                  : rawDateTime;
+        } else {
+          scheduleDateTime =
+              DateTime.parse(
+            rawDateTime.toString(),
+          ).toLocal();
+        }
+
+        final dynamic rawDuration =
+            row['duration_minutes'];
+
+        if (rawDuration == null) {
+          throw Exception(
+            'Duration is missing.',
+          );
+        }
+
+        final int durationMinutes =
+            rawDuration is int
+                ? rawDuration
+                : int.parse(
+                    rawDuration.toString(),
+                  );
+
+        final Map<String, dynamic>
+            insertedRow =
+            await addSchedule(
+          title:
+              row['title']?.toString() ??
+                  '',
+          time:
+              row['time']?.toString() ??
+                  '',
+          scheduleDateTime:
+              scheduleDateTime,
+          durationMinutes:
+              durationMinutes,
+          category:
+              row['category']
+                      ?.toString() ??
+                  '',
+          focusMode:
+              row['focus_mode']
+                      ?.toString() ??
+                  '',
+        );
+
+        insertedRows.add(
+          insertedRow,
+        );
+      } catch (error) {
+        errors.add(
+          'Row ${index + 2}: $error',
+        );
+      }
+    }
+
+    return <String, dynamic>{
+      'imported':
+          insertedRows.length,
+      'failed':
+          errors.length,
+      'rows':
+          insertedRows,
+      'errors':
+          errors,
+    };
+  }
+
+  // ==========================================================
   // SCHEDULE LOCAL NOTIFICATION
+  // Sends notification 5 minutes before schedule starts.
   // ==========================================================
   Future<void> _scheduleReminder({
     required String scheduleId,
@@ -168,59 +396,157 @@ class ScheduleService {
     required String title,
     required DateTime scheduleDateTime,
   }) async {
-    final bool pushEnabled =
-        await _notificationSettingService
-            .isSettingEnabled(
-      settingKey:
-          'push_notifications',
-      defaultValue: true,
-    );
-
-    final bool reminderEnabled =
-        await _notificationSettingService
-            .isSettingEnabled(
-      settingKey:
-          'schedule_reminders',
-      defaultValue: true,
-    );
-
-    if (!pushEnabled ||
-        !reminderEnabled) {
-      debugPrint(
-        'Schedule notification disabled.',
+    try {
+      final bool pushEnabled =
+          await _notificationSettingService
+              .isSettingEnabled(
+        settingKey:
+            NotificationSettingService
+                .pushNotificationsKey,
+        defaultValue: true,
       );
 
-      return;
-    }
-
-    final bool permissionGranted =
-        await LocalNotificationService
-            .instance
-            .requestPermission();
-
-    if (!permissionGranted) {
-      debugPrint(
-        'Notification permission denied.',
+      final bool reminderEnabled =
+          await _notificationSettingService
+              .isSettingEnabled(
+        settingKey:
+            NotificationSettingService
+                .scheduleReminderKey,
+        defaultValue: true,
       );
 
-      return;
+      if (!pushEnabled ||
+          !reminderEnabled) {
+        debugPrint(
+          'Schedule reminder is disabled.',
+        );
+
+        return;
+      }
+
+      final DateTime now =
+          DateTime.now();
+
+      final DateTime localScheduleTime =
+          scheduleDateTime.isUtc
+              ? scheduleDateTime.toLocal()
+              : scheduleDateTime;
+
+      if (!localScheduleTime.isAfter(
+        now,
+      )) {
+        debugPrint(
+          'Cannot create reminder because '
+          'the schedule time has passed.',
+        );
+
+        return;
+      }
+
+      DateTime reminderTime =
+          localScheduleTime.subtract(
+        const Duration(minutes: 5),
+      );
+
+      /*
+       * If the schedule starts in less than
+       * five minutes, show the reminder shortly
+       * after the schedule is created.
+       */
+      if (!reminderTime.isAfter(now)) {
+        reminderTime = now.add(
+          const Duration(seconds: 2),
+        );
+      }
+
+      final bool permissionGranted =
+          await LocalNotificationService
+              .instance
+              .requestPermission();
+
+      if (!permissionGranted) {
+        debugPrint(
+          'Notification permission denied.',
+        );
+
+        return;
+      }
+
+      /*
+       * Cancel an existing reminder first.
+       * This prevents duplicate notifications
+       * when a schedule is edited.
+       */
+      await LocalNotificationService
+          .instance
+          .cancelNotification(
+        notificationId,
+      );
+
+      await LocalNotificationService
+          .instance
+          .scheduleNotification(
+        id: notificationId,
+        title: 'Schedule reminder',
+        body:
+            '$title starts in 5 minutes.',
+        scheduledDate:
+            reminderTime,
+        payload:
+            scheduleId,
+      );
+
+      final String reminderKey =
+          _createReminderKey(
+        scheduleId,
+      );
+
+      /*
+       * Remove the previous inbox reminder
+       * before adding the updated one.
+       */
+      await _notificationSettingService
+          .deleteNotificationByKey(
+        reminderKey,
+      );
+
+      /*
+       * This is inserted now but remains hidden
+       * until visibleAt is reached.
+       */
+      await _notificationSettingService
+          .addScheduleReminderNotification(
+        scheduleTitle:
+            title,
+        scheduleId:
+            scheduleId,
+        notificationKey:
+            reminderKey,
+        visibleAt:
+            reminderTime,
+      );
+
+      debugPrint(
+        'Schedule starts at: '
+        '$localScheduleTime',
+      );
+
+      debugPrint(
+        'Reminder scheduled at: '
+        '$reminderTime',
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Schedule reminder error: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      rethrow;
     }
-
-    await LocalNotificationService
-        .instance
-        .scheduleNotification(
-      id: notificationId,
-      title: 'Schedule reminder',
-      body: '$title starts now.',
-      scheduledDate:
-          scheduleDateTime,
-      payload: scheduleId,
-    );
-
-    debugPrint(
-      'Notification scheduled for '
-      '$scheduleDateTime',
-    );
   }
 
   // ==========================================================
@@ -232,7 +558,7 @@ class ScheduleService {
         _supabase.auth.currentUser;
 
     if (user == null) {
-      return [];
+      return <Map<String, dynamic>>[];
     }
 
     try {
@@ -262,9 +588,83 @@ class ScheduleService {
       );
 
       rethrow;
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint(
         'Get schedules error: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      rethrow;
+    }
+  }
+
+  // ==========================================================
+  // GET SCHEDULES BETWEEN TWO DATES
+  // ==========================================================
+  Future<List<Map<String, dynamic>>>
+      getSchedulesBetween({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final User? user =
+        _supabase.auth.currentUser;
+
+    if (user == null) {
+      return <Map<String, dynamic>>[];
+    }
+
+    if (!end.isAfter(start)) {
+      throw Exception(
+        'End date must be after start date.',
+      );
+    }
+
+    try {
+      final List<Map<String, dynamic>>
+          schedules =
+          await _supabase
+              .from('schedules')
+              .select()
+              .eq(
+                'user_id',
+                user.id,
+              )
+              .gte(
+                'scheduled_at',
+                start
+                    .toUtc()
+                    .toIso8601String(),
+              )
+              .lt(
+                'scheduled_at',
+                end
+                    .toUtc()
+                    .toIso8601String(),
+              )
+              .order(
+                'scheduled_at',
+                ascending: true,
+              );
+
+      return schedules;
+    } on PostgrestException catch (error) {
+      debugPrint(
+        'Get schedules between dates error: '
+        '${error.message}',
+      );
+
+      rethrow;
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Get schedules between dates error: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
       );
 
       rethrow;
@@ -294,19 +694,12 @@ class ScheduleService {
   }
 
   // ==========================================================
-  // GET SCHEDULES FOR SELECTED DATE
+  // GET SCHEDULES FOR DATE
   // ==========================================================
   Future<List<Map<String, dynamic>>>
       getSchedulesForDate(
     DateTime date,
   ) async {
-    final User? user =
-        _supabase.auth.currentUser;
-
-    if (user == null) {
-      return [];
-    }
-
     final DateTime localStart =
         _startOfDay(
       date,
@@ -317,57 +710,10 @@ class ScheduleService {
       const Duration(days: 1),
     );
 
-    try {
-      final List<Map<String, dynamic>>
-          schedules =
-          await _supabase
-              .from('schedules')
-              .select()
-              .eq(
-                'user_id',
-                user.id,
-              )
-              .gte(
-                'scheduled_at',
-                localStart
-                    .toUtc()
-                    .toIso8601String(),
-              )
-              .lt(
-                'scheduled_at',
-                localEnd
-                    .toUtc()
-                    .toIso8601String(),
-              )
-              .order(
-                'scheduled_at',
-                ascending: true,
-              );
-
-      debugPrint(
-        'Loaded ${schedules.length} '
-        'schedules for '
-        '${localStart.year}-'
-        '${localStart.month}-'
-        '${localStart.day}.',
-      );
-
-      return schedules;
-    } on PostgrestException catch (error) {
-      debugPrint(
-        'Load schedules by date error: '
-        '${error.message}',
-      );
-
-      rethrow;
-    } catch (error) {
-      debugPrint(
-        'Load schedules by date error: '
-        '$error',
-      );
-
-      rethrow;
-    }
+    return getSchedulesBetween(
+      start: localStart,
+      end: localEnd,
+    );
   }
 
   // ==========================================================
@@ -379,19 +725,16 @@ class ScheduleService {
         _supabase.auth.currentUser;
 
     if (user == null) {
-      return {
+      return <String, dynamic>{
         'total': 0,
         'completed': 0,
         'progress': 0.0,
       };
     }
 
-    final DateTime now =
-        DateTime.now();
-
     final DateTime startOfToday =
         _startOfDay(
-      now,
+      DateTime.now(),
     );
 
     final DateTime startOfTomorrow =
@@ -443,7 +786,7 @@ class ScheduleService {
               ? 0.0
               : completed / total;
 
-      return {
+      return <String, dynamic>{
         'total': total,
         'completed': completed,
         'progress': progress,
@@ -455,9 +798,13 @@ class ScheduleService {
       );
 
       rethrow;
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint(
         'Today progress error: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
       );
 
       rethrow;
@@ -481,7 +828,7 @@ class ScheduleService {
           await _supabase
               .from('schedules')
               .select(
-                'title, completed',
+                'title, completed, notification_id',
               )
               .eq(
                 'id',
@@ -501,6 +848,13 @@ class ScheduleService {
       final bool wasCompleted =
           schedule['completed'] ==
               true;
+
+      final int? savedNotificationId =
+          notificationId ??
+              _parseNotificationId(
+                schedule[
+                    'notification_id'],
+              );
 
       await _supabase
           .from('schedules')
@@ -522,14 +876,37 @@ class ScheduleService {
             .logScheduleCompleted(
           scheduleTitle,
         );
+
+        await _notificationSettingService
+            .addTaskCompletedNotification(
+          scheduleTitle:
+              scheduleTitle,
+          scheduleId:
+              scheduleId,
+          notificationKey:
+              'task_completed_$scheduleId',
+        );
       }
 
+      /*
+       * Cancel the upcoming reminder after
+       * the schedule is marked completed.
+       */
       if (completed &&
-          notificationId != null) {
+          savedNotificationId != null) {
         await LocalNotificationService
             .instance
             .cancelNotification(
-          notificationId,
+          savedNotificationId,
+        );
+      }
+
+      if (completed) {
+        await _notificationSettingService
+            .deleteNotificationByKey(
+          _createReminderKey(
+            scheduleId,
+          ),
         );
       }
 
@@ -543,9 +920,13 @@ class ScheduleService {
       );
 
       rethrow;
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint(
         'Update completed error: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
       );
 
       rethrow;
@@ -565,16 +946,27 @@ class ScheduleService {
     required String focusMode,
     int? notificationId,
   }) async {
+    _validateScheduleInput(
+      title: title,
+      time: time,
+      scheduleDateTime:
+          scheduleDateTime,
+      durationMinutes:
+          durationMinutes,
+      category: category,
+      focusMode: focusMode,
+    );
+
     final User user =
         _currentUser;
 
-    if (!scheduleDateTime.isAfter(
-      DateTime.now(),
-    )) {
-      throw Exception(
-        'Please select a future date and time.',
-      );
-    }
+    final String cleanTitle =
+        _cleanText(title);
+
+    final DateTime localScheduleTime =
+        scheduleDateTime.isUtc
+            ? scheduleDateTime.toLocal()
+            : scheduleDateTime;
 
     final int newNotificationId =
         notificationId ??
@@ -591,21 +983,30 @@ class ScheduleService {
         );
       }
 
+      await _notificationSettingService
+          .deleteNotificationByKey(
+        _createReminderKey(
+          scheduleId,
+        ),
+      );
+
       await _supabase
           .from('schedules')
           .update({
-            'title': title,
-            'time': time,
+            'title':
+                cleanTitle,
+            'time':
+                _cleanText(time),
             'scheduled_at':
-                scheduleDateTime
+                localScheduleTime
                     .toUtc()
                     .toIso8601String(),
             'duration_minutes':
                 durationMinutes,
             'category':
-                category,
+                _cleanText(category),
             'focus_mode':
-                focusMode,
+                _cleanText(focusMode),
             'notification_id':
                 newNotificationId,
           })
@@ -624,9 +1025,9 @@ class ScheduleService {
         notificationId:
             newNotificationId,
         title:
-            title,
+            cleanTitle,
         scheduleDateTime:
-            scheduleDateTime,
+            localScheduleTime,
       );
 
       debugPrint(
@@ -639,9 +1040,13 @@ class ScheduleService {
       );
 
       rethrow;
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint(
         'Update schedule error: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
       );
 
       rethrow;
@@ -680,18 +1085,10 @@ class ScheduleService {
                   ?.toString() ??
               'Schedule';
 
-      final dynamic
-          notificationValue =
-          schedule['notification_id'];
-
       final int? notificationId =
-          notificationValue is int
-              ? notificationValue
-              : int.tryParse(
-                  notificationValue
-                          ?.toString() ??
-                      '',
-                );
+          _parseNotificationId(
+        schedule['notification_id'],
+      );
 
       if (notificationId != null) {
         await LocalNotificationService
@@ -700,6 +1097,13 @@ class ScheduleService {
           notificationId,
         );
       }
+
+      await _notificationSettingService
+          .deleteNotificationByKey(
+        _createReminderKey(
+          scheduleId,
+        ),
+      );
 
       await _supabase
           .from('schedules')
@@ -718,6 +1122,16 @@ class ScheduleService {
         scheduleTitle,
       );
 
+      await _notificationSettingService
+          .addTaskCancelledNotification(
+        scheduleTitle:
+            scheduleTitle,
+        scheduleId:
+            scheduleId,
+        notificationKey:
+            'task_cancelled_$scheduleId',
+      );
+
       debugPrint(
         'Schedule deleted successfully.',
       );
@@ -728,9 +1142,13 @@ class ScheduleService {
       );
 
       rethrow;
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint(
         'Delete schedule error: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
       );
 
       rethrow;

@@ -6,6 +6,7 @@ import '../widgets/auth/auth_background.dart';
 import '../widgets/auth/auth_button.dart';
 import '../widgets/auth/auth_header.dart';
 import '../widgets/auth/auth_text_field.dart';
+import 'verify_reset_otp_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -61,29 +62,29 @@ class _ForgotPasswordScreenState
 
     try {
       await Supabase.instance.client.auth
-          .resetPasswordForEmail(
-        email,
-        redirectTo:
-            'focusglow://reset-password',
-      );
+          .resetPasswordForEmail(email);
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Password reset link sent. Check your email.',
+            'Verification code sent to your email.',
           ),
         ),
       );
 
-      Navigator.pop(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              VerifyResetOtpScreen(
+            email: email,
+          ),
+        ),
+      );
     } on AuthException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -91,14 +92,12 @@ class _ForgotPasswordScreenState
         ),
       );
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to send reset link: $error',
+            'Failed to send verification code.\n$error',
           ),
         ),
       );
@@ -168,7 +167,7 @@ class _ForgotPasswordScreenState
                       title:
                           'Forgot Password',
                       subtitle:
-                          'Enter your email address and we’ll send you a reset link',
+                          'Enter your email address and we will send a 6-digit verification code.',
                       isSmallScreen:
                           isSmallScreen,
                     ),
@@ -198,7 +197,7 @@ class _ForgotPasswordScreenState
                     AuthButton(
                       title: isLoading
                           ? 'Sending...'
-                          : 'Send Reset Link',
+                          : 'Send Verification Code',
                       onPressed: isLoading
                           ? null
                           : sendResetCode,

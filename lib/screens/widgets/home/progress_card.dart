@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 
 class ProgressCard extends StatelessWidget {
-  // Progress value must be between 0.0 and 1.0.
+  // Progress value should be between 0.0 and 1.0.
   final double progress;
 
   // Number of completed schedules.
@@ -30,24 +30,49 @@ class ProgressCard extends StatelessWidget {
     final AppLocalizations localizations =
         AppLocalizations.of(context)!;
 
-    // Make sure progress stays between 0 and 1.
-    final double safeProgress =
-        progress.clamp(0.0, 1.0);
+    /*
+     * Keep the task values safe.
+     */
+    final int safeTotalTasks =
+        totalTasks < 0 ? 0 : totalTasks;
 
-    // Convert progress into percentage.
+    final int safeCompletedTasks =
+        completedTasks.clamp(
+      0,
+      safeTotalTasks,
+    );
+
+    /*
+     * Keep progress between 0 and 1.
+     */
+    final double safeProgress =
+        progress.clamp(
+      0.0,
+      1.0,
+    );
+
+    /*
+     * Convert progress into percentage.
+     */
     final int percentage =
         (safeProgress * 100).round();
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(
+        16,
+      ),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius:
-            BorderRadius.circular(20),
+            BorderRadius.circular(
+          20,
+        ),
         border: Border.all(
           color: theme.dividerColor
-              .withValues(alpha: 0.45),
+              .withValues(
+            alpha: 0.45,
+          ),
         ),
       ),
       child: Row(
@@ -60,7 +85,8 @@ class ProgressCard extends StatelessWidget {
                   CrossAxisAlignment.start,
               children: [
                 Text(
-                  localizations.todaysProgress,
+                  localizations
+                      .todaysProgress,
                   style: TextStyle(
                     color: colorScheme
                         .onSurfaceVariant,
@@ -69,11 +95,9 @@ class ProgressCard extends StatelessWidget {
                         FontWeight.w500,
                   ),
                 ),
-
                 const SizedBox(
                   height: 8,
                 ),
-
                 Text(
                   '$percentage%',
                   style: TextStyle(
@@ -84,15 +108,13 @@ class ProgressCard extends StatelessWidget {
                         FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(
                   height: 4,
                 ),
-
                 Text(
                   localizations.tasksCompleted(
-                    completedTasks,
-                    totalTasks,
+                    safeCompletedTasks,
+                    safeTotalTasks,
                   ),
                   style: TextStyle(
                     color: colorScheme
@@ -103,26 +125,33 @@ class ProgressCard extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(
             width: 16,
           ),
-
           SizedBox(
             height: 70,
             width: 70,
-            child: CircularProgressIndicator(
+            child:
+                CircularProgressIndicator(
               value: safeProgress,
               strokeWidth: 8,
               backgroundColor:
-                  colorScheme.primary.withValues(
+                  colorScheme.primary
+                      .withValues(
                 alpha: 0.15,
               ),
               valueColor:
-                  AlwaysStoppedAnimation<Color>(
+                  AlwaysStoppedAnimation<
+                      Color>(
                 colorScheme.primary,
               ),
-              strokeCap: StrokeCap.round,
+              strokeCap:
+                  StrokeCap.round,
+              semanticsLabel:
+                  localizations
+                      .todaysProgress,
+              semanticsValue:
+                  '$percentage%',
             ),
           ),
         ],

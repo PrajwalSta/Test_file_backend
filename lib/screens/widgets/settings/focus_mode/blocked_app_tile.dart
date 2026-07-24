@@ -18,65 +18,103 @@ class BlockedAppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.md,
-        vertical: 14,
-      ),
-      decoration: BoxDecoration(
-        border: showDivider
-            ? Border(
-                bottom: BorderSide(
-                  color: theme.dividerColor.withValues(alpha: 0.5),
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    return Semantics(
+      container: true,
+      toggled: app.isBlocked,
+      label: app.name,
+      child: Container(
+        width: double.infinity,
+        padding:
+            const EdgeInsets.symmetric(
+          horizontal: AppConstants.md,
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          border: showDivider
+              ? Border(
+                  bottom: BorderSide(
+                    color: theme
+                        .dividerColor
+                        .withValues(
+                      alpha: 0.5,
+                    ),
+                  ),
+                )
+              : null,
+        ),
+        child: Row(
+          children: [
+            _buildIcon(
+              context,
+            ),
+
+            const SizedBox(
+              width: AppConstants.md,
+            ),
+
+            Expanded(
+              child: Text(
+                app.name,
+                maxLines: 1,
+                overflow:
+                    TextOverflow.ellipsis,
+                style: theme
+                    .textTheme.bodyMedium
+                    ?.copyWith(
+                  color:
+                      colorScheme.onSurface,
+                  fontWeight:
+                      FontWeight.w600,
                 ),
-              )
-            : null,
-      ),
-      child: Row(
-        children: [
-          _buildIcon(context),
-
-          const SizedBox(width: AppConstants.md),
-
-          Expanded(
-            child: Text(
-              app.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
 
-          const SizedBox(width: 12),
+            const SizedBox(
+              width: 12,
+            ),
 
-          CustomSwitch(
-            value: app.isBlocked,
-            onChanged: onChanged,
-          ),
-        ],
+            CustomSwitch(
+              value: app.isBlocked,
+              onChanged: onChanged,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildIcon(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget _buildIcon(
+    BuildContext context,
+  ) {
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
+        color: colorScheme.primary
+            .withValues(
+          alpha: 0.12,
+        ),
+        borderRadius:
+            BorderRadius.circular(
+          14,
+        ),
         border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.18),
+          color: colorScheme.primary
+              .withValues(
+            alpha: 0.18,
+          ),
         ),
       ),
       child: Icon(

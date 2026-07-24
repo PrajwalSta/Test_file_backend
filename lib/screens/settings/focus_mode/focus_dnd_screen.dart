@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../main_screen.dart';
 import 'package:flutter_app_focus_glow/models/blocked_app_model.dart';
 import 'package:flutter_app_focus_glow/screens/theme/app_constants.dart';
@@ -53,7 +54,8 @@ class _FocusDndScreenState
   void initState() {
     super.initState();
 
-    blockedApps = List<BlockedAppModel>.from(
+    blockedApps =
+        List<BlockedAppModel>.from(
       BlockedAppModel.demoApps,
     );
 
@@ -63,7 +65,8 @@ class _FocusDndScreenState
   Future<void> _loadSettings() async {
     try {
       final settings =
-          await _focusModeService.loadSettings();
+          await _focusModeService
+              .loadSettings();
 
       if (!mounted) {
         return;
@@ -113,6 +116,10 @@ class _FocusDndScreenState
         isLoading = false;
       });
     } catch (error) {
+      debugPrint(
+        'Unable to load Focus Mode settings: $error',
+      );
+
       if (!mounted) {
         return;
       }
@@ -121,8 +128,12 @@ class _FocusDndScreenState
         isLoading = false;
       });
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       _showMessage(
-        'Unable to load Focus Mode settings: $error',
+        localizations
+            .unableToLoadFocusModeSettings,
       );
     }
   }
@@ -137,7 +148,8 @@ class _FocusDndScreenState
     });
 
     try {
-      await _focusModeService.saveSettings(
+      await _focusModeService
+          .saveSettings(
         focusModeEnabled:
             focusModeEnabled,
         breakIntervalMinutes:
@@ -160,12 +172,20 @@ class _FocusDndScreenState
             dndEndTime,
       );
     } catch (error) {
+      debugPrint(
+        'Unable to save Focus Mode settings: $error',
+      );
+
       if (!mounted) {
         return;
       }
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       _showMessage(
-        'Unable to save Focus Mode settings: $error',
+        localizations
+            .unableToSaveFocusModeSettings,
       );
     } finally {
       if (mounted) {
@@ -176,7 +196,9 @@ class _FocusDndScreenState
     }
   }
 
-  bool _blockedValueAt(int index) {
+  bool _blockedValueAt(
+    int index,
+  ) {
     if (index < 0 ||
         index >= blockedApps.length) {
       return false;
@@ -195,13 +217,16 @@ class _FocusDndScreenState
     }
 
     setState(() {
-      blockedApps[index].isBlocked = value;
+      blockedApps[index].isBlocked =
+          value;
     });
 
     _saveSettings();
   }
 
-  void updateBreakInterval(int value) {
+  void updateBreakInterval(
+    int value,
+  ) {
     setState(() {
       selectedBreak = value;
     });
@@ -209,7 +234,9 @@ class _FocusDndScreenState
     _saveSettings();
   }
 
-  void updateFocusMode(bool value) {
+  void updateFocusMode(
+    bool value,
+  ) {
     setState(() {
       focusModeEnabled = value;
     });
@@ -217,7 +244,9 @@ class _FocusDndScreenState
     _saveSettings();
   }
 
-  void updateDnd(bool value) {
+  void updateDnd(
+    bool value,
+  ) {
     setState(() {
       dndEnabled = value;
     });
@@ -245,43 +274,77 @@ class _FocusDndScreenState
     _saveSettings();
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
+  void _showMessage(
+    String message,
+  ) {
+    final ScaffoldMessengerState messenger =
+        ScaffoldMessenger.of(context);
+
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
         ),
-      );
+        behavior:
+            SnackBarBehavior.floating,
+      ),
+    );
   }
 
-  void _handleBottomNavTap(int index) {
+  void _handleBottomNavTap(
+    int index,
+  ) {
+    if (index == 4) {
+      Navigator.pop(context);
+      return;
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (_) => MainScreen(
-          initialIndex: index,
-        ),
+      MaterialPageRoute<void>(
+        builder: (
+          BuildContext context,
+        ) {
+          return MainScreen(
+            initialIndex: index,
+          );
+        },
       ),
-      (route) => false,
+      (
+        Route<dynamic> route,
+      ) {
+        return false;
+      },
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    final ThemeData theme =
+        Theme.of(context);
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor:
-          Theme.of(context).scaffoldBackgroundColor,
-
+          theme.scaffoldBackgroundColor,
       bottomNavigationBar: BottomNavBar(
         currentIndex: 4,
         onTap: _handleBottomNavTap,
       ),
-
       body: SafeArea(
         child: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(),
+            ? Center(
+                child:
+                    CircularProgressIndicator(
+                  color: theme
+                      .colorScheme.primary,
+                ),
               )
             : Stack(
                 children: [
@@ -299,11 +362,13 @@ class _FocusDndScreenState
                       const FocusHeader(),
 
                       const SizedBox(
-                        height: AppConstants.xl,
+                        height:
+                            AppConstants.xl,
                       ),
 
                       SizedBox(
-                        width: double.infinity,
+                        width:
+                            double.infinity,
                         child: FocusModeCard(
                           value:
                               focusModeEnabled,
@@ -313,12 +378,15 @@ class _FocusDndScreenState
                       ),
 
                       const SizedBox(
-                        height: AppConstants.lg,
+                        height:
+                            AppConstants.lg,
                       ),
 
                       SizedBox(
-                        width: double.infinity,
-                        child: BreakIntervalCard(
+                        width:
+                            double.infinity,
+                        child:
+                            BreakIntervalCard(
                           selectedValue:
                               selectedBreak,
                           onSelected:
@@ -327,20 +395,26 @@ class _FocusDndScreenState
                       ),
 
                       const SizedBox(
-                        height: AppConstants.xl,
+                        height:
+                            AppConstants.xl,
                       ),
 
-                      const SectionTitle(
-                        title: 'BLOCKED APPS',
+                      SectionTitle(
+                        title: localizations
+                            .blockedApps
+                            .toUpperCase(),
                       ),
 
                       const SizedBox(
-                        height: AppConstants.sm,
+                        height:
+                            AppConstants.sm,
                       ),
 
                       SizedBox(
-                        width: double.infinity,
-                        child: BlockedAppsCard(
+                        width:
+                            double.infinity,
+                        child:
+                            BlockedAppsCard(
                           apps: blockedApps,
                           onChanged:
                               updateBlockedApp,
@@ -348,14 +422,18 @@ class _FocusDndScreenState
                       ),
 
                       const SizedBox(
-                        height: AppConstants.lg,
+                        height:
+                            AppConstants.lg,
                       ),
 
                       SizedBox(
-                        width: double.infinity,
+                        width:
+                            double.infinity,
                         child: DndCard(
-                          enabled: dndEnabled,
-                          onChanged: updateDnd,
+                          enabled:
+                              dndEnabled,
+                          onChanged:
+                              updateDnd,
                           startTime:
                               dndStartTime,
                           endTime:
@@ -368,21 +446,28 @@ class _FocusDndScreenState
                       ),
 
                       const SizedBox(
-                        height: AppConstants.lg,
+                        height:
+                            AppConstants.lg,
                       ),
                     ],
                   ),
 
                   if (isSaving)
-                    const Positioned(
+                    Positioned(
                       top: 8,
-                      right: AppConstants.lg,
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
+                      right:
+                          AppConstants.lg,
+                      child: Semantics(
+                        label: localizations
+                            .saving,
                         child:
-                            CircularProgressIndicator(
-                          strokeWidth: 2,
+                            const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child:
+                              CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
                         ),
                       ),
                     ),

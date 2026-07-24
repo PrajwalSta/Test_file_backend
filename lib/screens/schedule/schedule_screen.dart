@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../l10n/app_localizations.dart';
+
 import '../../models/schedule_model.dart';
 import '../../services/local_notification_service.dart';
-import '../../services/notification_setting_service.dart';
 import '../../services/profile/profile_service.dart';
 import '../theme/app_constants.dart';
 import '../widgets/schedule/add_schedule_sheet.dart';
@@ -32,6 +33,9 @@ class _ScheduleScreenState
   final ProfileService _profileService =
       ProfileService();
 
+  late AppLocalizations _localizations;
+  bool _didLoadSchedules = false;
+
   String selectedCategory = 'All';
 
   bool _showAddScheduleSheet = false;
@@ -45,10 +49,16 @@ class _ScheduleScreenState
   List<ScheduleModel> tomorrowSchedules = [];
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    _loadSchedules();
+    _localizations =
+        AppLocalizations.of(context)!;
+
+    if (!_didLoadSchedules) {
+      _didLoadSchedules = true;
+      _loadSchedules();
+    }
   }
 
   String _formatDisplayTime(
@@ -73,8 +83,8 @@ class _ScheduleScreenState
 
     final String period =
         hour >= 12
-            ? 'PM'
-            : 'AM';
+            ? _localizations.pm
+            : _localizations.am;
 
     return '$displayHour:$minute $period';
   }
@@ -91,7 +101,7 @@ class _ScheduleScreenState
       setState(() {
         _isLoading = false;
         _errorMessage =
-            'Please log in to view schedules.';
+            _localizations.loginToViewSchedules;
         todaySchedules = [];
         tomorrowSchedules = [];
       });
@@ -189,7 +199,7 @@ class _ScheduleScreenState
         final String categoryName =
             row['category']
                     ?.toString() ??
-                'Study';
+                _localizations.study;
 
         final ScheduleCategory category =
             CategorySelector.categories
@@ -255,7 +265,7 @@ class _ScheduleScreenState
           title:
               row['title']
                       ?.toString() ??
-                  'Untitled',
+                  _localizations.untitled,
           time:
               row['time']
                       ?.toString() ??
@@ -271,7 +281,7 @@ class _ScheduleScreenState
           focusMode:
               row['focus_mode']
                       ?.toString() ??
-                  'Study Mode',
+                  _localizations.studyMode,
           durationMinutes:
               (row['duration_minutes']
                           as num?)
@@ -280,6 +290,10 @@ class _ScheduleScreenState
           completed:
               row['completed'] ==
                   true,
+          notificationId:
+              _parseNotificationId(
+            row['notification_id'],
+          ),
         );
 
         if (scheduleDay == today) {
@@ -335,8 +349,9 @@ class _ScheduleScreenState
       setState(() {
         _isLoading = false;
         _errorMessage =
-            'Database error: '
-            '${error.message}';
+            _localizations.databaseError(
+              error.message,
+            );
       });
     } catch (error, stackTrace) {
       debugPrint(
@@ -355,9 +370,29 @@ class _ScheduleScreenState
       setState(() {
         _isLoading = false;
         _errorMessage =
-            'Unable to load schedules.';
+            _localizations.unableToLoadSchedules;
       });
     }
+  }
+
+  int? _parseNotificationId(
+    dynamic value,
+  ) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    return int.tryParse(
+      value.toString(),
+    );
   }
 
   List<ScheduleModel>
@@ -395,6 +430,11 @@ class _ScheduleScreenState
   void _openAddScheduleSheet() {
     FocusScope.of(context).unfocus();
 
+    if (!mounted ||
+        _showAddScheduleSheet) {
+      return;
+    }
+
     setState(() {
       _showAddScheduleSheet = true;
     });
@@ -402,6 +442,11 @@ class _ScheduleScreenState
 
   void _closeAddScheduleSheet() {
     FocusScope.of(context).unfocus();
+
+    if (!mounted ||
+        !_showAddScheduleSheet) {
+      return;
+    }
 
     setState(() {
       _showAddScheduleSheet = false;
@@ -411,10 +456,35 @@ class _ScheduleScreenState
   Future<void> _saveNewSchedule(
     ScheduleModel newSchedule,
   ) async {
-    if (mounted) {
-      setState(() {
-        _showAddScheduleSheet = false;
-      });
+    /*
+     * Close the Add Schedule sheet immediately
+     * after the schedule is saved.
+     */
+    _closeAddScheduleSheet();
+
+    try {
+      await LocalNotificationService.instance
+          .showAndSaveNotification(
+        title:
+            _localizations.scheduleAdded,
+        body:
+            _localizations.scheduleAddedBody(
+          newSchedule.title,
+        ),
+        type: 'schedule_added',
+        scheduleId:
+            newSchedule.id,
+        payload:
+            newSchedule.id == null
+                ? 'schedule_added'
+                : 'schedule_added:'
+                    '${newSchedule.id}',
+      );
+    } catch (error) {
+      debugPrint(
+        'Schedule added notification error: '
+        '$error',
+      );
     }
 
     await _loadSchedules();
@@ -426,18 +496,21 @@ class _ScheduleScreenState
     }
 
     ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(
-          'Schedule added successfully: '
-          '${newSchedule.title}',
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            _localizations
+                .scheduleAddedSuccessfully(
+              newSchedule.title,
+            ),
+          ),
+          behavior:
+              SnackBarBehavior.floating,
+          backgroundColor:
+              newSchedule.categoryColor,
         ),
-        behavior:
-            SnackBarBehavior.floating,
-        backgroundColor:
-            newSchedule.categoryColor,
-      ),
-    );
+      );
   }
 
   Future<void> _updateCompleted(
@@ -458,9 +531,9 @@ class _ScheduleScreenState
         scheduleId.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Schedule ID is missing.',
+            _localizations.scheduleIdMissing,
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -473,10 +546,10 @@ class _ScheduleScreenState
     if (currentUser == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Please log in before '
-            'updating a schedule.',
+            _localizations
+                .loginBeforeUpdatingSchedule,
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -518,8 +591,7 @@ class _ScheduleScreenState
 
       if (updatedRows.isEmpty) {
         throw Exception(
-          'Schedule was not updated. '
-          'Check the schedule RLS policy.',
+          _localizations.scheduleUpdateFailed,
         );
       }
 
@@ -542,24 +614,67 @@ class _ScheduleScreenState
         '$completedCount',
       );
 
-      final NotificationSettingService
-          notificationSettingService =
-          NotificationSettingService();
-
       if (completed) {
-        final bool notificationEnabled =
-            await notificationSettingService
-                .isTaskCompletedNotificationEnabled();
+        try {
+          final int notificationId =
+              schedule.notificationId ??
+                  scheduleId.hashCode;
 
-        if (notificationEnabled) {
           await LocalNotificationService
               .instance
-              .showTaskStatusNotification(
+              .cancelScheduleNotification(
+            notificationId:
+                notificationId,
+            scheduleId:
+                scheduleId,
+          );
+        } catch (error) {
+          debugPrint(
+            'Reminder cancellation error: '
+            '$error',
+          );
+        }
+
+        try {
+          await LocalNotificationService
+              .instance
+              .showTaskCompletedNotification(
+            taskTitle:
+                schedule.title,
+            scheduleId:
+                scheduleId,
+            id:
+                scheduleId.hashCode,
+          );
+        } catch (error) {
+          debugPrint(
+            'Task completed notification '
+            'error: $error',
+          );
+        }
+      } else {
+        try {
+          await LocalNotificationService
+              .instance
+              .showAndSaveNotification(
             title:
-                'Task completed',
+                _localizations.taskReopened,
             body:
-                'Task "${schedule.title}" '
-                'has been completed.',
+                _localizations.taskReopenedBody(
+              schedule.title,
+            ),
+            type:
+                'task_reopened',
+            scheduleId:
+                scheduleId,
+            payload:
+                'task_reopened:'
+                '$scheduleId',
+          );
+        } catch (error) {
+          debugPrint(
+            'Task reopened notification '
+            'error: $error',
           );
         }
       }
@@ -573,21 +688,26 @@ class _ScheduleScreenState
       }
 
       ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: Text(
-            completed
-                ? 'Task "${schedule.title}" '
-                    'marked as completed. '
-                    'Done: $completedCount'
-                : 'Task "${schedule.title}" '
-                    'marked as incomplete. '
-                    'Done: $completedCount',
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              completed
+                  ? _localizations
+                      .taskMarkedCompleted(
+                      schedule.title,
+                      completedCount,
+                    )
+                  : _localizations
+                      .taskMarkedIncomplete(
+                      schedule.title,
+                      completedCount,
+                    ),
+            ),
+            behavior:
+                SnackBarBehavior.floating,
           ),
-          behavior:
-              SnackBarBehavior.floating,
-        ),
-      );
+        );
     } on PostgrestException catch (error) {
       debugPrint(
         'Completed update error: '
@@ -607,8 +727,9 @@ class _ScheduleScreenState
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Update failed: '
-            '${error.message}',
+            _localizations.updateFailed(
+              error.message,
+            ),
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -632,8 +753,10 @@ class _ScheduleScreenState
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to update schedule: '
-            '$error',
+            _localizations
+                .unableToUpdateSchedule(
+              error.toString(),
+            ),
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -662,9 +785,9 @@ class _ScheduleScreenState
         scheduleId.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Schedule ID is missing.',
+            _localizations.scheduleIdMissing,
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -680,10 +803,10 @@ class _ScheduleScreenState
     if (currentUser == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Please log in before '
-            'deleting a schedule.',
+            _localizations
+                .loginBeforeDeletingSchedule,
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -698,6 +821,49 @@ class _ScheduleScreenState
     });
 
     try {
+      /*
+       * Cancel the scheduled reminder.
+       */
+      try {
+        final int notificationId =
+            schedule.notificationId ??
+                scheduleId.hashCode;
+
+        await LocalNotificationService
+            .instance
+            .cancelScheduleNotification(
+          notificationId:
+              notificationId,
+          scheduleId:
+              scheduleId,
+        );
+      } catch (error) {
+        debugPrint(
+          'Schedule reminder cancellation '
+          'error: $error',
+        );
+      }
+
+      /*
+       * Save the cancellation notification
+       * before deleting the schedule row.
+       */
+      try {
+        await LocalNotificationService
+            .instance
+            .showScheduleDeletedNotification(
+          scheduleTitle:
+              schedule.title,
+          scheduleId:
+              scheduleId,
+        );
+      } catch (error) {
+        debugPrint(
+          'Schedule deleted notification '
+          'error: $error',
+        );
+      }
+
       final List<Map<String, dynamic>>
           deletedRows =
           await _supabase
@@ -722,8 +888,7 @@ class _ScheduleScreenState
 
       if (deletedRows.isEmpty) {
         throw Exception(
-          'Schedule was not deleted. '
-          'Check the schedule RLS policy.',
+          _localizations.scheduleDeleteFailed,
         );
       }
 
@@ -736,26 +901,6 @@ class _ScheduleScreenState
         '$completedCount',
       );
 
-      final NotificationSettingService
-          notificationSettingService =
-          NotificationSettingService();
-
-      final bool notificationEnabled =
-          await notificationSettingService
-              .isScheduleDeleteNotificationEnabled();
-
-      if (notificationEnabled) {
-        await LocalNotificationService
-            .instance
-            .showTaskStatusNotification(
-          title:
-              'Schedule cancelled',
-          body:
-              'Schedule "${schedule.title}" '
-              'has been cancelled.',
-        );
-      }
-
       await _loadSchedules();
 
       widget.onScheduleUpdated?.call();
@@ -765,16 +910,19 @@ class _ScheduleScreenState
       }
 
       ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: Text(
-            'Schedule deleted successfully: '
-            '${schedule.title}',
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              _localizations
+                  .scheduleDeletedSuccessfully(
+                schedule.title,
+              ),
+            ),
+            behavior:
+                SnackBarBehavior.floating,
           ),
-          behavior:
-              SnackBarBehavior.floating,
-        ),
-      );
+        );
     } on PostgrestException catch (error) {
       debugPrint(
         'Delete message: '
@@ -794,8 +942,9 @@ class _ScheduleScreenState
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Delete failed: '
-            '${error.message}',
+            _localizations.deleteFailed(
+              error.message,
+            ),
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -819,8 +968,10 @@ class _ScheduleScreenState
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to delete schedule: '
-            '$error',
+            _localizations
+                .unableToDeleteSchedule(
+              error.toString(),
+            ),
           ),
           behavior:
               SnackBarBehavior.floating,
@@ -839,16 +990,18 @@ class _ScheduleScreenState
     ScheduleModel schedule,
   ) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(
-          'Schedule selected: '
-          '${schedule.title}',
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            _localizations.scheduleSelected(
+              schedule.title,
+            ),
+          ),
+          behavior:
+              SnackBarBehavior.floating,
         ),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
-    );
+      );
   }
 
   Widget _buildScheduleContent() {
@@ -886,8 +1039,8 @@ class _ScheduleScreenState
                 icon: const Icon(
                   Icons.refresh_rounded,
                 ),
-                label: const Text(
-                  'Try Again',
+                label: Text(
+                  _localizations.tryAgain,
                 ),
               ),
             ],
@@ -901,7 +1054,7 @@ class _ScheduleScreenState
           CrossAxisAlignment.start,
       children: [
         ScheduleList(
-          title: 'Today',
+          title: _localizations.today,
           tasks:
               filteredTodaySchedules,
           onScheduleTap:
@@ -915,7 +1068,7 @@ class _ScheduleScreenState
           height: 24,
         ),
         ScheduleList(
-          title: 'Tomorrow',
+          title: _localizations.tomorrow,
           tasks:
               filteredTomorrowSchedules,
           onScheduleTap:
@@ -984,6 +1137,11 @@ class _ScheduleScreenState
                 ),
               ),
             ),
+
+            /*
+             * Show the floating add button only
+             * while the sheet is closed.
+             */
             if (!_showAddScheduleSheet)
               Positioned(
                 right:
@@ -999,7 +1157,16 @@ class _ScheduleScreenState
                   ),
                 ),
               ),
-            if (_showAddScheduleSheet)
+
+            /*
+             * Add the overlay and sheet only when
+             * _showAddScheduleSheet is true.
+             *
+             * This completely removes the sheet
+             * after save instead of moving it to
+             * bottom: -1000.
+             */
+            if (_showAddScheduleSheet) ...[
               Positioned.fill(
                 child: GestureDetector(
                   behavior:
@@ -1014,27 +1181,19 @@ class _ScheduleScreenState
                   ),
                 ),
               ),
-            AnimatedPositioned(
-              duration:
-                  const Duration(
-                milliseconds: 300,
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child:
+                    AddScheduleSheet(
+                  onClose:
+                      _closeAddScheduleSheet,
+                  onScheduleSaved:
+                      _saveNewSchedule,
+                ),
               ),
-              curve:
-                  Curves.easeOutCubic,
-              left: 0,
-              right: 0,
-              bottom:
-                  _showAddScheduleSheet
-                      ? 0
-                      : -1000,
-              child:
-                  AddScheduleSheet(
-                onClose:
-                    _closeAddScheduleSheet,
-                onScheduleSaved:
-                    _saveNewSchedule,
-              ),
-            ),
+            ],
           ],
         ),
       ),

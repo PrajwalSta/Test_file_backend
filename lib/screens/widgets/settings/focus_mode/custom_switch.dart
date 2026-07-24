@@ -12,25 +12,40 @@ class CustomSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
 
-    return SizedBox(
-      height: 32,
-      child: Transform.scale(
-        scale: 0.9,
-        child: Switch(
-          value: value,
-          onChanged: onChanged,
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
-          activeThumbColor: colorScheme.onPrimary,
-          activeTrackColor: colorScheme.primary,
+    return Semantics(
+      container: true,
+      toggled: value,
+      child: SizedBox(
+        height: 32,
+        child: Transform.scale(
+          scale: 0.9,
+          child: Switch(
+            value: value,
+            onChanged: onChanged,
 
-          inactiveThumbColor: colorScheme.onSurfaceVariant,
-          inactiveTrackColor:
-              colorScheme.onSurface.withValues(alpha: 0.15),
+            activeThumbColor:
+                colorScheme.onPrimary,
+            activeTrackColor:
+                colorScheme.primary,
 
-          materialTapTargetSize:
-              MaterialTapTargetSize.shrinkWrap,
+            inactiveThumbColor:
+                colorScheme.onSurfaceVariant,
+            inactiveTrackColor:
+                colorScheme.onSurface
+                    .withValues(
+                  alpha: 0.15,
+                ),
+
+            materialTapTargetSize:
+                MaterialTapTargetSize
+                    .shrinkWrap,
+          ),
         ),
       ),
     );

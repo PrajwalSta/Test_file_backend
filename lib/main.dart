@@ -6,104 +6,292 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'l10n/app_localizations.dart';
 import 'providers/language_provider.dart';
-import 'screens/Auth/reset_password_screen.dart';
+import 'providers/theme_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/theme/app_theme.dart';
-import 'screens/theme/theme_provider.dart';
 import 'services/local_notification_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey =
     GlobalKey<NavigatorState>();
 
-StreamSubscription<AuthState>? authSubscription;
+StreamSubscription<AuthState>?
+    authSubscription;
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding
+      .ensureInitialized();
 
+  /*
+   * ------------------------------------------------------
+   * Initialize Supabase
+   * ------------------------------------------------------
+   */
   await Supabase.initialize(
-    url: 'https://kuqiieuuuurvxtnlpqac.supabase.co',
+    url:
+        'https://kuqiieuuuurvxtnlpqac.supabase.co',
     publishableKey:
         'sb_publishable_2dn-psJkX9OjFVoPc5rQ9w_h-0KgVR-',
   );
 
-  await LocalNotificationService.instance.initialize();
+  /*
+   * ------------------------------------------------------
+   * Initialize local notifications
+   * ------------------------------------------------------
+   */
+  try {
+    await LocalNotificationService
+        .instance
+        .initialize();
 
-  final LanguageProvider languageProvider =
+    debugPrint(
+      'Local notification service initialized.',
+    );
+  } catch (error, stackTrace) {
+    /*
+     * Notification failure should not stop
+     * the complete application.
+     */
+    debugPrint(
+      'Local notification initialization '
+      'failed: $error',
+    );
+
+    debugPrintStack(
+      stackTrace: stackTrace,
+    );
+  }
+
+  /*
+   * ------------------------------------------------------
+   * Create application providers
+   * ------------------------------------------------------
+   */
+  final LanguageProvider
+      languageProvider =
       LanguageProvider();
 
   final ThemeProvider themeProvider =
       ThemeProvider();
 
   /*
-   * Load language saved on the device or backend.
+   * Load locally saved language.
    */
-  await languageProvider.loadSavedLanguage();
+  try {
+    await languageProvider
+        .loadSavedLanguage();
+  } catch (error, stackTrace) {
+    debugPrint(
+      'Could not load saved language: '
+      '$error',
+    );
 
-  /*
-   * Load Dark Mode when a Supabase session
-   * already exists.
-   */
-  if (Supabase.instance.client.auth.currentUser !=
-      null) {
-    await themeProvider.loadTheme();
+    debugPrintStack(
+      stackTrace: stackTrace,
+    );
   }
 
-  authSubscription =
-      Supabase.instance.client.auth.onAuthStateChange.listen(
-    (AuthState state) async {
+  /*
+   * Load the signed-in user's saved theme.
+   *
+   * Do not request Supabase theme data when
+   * there is no authenticated user.
+   */
+  if (Supabase.instance.client.auth
+          .currentUser !=
+      null) {
+    try {
+      await themeProvider.loadTheme();
+    } catch (error, stackTrace) {
       debugPrint(
-        'Supabase authentication event: ${state.event}',
+        'Could not load saved theme: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /*
+   * ------------------------------------------------------
+   * Start the Flutter application
+   * ------------------------------------------------------
+   */
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<
+            ThemeProvider>.value(
+          value: themeProvider,
+        ),
+        ChangeNotifierProvider<
+            LanguageProvider>.value(
+          value: languageProvider,
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
+
+  /*
+   * ------------------------------------------------------
+   * Listen to Supabase authentication events
+   * ------------------------------------------------------
+   *
+   * Password reset OTP flow:
+   *
+   * ForgotPasswordScreen
+   * -> VerifyResetOtpScreen
+   * -> ResetPasswordScreen
+   * -> LoginScreen
+   *
+   * main.dart must not automatically open
+   * ResetPasswordScreen.
+   * ------------------------------------------------------
+   */
+  authSubscription =
+      Supabase.instance.client.auth
+          .onAuthStateChange
+          .listen(
+    (
+      AuthState state,
+    ) async {
+      debugPrint(
+        'Supabase authentication event: '
+        '${state.event}',
       );
 
       /*
-       * Password recovery redirect.
+       * Do not navigate here during password
+       * recovery.
+       *
+       * VerifyResetOtpScreen is responsible for
+       * opening ResetPasswordScreen after:
+       *
+       * verifyOTP(
+       *   type: OtpType.recovery,
+       * )
        */
       if (state.event ==
-          AuthChangeEvent.passwordRecovery) {
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) {
-            final NavigatorState? navigator =
-                navigatorKey.currentState;
-
-            if (navigator == null) {
-              debugPrint(
-                'Navigator is not ready for password recovery.',
-              );
-              return;
-            }
-
-            navigator.pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (_) =>
-                    const ResetPasswordScreen(),
-              ),
-              (Route<dynamic> route) => false,
-            );
-          },
+          AuthChangeEvent
+              .passwordRecovery) {
+        debugPrint(
+          'Password recovery session detected. '
+          'Navigation is handled by the OTP screen.',
         );
+
+        return;
       }
 
       /*
-       * Load language and theme after login
-       * or when Supabase restores a session.
+       * Reload user settings after a normal
+       * sign-in or after Supabase restores an
+       * existing session.
+       *
+       * OTP verification may also create a
+       * signedIn event. This block only loads
+       * settings and does not navigate.
        */
       if (state.event ==
-              AuthChangeEvent.signedIn ||
+              AuthChangeEvent
+                  .signedIn ||
           state.event ==
-              AuthChangeEvent.initialSession) {
-        await languageProvider.loadSavedLanguage();
+              AuthChangeEvent
+                  .initialSession) {
+        /*
+         * Ensure a valid user exists before
+         * loading user-specific settings.
+         */
+        final User? currentUser =
+            state.session?.user ??
+                Supabase.instance.client.auth
+                    .currentUser;
 
-        await themeProvider.loadTheme();
+        if (currentUser == null) {
+          debugPrint(
+            'No authenticated user is available.',
+          );
+
+          return;
+        }
+
+        try {
+          await languageProvider
+              .loadSavedLanguage();
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Could not reload language '
+            'after authentication: $error',
+          );
+
+          debugPrintStack(
+            stackTrace: stackTrace,
+          );
+        }
+
+        try {
+          await themeProvider
+              .loadTheme();
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Could not reload theme '
+            'after authentication: $error',
+          );
+
+          debugPrintStack(
+            stackTrace: stackTrace,
+          );
+        }
       }
 
       /*
-       * Reset language and theme after logout.
+       * Reset provider values and local
+       * notifications after logout.
        */
       if (state.event ==
           AuthChangeEvent.signedOut) {
-        languageProvider.resetLanguage();
+        languageProvider
+            .resetLanguage();
 
-        themeProvider.resetTheme();
+        try {
+          await themeProvider
+              .resetTheme();
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Could not reset theme '
+            'after logout: $error',
+          );
+
+          debugPrintStack(
+            stackTrace: stackTrace,
+          );
+        }
+
+        /*
+         * Cancel local notifications belonging
+         * to the previously signed-in user.
+         *
+         * clearInbox is false because notification
+         * inbox rows should remain in Supabase.
+         */
+        try {
+          await LocalNotificationService
+              .instance
+              .cancelAllNotifications(
+            clearInbox: false,
+          );
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Could not cancel local '
+            'notifications after logout: '
+            '$error',
+          );
+
+          debugPrintStack(
+            stackTrace: stackTrace,
+          );
+        }
       }
     },
     onError: (
@@ -111,23 +299,14 @@ Future<void> main() async {
       StackTrace stackTrace,
     ) {
       debugPrint(
-        'Supabase authentication error: $error',
+        'Supabase authentication error: '
+        '$error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
       );
     },
-  );
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(
-          value: themeProvider,
-        ),
-        ChangeNotifierProvider.value(
-          value: languageProvider,
-        ),
-      ],
-      child: const MyApp(),
-    ),
   );
 }
 
@@ -137,62 +316,114 @@ class MyApp extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return const FocusGlowApp();
   }
 }
 
-class FocusGlowApp extends StatelessWidget {
+class FocusGlowApp
+    extends StatelessWidget {
   const FocusGlowApp({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final ThemeProvider themeProvider =
         context.watch<ThemeProvider>();
 
-    final LanguageProvider languageProvider =
-        context.watch<LanguageProvider>();
+    final LanguageProvider
+        languageProvider =
+        context.watch<
+            LanguageProvider>();
 
     return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
+      navigatorKey:
+          navigatorKey,
 
-      title: 'Focus Glow',
+      debugShowCheckedModeBanner:
+          false,
 
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeProvider.themeMode,
+      title:
+          'Focus Glow',
 
-      locale: languageProvider.locale,
+      /*
+       * Light theme using the user's selected
+       * primary and secondary colors.
+       */
+      theme:
+          AppTheme.lightTheme(
+        primaryColor:
+            themeProvider
+                .primaryColor,
+        secondaryColor:
+            themeProvider
+                .secondaryColor,
+      ),
+
+      /*
+       * Dark theme using the user's selected
+       * primary and secondary colors.
+       */
+      darkTheme:
+          AppTheme.darkTheme(
+        primaryColor:
+            themeProvider
+                .primaryColor,
+        secondaryColor:
+            themeProvider
+                .secondaryColor,
+      ),
+
+      themeMode:
+          themeProvider.themeMode,
+
+      locale:
+          languageProvider.locale,
 
       localizationsDelegates:
-          AppLocalizations.localizationsDelegates,
+          AppLocalizations
+              .localizationsDelegates,
 
       supportedLocales:
-          AppLocalizations.supportedLocales,
+          AppLocalizations
+              .supportedLocales,
 
-      localeResolutionCallback: (
+      localeResolutionCallback:
+          (
         Locale? locale,
-        Iterable<Locale> supportedLocales,
+        Iterable<Locale>
+            supportedLocales,
       ) {
         if (locale == null) {
-          return const Locale('en');
+          return const Locale(
+            'en',
+          );
         }
 
-        for (final Locale supportedLocale
-            in supportedLocales) {
-          if (supportedLocale.languageCode ==
+        for (
+          final Locale
+              supportedLocale
+          in supportedLocales
+        ) {
+          if (supportedLocale
+                  .languageCode ==
               locale.languageCode) {
             return supportedLocale;
           }
         }
 
-        return const Locale('en');
+        return const Locale(
+          'en',
+        );
       },
 
-      home: const SplashScreen(),
+      home:
+          const SplashScreen(),
     );
   }
 }

@@ -1,23 +1,48 @@
 import 'package:flutter/material.dart';
 
 class PhoneStatusBar extends StatelessWidget {
-  const PhoneStatusBar({super.key});
+  final String timeText;
+  final int batteryPercentage;
+  final bool isCharging;
+
+  const PhoneStatusBar({
+    super.key,
+    this.timeText = '9:41',
+    this.batteryPercentage = 87,
+    this.isCharging = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final int safeBatteryPercentage =
+        batteryPercentage.clamp(
+      0,
+      100,
+    );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
+      padding: const EdgeInsets.fromLTRB(
+        22,
+        14,
+        22,
+        8,
+      ),
       child: Row(
         children: [
           Text(
-            "9:41",
+            timeText,
             style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
+              color: colorScheme
+                  .onSurfaceVariant,
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
 
@@ -28,9 +53,15 @@ class PhoneStatusBar extends StatelessWidget {
             height: 18,
             decoration: BoxDecoration(
               color: theme.cardColor,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius:
+                  BorderRadius.circular(
+                20,
+              ),
               border: Border.all(
-                color: theme.dividerColor.withValues(alpha: 0.4),
+                color: theme.dividerColor
+                    .withValues(
+                  alpha: 0.4,
+                ),
               ),
             ),
           ),
@@ -38,25 +69,42 @@ class PhoneStatusBar extends StatelessWidget {
           const Spacer(),
 
           Row(
+            mainAxisSize:
+                MainAxisSize.min,
             children: [
               Icon(
-                Icons.signal_cellular_alt_rounded,
-                color: colorScheme.onSurfaceVariant,
+                Icons
+                    .signal_cellular_alt_rounded,
+                color: colorScheme
+                    .onSurfaceVariant,
                 size: 14,
               ),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.bolt,
-                color: Color(0xFFFFD166),
-                size: 13,
+
+              if (isCharging) ...[
+                const SizedBox(
+                  width: 4,
+                ),
+                const Icon(
+                  Icons.bolt,
+                  color: Color(
+                    0xFFFFD166,
+                  ),
+                  size: 13,
+                ),
+              ],
+
+              const SizedBox(
+                width: 4,
               ),
-              const SizedBox(width: 4),
+
               Text(
-                "87%",
+                '$safeBatteryPercentage%',
                 style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
+                  color: colorScheme
+                      .onSurfaceVariant,
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontWeight:
+                      FontWeight.w600,
                 ),
               ),
             ],

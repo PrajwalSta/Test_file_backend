@@ -6,7 +6,7 @@ class SecurityOptionTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget trailing;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const SecurityOptionTile({
     super.key,
@@ -15,7 +15,7 @@ class SecurityOptionTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.trailing,
-    required this.onTap,
+    this.onTap,
   });
 
   @override

@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../main_screen.dart';
 
 class SecurityHeader extends StatelessWidget {
-  const SecurityHeader({super.key});
+  const SecurityHeader({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget build(
+    BuildContext context,
+  ) {
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     return Row(
       children: [
@@ -22,39 +33,64 @@ class SecurityHeader extends StatelessWidget {
             ),
             child: IconButton(
               onPressed: () {
-                final navigator = Navigator.of(context);
+                final NavigatorState navigator =
+                    Navigator.of(context);
 
-                navigator.maybePop().then((didPop) {
-                  if (!didPop && context.mounted) {
-                    navigator.pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const MainScreen(initialIndex: 4),
-                      ),
-                    );
-                  }
-                });
+                navigator
+                    .maybePop()
+                    .then(
+                  (
+                    bool didPop,
+                  ) {
+                    if (!didPop &&
+                        context.mounted) {
+                      navigator.pushReplacement(
+                        MaterialPageRoute<void>(
+                          builder: (
+                            BuildContext context,
+                          ) {
+                            return const MainScreen(
+                              initialIndex: 4,
+                            );
+                          },
+                        ),
+                      );
+                    }
+                  },
+                );
               },
               icon: Icon(
                 Icons.arrow_back,
-                color: colorScheme.onSurface,
+                color:
+                    colorScheme.onSurface,
                 size: 20,
               ),
+              tooltip:
+                  localizations.back,
               splashRadius: 24,
-              padding: EdgeInsets.zero,
+              padding:
+                  EdgeInsets.zero,
             ),
           ),
         ),
 
-        const SizedBox(width: 12),
+        const SizedBox(
+          width: 12,
+        ),
 
         Expanded(
           child: Text(
-            "Privacy & Security",
+            localizations
+                .privacyAndSecurity,
+            maxLines: 1,
+            overflow:
+                TextOverflow.ellipsis,
             style: TextStyle(
-              color: colorScheme.onSurface,
+              color:
+                  colorScheme.onSurface,
               fontSize: 22,
-              fontWeight: FontWeight.w800,
+              fontWeight:
+                  FontWeight.w800,
             ),
           ),
         ),

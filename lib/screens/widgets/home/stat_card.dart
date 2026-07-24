@@ -14,43 +14,73 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(
+        12,
+      ),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+            BorderRadius.circular(
+          16,
+        ),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.4),
+          color: theme.dividerColor
+              .withValues(
+            alpha: 0.4,
+          ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            color: colorScheme.primary,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+      child: Semantics(
+        container: true,
+        label: '$title, $subtitle',
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Icon(
+              icon,
+              color:
+                  colorScheme.primary,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 13,
+            const SizedBox(
+              height: 10,
             ),
-          ),
-        ],
+            Text(
+              title,
+              maxLines: 1,
+              overflow:
+                  TextOverflow.ellipsis,
+              style: TextStyle(
+                color:
+                    colorScheme.onSurface,
+                fontWeight:
+                    FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(
+              height: 4,
+            ),
+            Text(
+              subtitle,
+              maxLines: 2,
+              overflow:
+                  TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colorScheme
+                    .onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

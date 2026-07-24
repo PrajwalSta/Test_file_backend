@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/profile/profile_model.dart';
 import '../../models/schedule_model.dart';
+import '../../services/notification_setting_service.dart';
+import '../../services/profile/profile_service.dart';
 import '../../services/sleep_setting_service.dart';
+import '../notifications/notification_inbox_screen.dart';
 import '../widgets/home/greeting_header.dart';
 import '../widgets/home/progress_card.dart';
 import '../widgets/home/schedule_section.dart';
@@ -39,8 +43,18 @@ class _HomeScreenState extends State<HomeScreen> {
       _sleepSettingService =
       SleepSettingService();
 
+  final ProfileService _profileService =
+      ProfileService();
+
+  final NotificationSettingService
+      _notificationSettingService =
+      NotificationSettingService();
+
   List<ScheduleModel> todaySchedules = [];
 
+  String _profileName = 'User';
+
+  int _unreadNotificationCount = 0;
   int completedTasks = 0;
   int totalTasks = 0;
   int totalFocusMinutes = 0;
@@ -59,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _sleepModeEnabled = false;
   bool _isLoading = true;
+  bool _isProfileLoading = true;
 
   String? _errorType;
   String? _databaseError;
@@ -67,8 +82,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
+    _loadProfileName();
     _loadTodaySchedules();
     _loadSleepSettings();
+    _loadUnreadNotificationCount();
   }
 
   @override
@@ -85,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (oldWidget.scheduleRefreshVersion !=
         widget.scheduleRefreshVersion) {
       _loadTodaySchedules();
+      _loadUnreadNotificationCount();
     }
   }
 
@@ -198,6 +216,186 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return localizations
         .unableToLoadSchedules;
+  }
+
+  Future<void> _loadProfileName() async {
+    try {
+      final ProfileModel profile =
+          await _profileService.getProfile();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        final String loadedName =
+            profile.fullName.trim();
+
+        _profileName =
+            loadedName.isEmpty
+                ? _getFallbackName()
+                : loadedName;
+
+        _isProfileLoading = false;
+      });
+    } catch (error) {
+      debugPrint(
+        'Home profile loading error: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _profileName =
+            _getFallbackName();
+
+        _isProfileLoading = false;
+      });
+    }
+  }
+
+  Future<void>
+      _loadUnreadNotificationCount() async {
+    final User? currentUser =
+        _supabase.auth.currentUser;
+
+    if (currentUser == null) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _unreadNotificationCount = 0;
+      });
+
+      return;
+    }
+
+    try {
+      final int count =
+          await _notificationSettingService
+              .getUnreadNotificationCount();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _unreadNotificationCount = count;
+      });
+    } on PostgrestException catch (error) {
+      debugPrint(
+        'Unread notification database error: '
+        '${error.message}',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _unreadNotificationCount = 0;
+      });
+    } catch (error) {
+      debugPrint(
+        'Unread notification count error: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _unreadNotificationCount = 0;
+      });
+    }
+  }
+
+  String _getFallbackName() {
+    final User? currentUser =
+        _supabase.auth.currentUser;
+
+    final dynamic metadataName =
+        currentUser
+            ?.userMetadata?['full_name'];
+
+    if (metadataName != null &&
+        metadataName
+            .toString()
+            .trim()
+            .isNotEmpty) {
+      return metadataName
+          .toString()
+          .trim();
+    }
+
+    final String? email =
+        currentUser?.email;
+
+    if (email != null &&
+        email.contains('@')) {
+      final String emailName =
+          email.split('@').first;
+
+      if (emailName.isNotEmpty) {
+        return _formatProfileName(
+          emailName,
+        );
+      }
+    }
+
+    return 'User';
+  }
+
+  String _formatProfileName(
+    String value,
+  ) {
+    final String cleanedValue =
+        value
+            .replaceAll('.', ' ')
+            .replaceAll('_', ' ')
+            .replaceAll('-', ' ')
+            .trim();
+
+    if (cleanedValue.isEmpty) {
+      return 'User';
+    }
+
+    return cleanedValue
+        .split(' ')
+        .where(
+          (String word) =>
+              word.isNotEmpty,
+        )
+        .map(
+          (String word) {
+            if (word.length == 1) {
+              return word.toUpperCase();
+            }
+
+            return '${word[0].toUpperCase()}'
+                '${word.substring(1).toLowerCase()}';
+          },
+        )
+        .join(' ');
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return const NotificationInboxScreen();
+        },
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadUnreadNotificationCount();
   }
 
   Future<void> _loadSleepSettings() async {
@@ -522,8 +720,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _refreshHomeData() async {
     await Future.wait([
+      _loadProfileName(),
       _loadTodaySchedules(),
       _loadSleepSettings(),
+      _loadUnreadNotificationCount(),
     ]);
   }
 
@@ -533,6 +733,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onScheduleSaved:
           (ScheduleModel newSchedule) async {
         await _loadTodaySchedules();
+        await _loadUnreadNotificationCount();
 
         widget.onScheduleUpdated?.call();
 
@@ -664,7 +865,16 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                const GreetingHeader(),
+                GreetingHeader(
+                  profileName:
+                      _isProfileLoading
+                          ? 'Loading...'
+                          : _profileName,
+                  unreadNotificationCount:
+                      _unreadNotificationCount,
+                  onNotificationTap:
+                      _openNotifications,
+                ),
 
                 SizedBox(
                   height:

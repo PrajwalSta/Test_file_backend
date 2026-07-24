@@ -10,8 +10,11 @@ class NotificationSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.only(
@@ -20,8 +23,10 @@ class NotificationSectionTitle extends StatelessWidget {
       ),
       child: Text(
         title,
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: colorScheme.onSurfaceVariant,
+        style: theme.textTheme.titleSmall
+            ?.copyWith(
+          color:
+              colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.8,
         ),

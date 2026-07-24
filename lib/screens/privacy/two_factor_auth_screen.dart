@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/MFA Auth/security_settings_service.dart';
 
 class TwoFactorAuthScreen extends StatefulWidget {
@@ -52,12 +53,13 @@ class _TwoFactorAuthScreenState
       final User? user =
           _supabase.auth.currentUser;
 
-      final String? email = user?.email;
+      final String? email =
+          user?.email?.trim().toLowerCase();
 
-      if (user == null || email == null) {
-        throw Exception(
-          'Your session has expired. Please log in again.',
-        );
+      if (user == null ||
+          email == null ||
+          email.isEmpty) {
+        throw const _SessionExpiredException();
       }
 
       final Map<String, dynamic> settings =
@@ -77,7 +79,7 @@ class _TwoFactorAuthScreenState
 
         _isLoading = false;
       });
-    } catch (error) {
+    } on _SessionExpiredException {
       if (!mounted) {
         return;
       }
@@ -86,18 +88,45 @@ class _TwoFactorAuthScreenState
         _isLoading = false;
       });
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       _showMessage(
-        _cleanError(error),
+        localizations.sessionExpiredLoginAgain,
+      );
+    } catch (error) {
+      debugPrint(
+        'Unable to load email verification settings: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
+      _showMessage(
+        localizations
+            .unableToLoadEmailVerificationSettings,
       );
     }
   }
 
   Future<void> _sendOtp() async {
-    final String? email = _email;
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final String? email =
+        _email?.trim().toLowerCase();
 
     if (email == null || email.isEmpty) {
       _showMessage(
-        'No email address is connected to your account.',
+        localizations.noEmailConnected,
       );
       return;
     }
@@ -108,6 +137,7 @@ class _TwoFactorAuthScreenState
 
     setState(() {
       _isSending = true;
+      _otpSent = false;
     });
 
     try {
@@ -127,9 +157,13 @@ class _TwoFactorAuthScreenState
       });
 
       _showMessage(
-        'A new verification code was sent. Use only the newest code.',
+        localizations.verificationCodeSent,
       );
     } on AuthException catch (error) {
+      debugPrint(
+        'Unable to send verification code: ${error.message}',
+      );
+
       if (!mounted) {
         return;
       }
@@ -142,20 +176,26 @@ class _TwoFactorAuthScreenState
             'security purposes',
           )) {
         _showMessage(
-          'Please wait about 60 seconds before requesting another code.',
+          localizations.waitBeforeRequestingCode,
         );
       } else {
         _showMessage(
-          error.message,
+          localizations
+              .unableToSendVerificationCode,
         );
       }
     } catch (error) {
+      debugPrint(
+        'Unable to send verification code: $error',
+      );
+
       if (!mounted) {
         return;
       }
 
       _showMessage(
-        _cleanError(error),
+        localizations
+            .unableToSendVerificationCode,
       );
     } finally {
       if (mounted) {
@@ -167,28 +207,32 @@ class _TwoFactorAuthScreenState
   }
 
   Future<void> _verifyOtp() async {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final String code =
         _codeController.text.trim();
 
-    final String? email = _email;
+    final String? email =
+        _email?.trim().toLowerCase();
 
     if (email == null || email.isEmpty) {
       _showMessage(
-        'No email address is connected to your account.',
+        localizations.noEmailConnected,
       );
       return;
     }
 
     if (!_otpSent) {
       _showMessage(
-        'Please send a verification code first.',
+        localizations.sendVerificationCodeFirst,
       );
       return;
     }
 
     if (!RegExp(r'^\d{6}$').hasMatch(code)) {
       _showMessage(
-        'Please enter the complete six-digit code.',
+        localizations.enterCompleteSixDigitCode,
       );
       return;
     }
@@ -209,31 +253,41 @@ class _TwoFactorAuthScreenState
         type: OtpType.email,
       );
 
-      if (response.user == null) {
-        throw Exception(
-          'The verification code could not be confirmed.',
-        );
+      final User? verifiedUser =
+          response.user;
+
+      if (verifiedUser == null) {
+        throw const _OtpConfirmationException();
+      }
+
+      final String? verifiedEmail =
+          verifiedUser.email
+              ?.trim()
+              .toLowerCase();
+
+      if (verifiedEmail != email) {
+        throw const _EmailMismatchException();
       }
 
       await _securityService.updateTwoFactor(
         true,
       );
 
+      _codeController.clear();
+
       if (!mounted) {
         return;
       }
 
-      setState(() {
-        _isEnabled = true;
-        _otpSent = false;
-      });
-
-      _codeController.clear();
-
-      _showMessage(
-        'Email verification enabled successfully.',
+      Navigator.pop(
+        context,
+        true,
       );
     } on AuthException catch (error) {
+      debugPrint(
+        'Unable to verify email code: ${error.message}',
+      );
+
       if (!mounted) {
         return;
       }
@@ -241,7 +295,11 @@ class _TwoFactorAuthScreenState
       final String message =
           error.message.toLowerCase();
 
-      if (message.contains('expired')) {
+      final String errorCode =
+          error.code?.toLowerCase() ?? '';
+
+      if (errorCode == 'otp_expired' ||
+          message.contains('expired')) {
         _codeController.clear();
 
         setState(() {
@@ -249,25 +307,48 @@ class _TwoFactorAuthScreenState
         });
 
         _showMessage(
-          'This code is expired or was replaced. Press Send Code and use the newest email.',
+          localizations.verificationCodeExpired,
         );
       } else if (message.contains('invalid') ||
           message.contains('token')) {
         _showMessage(
-          'The verification code is incorrect. Check the newest email.',
+          localizations.verificationCodeIncorrect,
         );
       } else {
         _showMessage(
-          error.message,
+          localizations
+              .unableToVerifyVerificationCode,
         );
       }
-    } catch (error) {
+    } on _OtpConfirmationException {
       if (!mounted) {
         return;
       }
 
       _showMessage(
-        _cleanError(error),
+        localizations
+            .verificationCodeNotConfirmed,
+      );
+    } on _EmailMismatchException {
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        localizations.verifiedEmailMismatch,
+      );
+    } catch (error) {
+      debugPrint(
+        'Unable to verify email code: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        localizations
+            .unableToVerifyVerificationCode,
       );
     } finally {
       if (mounted) {
@@ -278,7 +359,8 @@ class _TwoFactorAuthScreenState
     }
   }
 
-  Future<void> _disableEmailVerification() async {
+  Future<void>
+      _disableEmailVerification() async {
     if (_isDisabling) {
       return;
     }
@@ -292,27 +374,31 @@ class _TwoFactorAuthScreenState
         false,
       );
 
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _isEnabled = false;
-        _otpSent = false;
-      });
-
       _codeController.clear();
 
-      _showMessage(
-        'Email verification disabled.',
-      );
-    } catch (error) {
       if (!mounted) {
         return;
       }
 
+      Navigator.pop(
+        context,
+        false,
+      );
+    } catch (error) {
+      debugPrint(
+        'Unable to disable email verification: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       _showMessage(
-        _cleanError(error),
+        localizations
+            .unableToDisableEmailVerification,
       );
     } finally {
       if (mounted) {
@@ -323,15 +409,6 @@ class _TwoFactorAuthScreenState
     }
   }
 
-  String _cleanError(Object error) {
-    return error
-        .toString()
-        .replaceFirst(
-          'Exception: ',
-          '',
-        );
-  }
-
   void _showMessage(
     String message,
   ) {
@@ -339,14 +416,18 @@ class _TwoFactorAuthScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
+    final ScaffoldMessengerState messenger =
+        ScaffoldMessenger.of(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
       SnackBar(
         content: Text(
           message,
         ),
+        behavior:
+            SnackBarBehavior.floating,
       ),
     );
   }
@@ -368,11 +449,7 @@ class _TwoFactorAuthScreenState
       return email;
     }
 
-    if (name.length == 1) {
-      return '${name.substring(0, 1)}***@$domain';
-    }
-
-    if (name.length == 2) {
+    if (name.length <= 2) {
       return '${name.substring(0, 1)}***@$domain';
     }
 
@@ -383,19 +460,27 @@ class _TwoFactorAuthScreenState
   Widget build(
     BuildContext context,
   ) {
+    final ThemeData theme =
+        Theme.of(context);
+
     final ColorScheme colorScheme =
-        Theme.of(context).colorScheme;
+        theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Email Verification',
+        title: Text(
+          localizations.emailVerification,
         ),
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child:
-                  CircularProgressIndicator(),
+                  CircularProgressIndicator(
+                color: colorScheme.primary,
+              ),
             )
           : SafeArea(
               child: SingleChildScrollView(
@@ -405,10 +490,14 @@ class _TwoFactorAuthScreenState
                     const EdgeInsets.all(24),
                 child: _isEnabled
                     ? _buildEnabledContent(
+                        theme,
                         colorScheme,
+                        localizations,
                       )
                     : _buildSetupContent(
+                        theme,
                         colorScheme,
+                        localizations,
                       ),
               ),
             ),
@@ -416,8 +505,18 @@ class _TwoFactorAuthScreenState
   }
 
   Widget _buildEnabledContent(
+    ThemeData theme,
     ColorScheme colorScheme,
+    AppLocalizations localizations,
   ) {
+    final String description =
+        _email == null
+            ? localizations.emailVerified
+            : localizations
+                .verificationEnabledFor(
+                _maskedEmail(_email!),
+              );
+
     return Column(
       crossAxisAlignment:
           CrossAxisAlignment.stretch,
@@ -436,11 +535,14 @@ class _TwoFactorAuthScreenState
           height: 24,
         ),
 
-        const Text(
-          'Email verification is enabled',
+        Text(
+          localizations
+              .emailVerificationEnabled,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 22,
+          style: theme
+              .textTheme.headlineSmall
+              ?.copyWith(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -450,10 +552,15 @@ class _TwoFactorAuthScreenState
         ),
 
         Text(
-          _email == null
-              ? 'Your email has been verified.'
-              : 'Verification is enabled for ${_maskedEmail(_email!)}.',
+          description,
           textAlign: TextAlign.center,
+          style: theme
+              .textTheme.bodyMedium
+              ?.copyWith(
+            color:
+                colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
         ),
 
         const SizedBox(
@@ -478,8 +585,9 @@ class _TwoFactorAuthScreenState
                 ),
           label: Text(
             _isDisabling
-                ? 'Disabling...'
-                : 'Disable Email Verification',
+                ? localizations.disabling
+                : localizations
+                    .disableEmailVerification,
           ),
         ),
       ],
@@ -487,8 +595,19 @@ class _TwoFactorAuthScreenState
   }
 
   Widget _buildSetupContent(
+    ThemeData theme,
     ColorScheme colorScheme,
+    AppLocalizations localizations,
   ) {
+    final String description =
+        _email == null
+            ? localizations
+                .verificationCodeWillBeSent
+            : localizations
+                .sixDigitCodeWillBeSentTo(
+                _maskedEmail(_email!),
+              );
+
     return Column(
       crossAxisAlignment:
           CrossAxisAlignment.stretch,
@@ -503,11 +622,13 @@ class _TwoFactorAuthScreenState
           height: 20,
         ),
 
-        const Text(
-          'Verify your email',
+        Text(
+          localizations.verifyYourEmail,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 22,
+          style: theme
+              .textTheme.headlineSmall
+              ?.copyWith(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -517,10 +638,15 @@ class _TwoFactorAuthScreenState
         ),
 
         Text(
-          _email == null
-              ? 'A verification code will be sent to your email.'
-              : 'We will send a six-digit code to ${_maskedEmail(_email!)}.',
+          description,
           textAlign: TextAlign.center,
+          style: theme
+              .textTheme.bodyMedium
+              ?.copyWith(
+            color:
+                colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
         ),
 
         const SizedBox(
@@ -544,10 +670,10 @@ class _TwoFactorAuthScreenState
                 ),
           label: Text(
             _isSending
-                ? 'Sending...'
+                ? localizations.sending
                 : _otpSent
-                    ? 'Resend Code'
-                    : 'Send Code',
+                    ? localizations.resendCode
+                    : localizations.sendCode,
           ),
         ),
 
@@ -563,26 +689,31 @@ class _TwoFactorAuthScreenState
             textInputAction:
                 TextInputAction.done,
             maxLength: 6,
-            inputFormatters: [
+            autofillHints: const <String>[
+              AutofillHints.oneTimeCode,
+            ],
+            inputFormatters:
+                <TextInputFormatter>[
               FilteringTextInputFormatter
                   .digitsOnly,
               LengthLimitingTextInputFormatter(
                 6,
               ),
             ],
-            decoration:
-                const InputDecoration(
-              labelText:
-                  'Six-digit verification code',
+            decoration: InputDecoration(
+              labelText: localizations
+                  .sixDigitVerificationCode,
               hintText: '123456',
               border:
-                  OutlineInputBorder(),
+                  const OutlineInputBorder(),
               counterText: '',
-              prefixIcon: Icon(
+              prefixIcon: const Icon(
                 Icons.password_outlined,
               ),
             ),
-            onSubmitted: (_) {
+            onSubmitted: (
+              String value,
+            ) {
               if (!_isVerifying) {
                 _verifyOtp();
               }
@@ -606,12 +737,28 @@ class _TwoFactorAuthScreenState
                       strokeWidth: 2,
                     ),
                   )
-                : const Text(
-                    'Verify and Enable',
+                : Text(
+                    localizations
+                        .verifyAndEnable,
                   ),
           ),
         ],
       ],
     );
   }
+}
+
+class _SessionExpiredException
+    implements Exception {
+  const _SessionExpiredException();
+}
+
+class _OtpConfirmationException
+    implements Exception {
+  const _OtpConfirmationException();
+}
+
+class _EmailMismatchException
+    implements Exception {
+  const _EmailMismatchException();
 }

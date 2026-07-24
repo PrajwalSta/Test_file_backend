@@ -2,7 +2,9 @@
   "@@locale": "en",
 
   "appName": "Focus Glow",
-  "@appName": {},
+  "@appName": {
+    "description": "Application name"
+  },
 
   "home": "Home",
   "schedule": "Schedule",
@@ -23,6 +25,7 @@
   "delete": "Delete",
   "add": "Add",
   "tryAgain": "Try Again",
+  "close": "Close",
 
   "english": "English",
   "nepali": "Nepali",
@@ -33,9 +36,65 @@
   "goodMorning": "Good Morning",
   "goodAfternoon": "Good Afternoon",
   "goodEvening": "Good Evening",
-  "project": "Project",
 
+  "project": "Project",
   "todaysProgress": "Today's Progress",
+  "todaysSchedule": "Today's Schedule",
+
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "sunday": "Sunday",
+
+  "totalFocusTime": "Total Focus Time",
+  "focusTime": "Focus Time",
+  "focusHours": "Focus Hours",
+  "tasksDone": "Tasks Done",
+  "totalTasks": "Total Tasks",
+  "completed": "Completed",
+  "completedTasksTitle": "Completed Tasks",
+  "completionRate": "Completion Rate",
+  "dailyFocusHours": "Daily Focus Hours",
+  "byCategory": "By Category",
+  "monthlyFocus": "Monthly Focus",
+  "productivityInsights": "Your productivity insights",
+
+  "profileSection": "Profile",
+  "preferencesSection": "Preferences",
+  "focusModesSection": "Focus Modes",
+
+  "profileSubtitle": "Name, photo, bio",
+  "privacySubtitle": "Password, 2FA, biometrics",
+
+  "darkMode": "Dark Mode",
+  "darkModeOn": "On — dark interface",
+  "darkModeOff": "Off — light interface",
+
+  "notificationsSubtitle": "Push, email, reminders",
+  "themeColorSubtitle": "Customize app color scheme",
+
+  "focusMode": "Focus Mode",
+  "focusModeSubtitle": "Blocked apps, break intervals",
+
+  "sleepModeSubtitle": "Bedtime and wake-up schedule",
+
+  "doNotDisturb": "Do Not Disturb",
+  "loadingSettings": "Loading settings...",
+
+  "on": "On",
+  "off": "Off",
+
+  "am": "AM",
+  "pm": "PM",
+
+  "dndEnabled": "Do Not Disturb enabled",
+  "dndDisabled": "Do Not Disturb disabled",
 
   "tasksCompleted": "{completed} of {total} tasks completed",
   "@tasksCompleted": {
@@ -49,36 +108,40 @@
     }
   },
 
-  "focusTime": "Focus Time",
-  "tasksDone": "Tasks Done",
-  "todaysSchedule": "Today's Schedule",
-
-  "today": "Today",
-  "tomorrow": "Tomorrow",
+  "pleaseLoginToViewStatistics": "Please log in to view statistics.",
+  "unableToLoadStatistics": "Unable to load statistics.",
 
   "untitled": "Untitled",
-  "studyMode": "Study Mode",
 
-  "off": "Off",
+  "studyMode": "Study Mode",
+  "workMode": "Work Mode",
   "sleeping": "Sleeping",
 
+  "loginToViewSchedules": "Please log in to view schedules.",
   "pleaseLoginToViewSchedules": "Please log in to view schedules.",
   "unableToLoadSchedules": "Unable to load schedules.",
-
-  "scheduleIdMissing": "Schedule database ID is missing",
-  "loginBeforeUpdating": "Please log in before updating.",
-  "loginBeforeDeleting": "Please log in before deleting.",
 
   "databaseError": "Database error: {message}",
   "@databaseError": {
     "placeholders": {
       "message": {
-        "type": "String"
+        "type": "Object"
       }
     }
   },
 
-  "scheduleAddedSuccessfully": "{title} added successfully",
+  "scheduleAdded": "Schedule Added",
+
+  "scheduleAddedBody": "\"{title}\" was added to your schedule.",
+  "@scheduleAddedBody": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+
+  "scheduleAddedSuccessfully": "Schedule added successfully: {title}",
   "@scheduleAddedSuccessfully": {
     "placeholders": {
       "title": {
@@ -86,6 +149,14 @@
       }
     }
   },
+
+  "scheduleIdMissing": "Schedule database ID is missing.",
+
+  "loginBeforeUpdating": "Please log in before updating.",
+  "loginBeforeUpdatingSchedule": "Please log in before updating a schedule.",
+
+  "loginBeforeDeleting": "Please log in before deleting.",
+  "loginBeforeDeletingSchedule": "Please log in before deleting a schedule.",
 
   "taskCompleted": "{title} completed",
   "@taskCompleted": {
@@ -96,8 +167,10 @@
     }
   },
 
-  "taskMarkedIncomplete": "{title} marked incomplete",
-  "@taskMarkedIncomplete": {
+  "taskReopened": "Task Reopened",
+
+  "taskReopenedBody": "\"{title}\" was marked as incomplete.",
+  "@taskReopenedBody": {
     "placeholders": {
       "title": {
         "type": "String"
@@ -105,8 +178,41 @@
     }
   },
 
+  "taskMarkedCompleted": "Task \"{title}\" marked as completed. Done: {count}",
+  "@taskMarkedCompleted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "taskMarkedIncomplete": "Task \"{title}\" marked as incomplete. Done: {count}",
+  "@taskMarkedIncomplete": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
   "updateFailed": "Update failed: {message}",
   "@updateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unableToUpdateSchedule": "Unable to update schedule: {message}",
+  "@unableToUpdateSchedule": {
     "placeholders": {
       "message": {
         "type": "String"
@@ -123,10 +229,16 @@
     }
   },
 
-  "unableToUpdateSchedule": "Unable to update schedule.",
-  "unableToDeleteSchedule": "Unable to delete schedule.",
+  "unableToDeleteSchedule": "Unable to delete schedule: {message}",
+  "@unableToDeleteSchedule": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
 
-  "scheduleDeletedSuccessfully": "{title} deleted successfully",
+  "scheduleDeletedSuccessfully": "Schedule deleted successfully: {title}",
   "@scheduleDeletedSuccessfully": {
     "placeholders": {
       "title": {
@@ -135,7 +247,7 @@
     }
   },
 
-  "scheduleSelected": "{title} selected",
+  "scheduleSelected": "Schedule selected: {title}",
   "@scheduleSelected": {
     "placeholders": {
       "title": {
@@ -145,6 +257,7 @@
   },
 
   "taskCompletedNotificationTitle": "🎉 Task Completed",
+  "@taskCompletedNotificationTitle": {},
 
   "taskCompletedNotificationBody": "{title} has been completed successfully.",
   "@taskCompletedNotificationBody": {
@@ -156,6 +269,7 @@
   },
 
   "scheduleCancelledNotificationTitle": "Schedule Cancelled",
+  "@scheduleCancelledNotificationTitle": {},
 
   "scheduleCancelledNotificationBody": "{title} has been deleted from your schedule.",
   "@scheduleCancelledNotificationBody": {
@@ -164,5 +278,757 @@
         "type": "String"
       }
     }
+  },
+
+  "unableToLoadDndSettings": "Unable to load Do Not Disturb settings: {message}",
+  "@unableToLoadDndSettings": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unableToUpdateDnd": "Unable to update Do Not Disturb: {message}",
+  "@unableToUpdateDnd": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "sleepModeSettingsUpdated": "Sleep Mode settings updated",
+
+  "signOut": "Sign Out",
+  "signOutConfirmation": "Are you sure you want to sign out?",
+
+  "signOutFailed": "Sign out failed: {message}",
+  "@signOutFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "pageTitle": "{title} Page",
+  "@pageTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "addSchedule": "Add Schedule",
+  "orAddManually": "OR ADD MANUALLY",
+  "title": "Title",
+  "category": "Category",
+  "date": "Date",
+  "startTime": "Start Time",
+  "durationMinutes": "Duration (min)",
+
+  "csvTemplateReady": "CSV template is ready.",
+
+  "unableToPrepareTemplate": "Unable to prepare template: {message}",
+  "@unableToPrepareTemplate": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "loginBeforeImportingSchedules": "Please log in before importing schedules.",
+  "noSchedulesImported": "No schedules were imported.",
+
+  "unableToImportCsv": "Unable to import CSV file: {message}",
+  "@unableToImportCsv": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "importSchedulesQuestion": "Import schedules?",
+  "importProblems": "Import problems",
+  "noValidSchedulesFound": "No valid schedules were found.",
+
+  "validSchedulesFound": "{count} valid schedules found.",
+  "@validSchedulesFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "rowsWillBeSkipped": "{count} rows will be skipped.",
+  "@rowsWillBeSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "andMore": "And {count} more.",
+  "@andMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "importCount": "Import {count}",
+  "@importCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "unknownCategory": "Unknown category.",
+
+  "unknownCategoryAtRow": "Row {row}: Unknown category \"{category}\".",
+  "@unknownCategoryAtRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+
+  "rowError": "Row {row}: {message}",
+  "@rowError": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "schedulesImportedSuccessfully": "{count} schedules imported successfully.",
+  "@schedulesImportedSuccessfully": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "schedulesImportedWithSkipped": "{count} schedules imported successfully, {skipped} skipped.",
+  "@schedulesImportedWithSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+
+  "enterScheduleTitle": "Please enter a schedule title.",
+  "enterValidDuration": "Please enter a valid duration.",
+  "loginBeforeSavingSchedule": "Please log in before saving a schedule.",
+  "selectFutureDateTime": "Please select a future date and time.",
+  "scheduleIdNotReturned": "No schedule ID was returned.",
+
+  "unableToSaveSchedule": "Unable to save schedule: {message}",
+  "@unableToSaveSchedule": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "noSchedulesAvailable": "No schedules available",
+
+  "all": "All",
+  "work": "Work",
+  "study": "Study",
+  "health": "Health",
+  "personal": "Personal",
+  "social": "Social",
+  "exercise": "Exercise",
+
+  "durationRequired": "Duration is required",
+  "enterValidNumber": "Enter a valid number",
+
+  "minimumDuration": "Minimum duration is {minutes} minute",
+  "@minimumDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "maximumDuration": "Maximum duration is {minutes} minutes",
+  "@maximumDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "deleteSchedule": "Delete schedule",
+
+  "deepWork": "Deep Work",
+  "readingMode": "Reading Mode",
+  "exerciseMode": "Exercise Mode",
+  "noFocusMode": "No Focus Mode",
+  "custom": "Custom",
+
+  "user": "User",
+
+  "notificationsUnread": "Notifications, {count} unread",
+  "@notificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "noSchedulesForToday": "No schedules for today",
+  "pressAddToCreateSchedule": "Press Add to create a schedule.",
+
+  "scheduleUpdateFailed": "Schedule was not updated. Check the schedule RLS policy.",
+  "scheduleDeleteFailed": "Schedule was not deleted. Check the schedule RLS policy.",
+
+  "importSchedule": "Import Schedule",
+  "uploadCsvDescription": "Upload a CSV file to add multiple schedules at once.",
+
+  "selectedFile": "Selected: {fileName}",
+  "@selectedFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "preparingTemplate": "Preparing template...",
+  "downloadTemplate": "Download template",
+  "uploadFile": "Upload File",
+
+  "scheduleTitleRequired": "Please enter a schedule title",
+
+  "minimumTitleLength": "Title must contain at least {count} characters",
+  "@minimumTitleLength": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "scheduleTitleHint": "e.g. Deep Work Session",
+  "durationHint": "60",
+  "saveSchedule": "Save Schedule",
+
+  "noData": "No data",
+  "noFocusDataYet": "No focus data yet",
+
+  "mon": "Mon",
+  "tue": "Tue",
+  "wed": "Wed",
+  "thu": "Thu",
+  "fri": "Fri",
+  "sat": "Sat",
+  "sun": "Sun",
+
+  "jan": "Jan",
+  "feb": "Feb",
+  "mar": "Mar",
+  "apr": "Apr",
+  "may": "May",
+  "jun": "Jun",
+  "jul": "Jul",
+  "aug": "Aug",
+  "sep": "Sep",
+  "oct": "Oct",
+  "nov": "Nov",
+  "dec": "Dec",
+
+  "taskDone": "Task done",
+  "tasksDonePlural": "Tasks done",
+  "hoursShort": "hr",
+  "minutesAbbreviation": "min",
+
+  "addWorldClock": "Add World Clock",
+  "worldClocks": "World Clocks",
+  "searchCityCountryTimezone": "Search city, country or timezone",
+  "clearSearch": "Clear search",
+  "noCityFound": "No city found",
+  "tryAnotherCityCountryTimezone": "Try another city, country or timezone.",
+  "isAlreadyAdded": "is already added",
+  "added": "added",
+  "removed": "removed",
+  "unableToLoadWorldClocks": "Unable to load world clocks",
+  "unableToAddClock": "Unable to add clock",
+  "unableToRemoveClock": "Unable to remove clock",
+  "thisClockCannotBeDeleted": "This clock cannot be deleted.",
+  "deleteClock": "Delete clock?",
+  "fromYourWorldClocks": "from your world clocks?",
+  "noWorldClocksAdded": "No world clocks added",
+  "tapPlusToAddCity": "Tap the + button to search and add a city.",
+  "searchCity": "Search city",
+
+  "unableToLoadProfile": "Unable to load profile",
+  "profileUpdatedSuccessfully": "Profile updated successfully",
+  "profileDataUnavailable": "Profile data is unavailable",
+
+  "citySydney": "Sydney",
+  "cityMelbourne": "Melbourne",
+  "cityBrisbane": "Brisbane",
+  "cityPerth": "Perth",
+  "cityAdelaide": "Adelaide",
+  "cityDarwin": "Darwin",
+  "cityHobart": "Hobart",
+
+  "cityKathmandu": "Kathmandu",
+  "cityPokhara": "Pokhara",
+
+  "cityNewDelhi": "New Delhi",
+  "cityMumbai": "Mumbai",
+  "cityBengaluru": "Bengaluru",
+  "cityChennai": "Chennai",
+
+  "cityTokyo": "Tokyo",
+  "cityOsaka": "Osaka",
+  "citySeoul": "Seoul",
+  "cityBeijing": "Beijing",
+  "cityShanghai": "Shanghai",
+  "cityHongKong": "Hong Kong",
+  "citySingapore": "Singapore",
+  "cityBangkok": "Bangkok",
+  "cityJakarta": "Jakarta",
+  "cityManila": "Manila",
+  "cityKualaLumpur": "Kuala Lumpur",
+  "cityDhaka": "Dhaka",
+  "cityKarachi": "Karachi",
+  "cityColombo": "Colombo",
+  "cityDubai": "Dubai",
+
+  "cityLondon": "London",
+  "cityParis": "Paris",
+  "cityBerlin": "Berlin",
+  "cityRome": "Rome",
+  "cityMadrid": "Madrid",
+  "cityAmsterdam": "Amsterdam",
+  "cityZurich": "Zurich",
+  "cityAthens": "Athens",
+  "cityIstanbul": "Istanbul",
+
+  "cityNewYork": "New York",
+  "cityLosAngeles": "Los Angeles",
+  "cityChicago": "Chicago",
+  "cityDenver": "Denver",
+  "cityHonolulu": "Honolulu",
+
+  "cityToronto": "Toronto",
+  "cityVancouver": "Vancouver",
+
+  "citySaoPaulo": "São Paulo",
+  "cityBuenosAires": "Buenos Aires",
+
+  "cityCairo": "Cairo",
+  "cityNairobi": "Nairobi",
+  "cityJohannesburg": "Johannesburg",
+
+  "cityAuckland": "Auckland",
+  "cityWellington": "Wellington",
+
+  "countryAustralia": "Australia",
+  "countryNepal": "Nepal",
+  "countryIndia": "India",
+  "countryJapan": "Japan",
+  "countrySouthKorea": "South Korea",
+  "countryChina": "China",
+  "countryHongKong": "Hong Kong",
+  "countrySingapore": "Singapore",
+  "countryThailand": "Thailand",
+  "countryIndonesia": "Indonesia",
+  "countryPhilippines": "Philippines",
+  "countryMalaysia": "Malaysia",
+  "countryBangladesh": "Bangladesh",
+  "countryPakistan": "Pakistan",
+  "countrySriLanka": "Sri Lanka",
+  "countryUnitedArabEmirates": "United Arab Emirates",
+  "countryUnitedKingdom": "United Kingdom",
+  "countryFrance": "France",
+  "countryGermany": "Germany",
+  "countryItaly": "Italy",
+  "countrySpain": "Spain",
+  "countryNetherlands": "Netherlands",
+  "countrySwitzerland": "Switzerland",
+  "countryGreece": "Greece",
+  "countryTurkiye": "Türkiye",
+  "countryUnitedStates": "United States",
+  "countryCanada": "Canada",
+  "countryBrazil": "Brazil",
+  "countryArgentina": "Argentina",
+  "countryEgypt": "Egypt",
+  "countryKenya": "Kenya",
+  "countrySouthAfrica": "South Africa",
+  "countryNewZealand": "New Zealand",
+  "editProfile": "Edit profile",
+  "days": "days",
+"done": "done",
+"hours": "hours",
+"membership": "membership",
+"projectUser": "Project User",
+"defaultBio": "Focused on building better habits ✨",
+"member": "Member",
+"level": "Level",
+"badges": "Badges",
+"badge": "Badge",
+"earlyBird": "Early Bird",
+"nightOwl": "Night Owl",
+"streakSeven": "Streak 7",
+"focusOneHundredHours": "Focus 100h",
+"plannerPro": "Planner Pro",
+"zenMaster": "Zen Master",
+"unableToLoadBadges": "Unable to load badges",
+"badgesEarned": "{earned}/{total} earned",
+"@badgesEarned": {
+  "placeholders": {
+    "earned": {
+      "type": "int"
+    },
+    "total": {
+      "type": "int"
+    }
   }
+},
+"recentActivity": "Recent activity",
+"refreshActivity": "Refresh activity",
+"unableToLoadRecentActivity": "Unable to load recent activity",
+"noRecentActivity": "No recent activity yet.",
+"activity": "Activity",
+"scheduleAddedActivity": "Schedule added",
+"scheduleCompletedActivity": "Schedule completed",
+"scheduleDeletedActivity": "Schedule deleted",
+"focusCompletedActivity": "Focus session completed",
+"badgeUnlockedActivity": "Badge unlocked",
+"membershipChangedActivity": "Membership changed",
+"levelUpActivity": "Level increased",
+"streakUpdatedActivity": "Streak updated",
+"justNow": "Just now",
+"yesterday": "Yesterday",
+"minutesAgo": "{count}m ago",
+"@minutesAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"hoursAgo": "{count}h ago",
+"@hoursAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"daysAgo": "{count}d ago",
+"@daysAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"editProfile": "Edit Profile",
+"fullName": "Full name",
+"bio": "Bio",
+"saveChanges": "Save Changes",
+"pleaseEnterYourName": "Please enter your name",
+"unableToUpdateProfile": "Unable to update profile",
+"livePreview": "Live Preview",
+"primary": "Primary",
+"secondary": "Secondary",
+"primaryButtonPreview": "Primary button preview",
+"secondaryButtonPreview": "Secondary button preview",
+"accentColorPreviewDescription": "This is how your selected accent colour will appear on buttons, icons, borders and selected controls throughout the app.",
+"themeColorDescription": "Choose your accent color. Changes apply across the entire app instantly.",
+"purple": "Purple",
+"ocean": "Ocean",
+"sunset": "Sunset",
+"forest": "Forest",
+"rose": "Rose",
+"gold": "Gold",
+
+"themeApplied": "{themeName} theme applied",
+"@themeApplied": {
+  "placeholders": {
+    "themeName": {
+      "type": "String"
+    }
+  }
+},
+
+"unableToSaveThemeColor": "Unable to save theme color"
+,
+"saving": "Saving...",
+"saveSettings": "Save settings",
+"enableSleepMode": "Enable Sleep Mode",
+"sleepModeActive": "Sleep Mode is active",
+"sleepModeOff": "Sleep Mode is turned off",
+"sleepSchedule": "Sleep Schedule",
+"sleepScheduleDescription": "Set your bedtime and wake-up time to maintain a consistent sleep routine.",
+"bedtime": "Bedtime",
+"wakeUpTime": "Wake-up Time",
+"selectBedtime": "Select bedtime",
+"selectWakeUpTime": "Select wake-up time",
+"sleepModeSettingsSaved": "Sleep Mode settings saved.",
+"unableToLoadSleepModeSettings": "Unable to load Sleep Mode settings.",
+"unableToSaveSleepModeSettings": "Unable to save Sleep Mode settings.",
+"ok": "OK",
+"blockedApps": "Blocked Apps",
+"unableToLoadFocusModeSettings": "Unable to load Focus Mode settings.",
+"unableToSaveFocusModeSettings": "Unable to save Focus Mode settings."
+,
+"breakInterval": "Break Interval",
+"doNotDisturb": "Do Not Disturb",
+"start": "Start",
+"end": "End",
+"selectDndStartTime": "Select Do Not Disturb start time",
+"selectDndEndTime": "Select Do Not Disturb end time",
+"focusModeDescription": "Block distracting apps while working",
+"emailVerification": "Email Verification",
+"emailVerificationEnabled": "Email verification is enabled",
+"emailVerified": "Your email has been verified.",
+"verificationEnabledFor": "Verification is enabled for {email}.",
+"@verificationEnabledFor": {
+  "placeholders": {
+    "email": {
+      "type": "String"
+    }
+  }
+},
+"disableEmailVerification": "Disable Email Verification",
+"disabling": "Disabling...",
+"verifyYourEmail": "Verify your email",
+"verificationCodeWillBeSent": "A verification code will be sent to your email.",
+"sixDigitCodeWillBeSentTo": "We will send a six-digit code to {email}.",
+"@sixDigitCodeWillBeSentTo": {
+  "placeholders": {
+    "email": {
+      "type": "String"
+    }
+  }
+},
+"sending": "Sending...",
+"sendCode": "Send Code",
+"resendCode": "Resend Code",
+"sixDigitVerificationCode": "Six-digit verification code",
+"verifyAndEnable": "Verify and Enable",
+"sessionExpiredLoginAgain": "Your session has expired. Please log in again.",
+"noEmailConnected": "No email address is connected to your account.",
+"verificationCodeSent": "A verification code was sent. Use only the newest code.",
+"waitBeforeRequestingCode": "Please wait about 60 seconds before requesting another code.",
+"sendVerificationCodeFirst": "Please send a verification code first.",
+"enterCompleteSixDigitCode": "Please enter the complete six-digit code.",
+"verificationCodeExpired": "The code is invalid or expired. Press Send Code and use the newest email.",
+"verificationCodeIncorrect": "The verification code is incorrect. Check the newest email.",
+"verificationCodeNotConfirmed": "The verification code could not be confirmed.",
+"verifiedEmailMismatch": "The verified email does not match the current account.",
+"unableToLoadEmailVerificationSettings": "Unable to load email verification settings.",
+"unableToSendVerificationCode": "Unable to send the verification code.",
+"unableToVerifyVerificationCode": "Unable to verify the verification code.",
+"unableToDisableEmailVerification": "Unable to disable email verification.",
+"unableToLoadSecuritySettings": "Unable to load security settings.",
+"faceIdLogin": "Face ID Login",
+"fingerprintLogin": "Fingerprint Login",
+"biometricLogin": "Biometric Login",
+"checkingAuthentication": "Checking authentication...",
+"faceIdLoginEnabled": "Face ID login is enabled",
+"unlockUsingFaceId": "Unlock using Face ID",
+"fingerprintLoginEnabled": "Fingerprint login is enabled",
+"unlockUsingFingerprint": "Unlock using fingerprint",
+"biometricUnavailable": "Face ID or fingerprint is unavailable",
+"faceIdOrFingerprint": "Face ID / Fingerprint",
+"faceId": "Face ID",
+"fingerprint": "Fingerprint",
+"biometric": "Biometric",
+"twoFactorAuth": "Two-Factor Auth",
+"openingEmailVerification": "Opening email verification...",
+"emailVerificationEnabled": "Email verification enabled",
+"verifyUsingEmailOtp": "Verify using email OTP",
+"emailVerificationEnabledSuccessfully": "Email verification enabled successfully.",
+"emailVerificationDisabled": "Email verification disabled.",
+"unableToOpenEmailVerification": "Unable to open email verification.",
+"enterCurrentPassword": "Please enter your current password.",
+"enterNewPassword": "Please enter a new password.",
+"newPasswordMustBeDifferent": "The new password must be different from your current password.",
+"currentPasswordIncorrect": "Your current password is incorrect.",
+"unableToUpdatePassword": "Unable to update your password. Please try again.",
+"biometricLoginDisabled": "{authenticationName} login disabled.",
+"@biometricLoginDisabled": {
+  "placeholders": {
+    "authenticationName": {
+      "type": "String"
+    }
+  }
+},
+"biometricLoginEnabled": "{authenticationName} login enabled successfully.",
+"@biometricLoginEnabled": {
+  "placeholders": {
+    "authenticationName": {
+      "type": "String"
+    }
+  }
+},
+"sessionExpiredBeforeBiometric": "Your session has expired. Please log in again before enabling biometric login.",
+"configureBiometricsFirst": "Face ID or fingerprint is not available. Configure biometrics in your device settings first.",
+"noBiometricAuthenticationEnrolled": "No biometric authentication is enrolled. Configure Face ID, Touch ID, or fingerprint in your device settings.",
+"biometricVerificationFailed": "Biometric verification was not successful.",
+"unableToUpdateBiometricLogin": "Unable to update biometric login.",
+"activityLog": "Activity Log",
+"viewAccountActivity": "View your account activity",
+"activityTrackingDisabled": "Activity tracking is disabled",
+"activityLogEnabledMessage": "Activity log enabled.",
+"activityLogDisabledMessage": "Activity log disabled.",
+"unableToUpdateActivityLog": "Unable to update activity log.",
+"dataSharing": "Data Sharing",
+"analyticsSharingEnabled": "Analytics sharing is enabled",
+"shareAnalyticsWithUs": "Share analytics with us",
+"dataSharingEnabledMessage": "Data sharing enabled.",
+"dataSharingDisabledMessage": "Data sharing disabled.",
+"unableToUpdateDataSharing": "Unable to update data sharing.",
+"changePassword": "Change Password",
+"updateLoginPassword": "Update your login password",
+"currentPassword": "Current Password",
+"newPassword": "New Password",
+"confirmPassword": "Confirm Password",
+"updatePassword": "Update Password",
+"weakPassword": "Weak Password",
+"mediumPassword": "Medium Password",
+"strongPassword": "Strong Password",
+"passwordUpdateServiceNotConnected": "Password update service is not connected.",
+"passwordUpdatedSuccessfully": "Password updated successfully",
+"clearActivityLog": "Clear activity log",
+"clearActivityLogQuestion": "Clear activity log?",
+"allActivityRecordsDeleted": "All activity records will be deleted.",
+"clear": "Clear",
+"activityLogCleared": "Activity log cleared.",
+"unableToLoadActivityLog": "Unable to load activity log.",
+"unableToClearActivityLog": "Unable to clear activity log.",
+"noActivityRecordedYet": "No activity recorded yet.",
+"justNow": "Just now",
+"minutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+"@minutesAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"hoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+"@hoursAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"daysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+"@daysAgo": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+"focusAndDnd": "Focus & Do Not Disturb",
+"back": "Back",
+"privacyAndSecurity": "Privacy & Security",
+"back": "Back",
+"pleaseLogInToViewNotifications": "Please log in to view notifications.",
+"unableToLoadNotifications": "Unable to load notifications.",
+"unableToMarkNotificationAsRead": "Unable to mark notification as read",
+"unableToMarkNotificationAsUnread": "Unable to mark notification as unread",
+"allNotificationsMarkedAsRead": "All notifications marked as read.",
+"unableToMarkAllAsRead": "Unable to mark all as read",
+"notificationDeleted": "Notification deleted.",
+"unableToDeleteNotification": "Unable to delete notification",
+"deleteAllNotificationsQuestion": "Delete all notifications?",
+"deleteAllNotificationsDescription": "This will permanently remove all notifications from your inbox.",
+"deleteAll": "Delete all",
+"allNotificationsDeleted": "All notifications deleted.",
+"unableToDeleteAllNotifications": "Unable to delete all notifications",
+"markAsUnread": "Mark as unread",
+"markAsRead": "Mark as read",
+"deleteNotification": "Delete notification",
+"todayWithTime": "Today • {time}",
+"@todayWithTime": {
+  "placeholders": {
+    "time": {
+      "type": "String"
+    }
+  }
+},
+"yesterdayWithTime": "Yesterday • {time}",
+"@yesterdayWithTime": {
+  "placeholders": {
+    "time": {
+      "type": "String"
+    }
+  }
+},
+"markAllRead": "Mark all read",
+"refresh": "Refresh",
+"tryAgain": "Try again",
+"noNotificationsYet": "No notifications yet",
+"notificationInboxEmptyDescription": "Your schedule reminders and task updates will appear here.",
+"notification": "Notification",
+"moreOptions": "More options",
+"notificationChannels": "CHANNELS",
+"notificationAlerts": "ALERTS",
+"notificationDisplay": "DISPLAY",
+"couldNotLoadNotificationSettings": "Could not load notification settings.",
+"couldNotSaveNotificationSetting": "Could not save notification setting.",
+"pushNotifications": "Push Notifications",
+"emailNotifications": "Email Notifications",
+"scheduleReminders": "Schedule Reminders",
+"breakAlerts": "Break Alerts",
+"achievements": "Achievements",
+"weeklyReport": "Weekly Report",
+"notificationSounds": "Notification Sounds",
+"appBadges": "App Badges",
+"realTimeAlertsOnYourDevice": "Real-time alerts on your device",
+"digestToYourInbox": "Digest to your inbox",
+"beforeEventsStart": "Before events start",
+"remindToTakeBreaks": "Remind to take breaks",
+"badgesAndMilestones": "Badges & milestones",
+"sundaySummaryEmail": "Sunday summary email",
+"audioForAlerts": "Audio for alerts",
+"unreadCountOnIcon": "Unread count on icon"
+
 }

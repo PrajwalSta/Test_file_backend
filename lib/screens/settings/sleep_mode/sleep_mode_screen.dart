@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../services/sleep_setting_service.dart';
 import '../../widgets/settings/sleep_mode/sleep_mode_switch_card.dart';
 import '../../widgets/settings/sleep_mode/sleep_save_button.dart';
 import '../../widgets/settings/sleep_mode/sleep_time_card.dart';
 
 class SleepModeScreen extends StatefulWidget {
-  const SleepModeScreen({super.key});
+  const SleepModeScreen({
+    super.key,
+  });
 
   @override
   State<SleepModeScreen> createState() =>
       _SleepModeScreenState();
 }
 
-class _SleepModeScreenState extends State<SleepModeScreen> {
-  final SleepSettingService _sleepSettingService =
+class _SleepModeScreenState
+    extends State<SleepModeScreen> {
+  final SleepSettingService
+      _sleepSettingService =
       SleepSettingService();
 
-  TimeOfDay _sleepTime = const TimeOfDay(
+  TimeOfDay _sleepTime =
+      const TimeOfDay(
     hour: 22,
     minute: 0,
   );
 
-  TimeOfDay _wakeTime = const TimeOfDay(
+  TimeOfDay _wakeTime =
+      const TimeOfDay(
     hour: 7,
     minute: 0,
   );
@@ -41,16 +48,25 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
     String value,
     TimeOfDay fallback,
   ) {
-    final List<String> parts = value.split(':');
+    final List<String> parts =
+        value.split(':');
 
     if (parts.length < 2) {
       return fallback;
     }
 
-    final int? hour = int.tryParse(parts[0]);
-    final int? minute = int.tryParse(parts[1]);
+    final int? hour =
+        int.tryParse(parts[0]);
 
-    if (hour == null || minute == null) {
+    final int? minute =
+        int.tryParse(parts[1]);
+
+    if (hour == null ||
+        minute == null ||
+        hour < 0 ||
+        hour > 23 ||
+        minute < 0 ||
+        minute > 59) {
       return fallback;
     }
 
@@ -64,17 +80,28 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
     TimeOfDay time,
   ) {
     final String hour =
-        time.hour.toString().padLeft(2, '0');
+        time.hour
+            .toString()
+            .padLeft(
+              2,
+              '0',
+            );
 
     final String minute =
-        time.minute.toString().padLeft(2, '0');
+        time.minute
+            .toString()
+            .padLeft(
+              2,
+              '0',
+            );
 
     return '$hour:$minute:00';
   }
 
   Future<void> _loadSettings() async {
     try {
-      final Map<String, dynamic> settings =
+      final Map<String, dynamic>
+          settings =
           await _sleepSettingService
               .getSleepSettings();
 
@@ -83,8 +110,10 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
       }
 
       setState(() {
-        _sleepTime = _parseDatabaseTime(
-          settings['sleep_time']?.toString() ??
+        _sleepTime =
+            _parseDatabaseTime(
+          settings['sleep_time']
+                  ?.toString() ??
               '22:00:00',
           const TimeOfDay(
             hour: 22,
@@ -92,8 +121,10 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
           ),
         );
 
-        _wakeTime = _parseDatabaseTime(
-          settings['wake_time']?.toString() ??
+        _wakeTime =
+            _parseDatabaseTime(
+          settings['wake_time']
+                  ?.toString() ??
               '07:00:00',
           const TimeOfDay(
             hour: 7,
@@ -107,6 +138,10 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
         _isLoading = false;
       });
     } catch (error) {
+      debugPrint(
+        'Unable to load Sleep Mode settings: $error',
+      );
+
       if (!mounted) {
         return;
       }
@@ -115,21 +150,34 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
         _isLoading = false;
       });
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       _showMessage(
-        'Unable to load Sleep Mode settings: $error',
+        localizations
+            .unableToLoadSleepModeSettings,
       );
     }
   }
 
   Future<void> _selectSleepTime() async {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final TimeOfDay? selected =
         await showTimePicker(
       context: context,
       initialTime: _sleepTime,
-      helpText: 'Select bedtime',
+      helpText:
+          localizations.selectBedtime,
+      cancelText:
+          localizations.cancel,
+      confirmText:
+          localizations.ok,
     );
 
-    if (selected == null || !mounted) {
+    if (selected == null ||
+        !mounted) {
       return;
     }
 
@@ -139,14 +187,23 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
   }
 
   Future<void> _selectWakeTime() async {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final TimeOfDay? selected =
         await showTimePicker(
       context: context,
       initialTime: _wakeTime,
-      helpText: 'Select wake-up time',
+      helpText:
+          localizations.selectWakeUpTime,
+      cancelText:
+          localizations.cancel,
+      confirmText:
+          localizations.ok,
     );
 
-    if (selected == null || !mounted) {
+    if (selected == null ||
+        !mounted) {
       return;
     }
 
@@ -156,6 +213,10 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
   }
 
   Future<void> _saveSettings() async {
+    if (_isSaving) {
+      return;
+    }
+
     setState(() {
       _isSaving = true;
     });
@@ -178,21 +239,33 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
         return;
       }
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       _showMessage(
-        'Sleep Mode settings saved.',
+        localizations
+            .sleepModeSettingsSaved,
       );
 
-      // Return true to SettingsScreen.
-      // SettingsScreen then tells MainScreen/HomeScreen
-      // to refresh Sleep Mode.
-      Navigator.pop(context, true);
+      Navigator.pop(
+        context,
+        true,
+      );
     } catch (error) {
+      debugPrint(
+        'Unable to save Sleep Mode settings: $error',
+      );
+
       if (!mounted) {
         return;
       }
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       _showMessage(
-        'Unable to save Sleep Mode settings: $error',
+        localizations
+            .unableToSaveSleepModeSettings,
       );
     } finally {
       if (mounted) {
@@ -206,10 +279,16 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
   void _showMessage(
     String message,
   ) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+    final ScaffoldMessengerState messenger =
+        ScaffoldMessenger.of(context);
+
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+        ),
         behavior:
             SnackBarBehavior.floating,
       ),
@@ -217,21 +296,34 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final ThemeData theme =
         Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     if (_isLoading) {
       return Scaffold(
         backgroundColor:
             theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title:
-              const Text('Sleep Mode'),
+          backgroundColor:
+              theme.scaffoldBackgroundColor,
+          title: Text(
+            localizations.sleepMode,
+          ),
         ),
-        body: const Center(
-          child:
-              CircularProgressIndicator(),
+        body: Center(
+          child: CircularProgressIndicator(
+            color:
+                colorScheme.primary,
+          ),
         ),
       );
     }
@@ -242,50 +334,74 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
       appBar: AppBar(
         backgroundColor:
             theme.scaffoldBackgroundColor,
-        title:
-            const Text('Sleep Mode'),
+        title: Text(
+          localizations.sleepMode,
+        ),
       ),
       body: SafeArea(
         child: ListView(
+          keyboardDismissBehavior:
+              ScrollViewKeyboardDismissBehavior
+                  .onDrag,
           padding:
-              const EdgeInsets.all(20),
+              const EdgeInsets.all(
+            20,
+          ),
           children: [
             Text(
-              'Sleep Schedule',
+              localizations.sleepSchedule,
               style: theme
                   .textTheme
                   .headlineSmall
                   ?.copyWith(
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
+                color:
+                    colorScheme.onSurface,
+                fontWeight:
+                    FontWeight.bold,
+              ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
 
             Text(
-              'Set your bedtime and wake-up time to maintain a consistent sleep routine.',
-              style:
-                  theme.textTheme.bodyMedium,
+              localizations
+                  .sleepScheduleDescription,
+              style: theme
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(
+                color: colorScheme
+                    .onSurfaceVariant,
+                height: 1.45,
+              ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(
+              height: 24,
+            ),
 
             SleepModeSwitchCard(
               enabled: _enabled,
-              onChanged: (value) {
+              onChanged: (
+                bool value,
+              ) {
                 setState(() {
                   _enabled = value;
                 });
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(
+              height: 16,
+            ),
 
             SleepTimeCard(
               icon:
                   Icons.bedtime_rounded,
-              title: 'Bedtime',
+              title:
+                  localizations.bedtime,
               time:
                   _sleepTime.format(
                 context,
@@ -294,12 +410,15 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                   _selectSleepTime,
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(
+              height: 16,
+            ),
 
             SleepTimeCard(
               icon:
                   Icons.wb_sunny_rounded,
-              title: 'Wake-up Time',
+              title: localizations
+                  .wakeUpTime,
               time:
                   _wakeTime.format(
                 context,
@@ -308,7 +427,9 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                   _selectWakeTime,
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(
+              height: 32,
+            ),
 
             SleepSaveButton(
               isSaving: _isSaving,

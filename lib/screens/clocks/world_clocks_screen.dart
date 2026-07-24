@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../data/timezone_database.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/world_clock.dart';
 import '../../services/world_clock_service.dart';
 import '../widgets/clocks/world_clock_card.dart';
@@ -57,6 +58,7 @@ class _WorldClocksScreenState
   void dispose() {
     _clockTimer?.cancel();
     _searchController.dispose();
+
     super.dispose();
   }
 
@@ -79,6 +81,9 @@ class _WorldClocksScreenState
         return;
       }
 
+      final AppLocalizations localizations =
+          AppLocalizations.of(context)!;
+
       setState(() {
         isLoading = false;
       });
@@ -88,7 +93,8 @@ class _WorldClocksScreenState
         ..showSnackBar(
           SnackBar(
             content: Text(
-              'Unable to load world clocks: $error',
+              '${localizations.unableToLoadWorldClocks}: '
+              '$error',
             ),
           ),
         );
@@ -101,6 +107,9 @@ class _WorldClocksScreenState
 
     final ColorScheme colorScheme =
         theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     _searchController.clear();
 
@@ -208,7 +217,8 @@ class _WorldClocksScreenState
 
                           Expanded(
                             child: Text(
-                              'Add World Clock',
+                              localizations
+                                  .addWorldClock,
                               style: TextStyle(
                                 color:
                                     colorScheme
@@ -222,7 +232,9 @@ class _WorldClocksScreenState
                           ),
 
                           IconButton(
-                            tooltip: 'Close',
+                            tooltip:
+                                localizations
+                                    .close,
                             onPressed: () {
                               Navigator.pop(
                                 sheetContext,
@@ -260,7 +272,8 @@ class _WorldClocksScreenState
                         decoration:
                             InputDecoration(
                           hintText:
-                              'Search city, country or timezone',
+                              localizations
+                                  .searchCityCountryTimezone,
                           prefixIcon:
                               const Icon(
                             Icons.search,
@@ -270,7 +283,8 @@ class _WorldClocksScreenState
                                   ? null
                                   : IconButton(
                                       tooltip:
-                                          'Clear search',
+                                          localizations
+                                              .clearSearch,
                                       onPressed:
                                           () {
                                         _searchController
@@ -350,6 +364,7 @@ class _WorldClocksScreenState
                                   .isEmpty
                               ? _buildNoSearchResult(
                                   colorScheme,
+                                  localizations,
                                 )
                               : ListView
                                   .separated(
@@ -369,8 +384,9 @@ class _WorldClocksScreenState
                                           .length,
                                   separatorBuilder:
                                       (
-                                    context,
-                                    index,
+                                    BuildContext
+                                        context,
+                                    int index,
                                   ) {
                                     return Divider(
                                       color: theme
@@ -383,8 +399,9 @@ class _WorldClocksScreenState
                                   },
                                   itemBuilder:
                                       (
-                                    context,
-                                    index,
+                                    BuildContext
+                                        context,
+                                    int index,
                                   ) {
                                     final WorldClock
                                         clock =
@@ -495,6 +512,7 @@ class _WorldClocksScreenState
 
   Widget _buildNoSearchResult(
     ColorScheme colorScheme,
+    AppLocalizations localizations,
   ) {
     return Center(
       child: Column(
@@ -513,7 +531,7 @@ class _WorldClocksScreenState
           ),
 
           Text(
-            'No city found',
+            localizations.noCityFound,
             style: TextStyle(
               color:
                   colorScheme.onSurface,
@@ -528,7 +546,8 @@ class _WorldClocksScreenState
           ),
 
           Text(
-            'Try another city, country or timezone.',
+            localizations
+                .tryAnotherCityCountryTimezone,
             textAlign:
                 TextAlign.center,
             style: TextStyle(
@@ -548,6 +567,9 @@ class _WorldClocksScreenState
       return;
     }
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     final bool alreadyAdded =
         savedClocks.any(
       (WorldClock saved) =>
@@ -564,7 +586,8 @@ class _WorldClocksScreenState
         ..showSnackBar(
           SnackBar(
             content: Text(
-              '${clock.city} is already added',
+              '${clock.city} '
+              '${localizations.isAlreadyAdded}',
             ),
             behavior:
                 SnackBarBehavior.floating,
@@ -604,7 +627,8 @@ class _WorldClocksScreenState
         ..showSnackBar(
           SnackBar(
             content: Text(
-              '${clock.city} added',
+              '${clock.city} '
+              '${localizations.added}',
             ),
             behavior:
                 SnackBarBehavior.floating,
@@ -620,7 +644,8 @@ class _WorldClocksScreenState
         ..showSnackBar(
           SnackBar(
             content: Text(
-              'Unable to add clock: $error',
+              '${localizations.unableToAddClock}: '
+              '$error',
             ),
           ),
         );
@@ -643,6 +668,9 @@ class _WorldClocksScreenState
         deletingClockId != null) {
       return;
     }
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     setState(() {
       deletingClockId =
@@ -671,7 +699,8 @@ class _WorldClocksScreenState
         ..showSnackBar(
           SnackBar(
             content: Text(
-              '${clock.city} removed',
+              '${clock.city} '
+              '${localizations.removed}',
             ),
             behavior:
                 SnackBarBehavior.floating,
@@ -687,7 +716,8 @@ class _WorldClocksScreenState
         ..showSnackBar(
           SnackBar(
             content: Text(
-              'Unable to remove clock: $error',
+              '${localizations.unableToRemoveClock}: '
+              '$error',
             ),
           ),
         );
@@ -703,13 +733,17 @@ class _WorldClocksScreenState
   Future<void> _showDeleteDialog(
     WorldClock clock,
   ) async {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     if (clock.id == null) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'This clock cannot be deleted.',
+              localizations
+                  .thisClockCannotBeDeleted,
             ),
           ),
         );
@@ -735,14 +769,16 @@ class _WorldClocksScreenState
           backgroundColor:
               theme.cardColor,
           title: Text(
-            'Delete clock?',
+            localizations.deleteClock,
             style: TextStyle(
               color:
                   colorScheme.onSurface,
             ),
           ),
           content: Text(
-            'Delete ${clock.city} from your world clocks?',
+            '${localizations.delete} '
+            '${clock.city} '
+            '${localizations.fromYourWorldClocks}',
             style: TextStyle(
               color: colorScheme
                   .onSurfaceVariant,
@@ -756,8 +792,8 @@ class _WorldClocksScreenState
                   false,
                 );
               },
-              child: const Text(
-                'Cancel',
+              child: Text(
+                localizations.cancel,
               ),
             ),
             FilledButton(
@@ -774,8 +810,8 @@ class _WorldClocksScreenState
                 foregroundColor:
                     colorScheme.onError,
               ),
-              child: const Text(
-                'Delete',
+              child: Text(
+                localizations.delete,
               ),
             ),
           ],
@@ -801,6 +837,9 @@ class _WorldClocksScreenState
     final ColorScheme colorScheme =
         theme.colorScheme;
 
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor:
           theme.scaffoldBackgroundColor,
@@ -824,18 +863,26 @@ class _WorldClocksScreenState
                     width: 8,
                   ),
 
-                  Text(
-                    'World Clocks',
-                    style: TextStyle(
-                      color: colorScheme
-                          .onSurface,
-                      fontSize: 28,
-                      fontWeight:
-                          FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      localizations
+                          .worldClocks,
+                      maxLines: 1,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colorScheme
+                            .onSurface,
+                        fontSize: 28,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
                     ),
                   ),
 
-                  const Spacer(),
+                  const SizedBox(
+                    width: 8,
+                  ),
 
                   Material(
                     color:
@@ -903,6 +950,7 @@ class _WorldClocksScreenState
                     _buildClockContent(
                   theme,
                   colorScheme,
+                  localizations,
                 ),
               ),
             ],
@@ -915,6 +963,7 @@ class _WorldClocksScreenState
   Widget _buildClockContent(
     ThemeData theme,
     ColorScheme colorScheme,
+    AppLocalizations localizations,
   ) {
     if (isLoading) {
       return Center(
@@ -945,7 +994,10 @@ class _WorldClocksScreenState
             ),
 
             Text(
-              'No world clocks added',
+              localizations
+                  .noWorldClocksAdded,
+              textAlign:
+                  TextAlign.center,
               style: TextStyle(
                 color:
                     colorScheme.onSurface,
@@ -960,7 +1012,8 @@ class _WorldClocksScreenState
             ),
 
             Text(
-              'Tap the + button to search and add a city.',
+              localizations
+                  .tapPlusToAddCity,
               textAlign:
                   TextAlign.center,
               style: TextStyle(
@@ -980,8 +1033,8 @@ class _WorldClocksScreenState
               icon: const Icon(
                 Icons.search,
               ),
-              label: const Text(
-                'Search city',
+              label: Text(
+                localizations.searchCity,
               ),
             ),
           ],
@@ -1039,7 +1092,8 @@ class _WorldClocksScreenState
                 child: Center(
                   child: IconButton(
                     tooltip:
-                        'Delete clock',
+                        localizations
+                            .deleteClock,
                     onPressed:
                         isDeleting
                             ? null

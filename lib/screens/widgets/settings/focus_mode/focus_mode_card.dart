@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../theme/app_constants.dart';
 import 'custom_switch.dart';
 
@@ -15,52 +16,94 @@ class FocusModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.lg),
-      decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.25),
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    return Semantics(
+      container: true,
+      toggled: value,
+      label: localizations.focusMode,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(
+          AppConstants.lg,
         ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Focus Mode",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: AppConstants.xs),
-
-                Text(
-                  "Block distracting apps while working",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+        decoration: BoxDecoration(
+          color: colorScheme.primary
+              .withValues(
+            alpha: 0.12,
+          ),
+          borderRadius:
+              BorderRadius.circular(20),
+          border: Border.all(
+            color: colorScheme.primary
+                .withValues(
+              alpha: 0.25,
             ),
           ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localizations.focusMode,
+                    maxLines: 1,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style: theme
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                      color:
+                          colorScheme.onSurface,
+                      fontWeight:
+                          FontWeight.w600,
+                    ),
+                  ),
 
-          const SizedBox(width: AppConstants.md),
+                  const SizedBox(
+                    height: AppConstants.xs,
+                  ),
 
-          CustomSwitch(
-            value: value,
-            onChanged: onChanged,
-          ),
-        ],
+                  Text(
+                    localizations
+                        .focusModeDescription,
+                    maxLines: 2,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style: theme
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
+                      color: colorScheme
+                          .onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(
+              width: AppConstants.md,
+            ),
+
+            CustomSwitch(
+              value: value,
+              onChanged: onChanged,
+            ),
+          ],
+        ),
       ),
     );
   }

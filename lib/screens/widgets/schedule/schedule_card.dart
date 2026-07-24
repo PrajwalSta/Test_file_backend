@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../models/schedule_model.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -19,10 +20,76 @@ class ScheduleCard extends StatelessWidget {
     this.onCompletedChanged,
   });
 
+  String _localizedCategory(
+    AppLocalizations localizations,
+    String category,
+  ) {
+    switch (category.trim().toLowerCase()) {
+      case 'all':
+        return localizations.all;
+
+      case 'work':
+        return localizations.work;
+
+      case 'study':
+        return localizations.study;
+
+      case 'health':
+        return localizations.health;
+
+      case 'personal':
+        return localizations.personal;
+
+      case 'social':
+        return localizations.social;
+
+      default:
+        return category;
+    }
+  }
+
+  String _localizedFocusMode(
+    AppLocalizations localizations,
+    String focusMode,
+  ) {
+    switch (focusMode.trim().toLowerCase()) {
+      case 'study mode':
+        return localizations.studyMode;
+
+      case 'work mode':
+        return localizations.workMode;
+
+      case 'deep work':
+        return localizations.deepWork;
+
+      case 'reading mode':
+        return localizations.readingMode;
+
+      case 'exercise mode':
+        return localizations.exerciseMode;
+
+      case 'no focus mode':
+      case 'none':
+      case 'off':
+        return localizations.noFocusMode;
+
+      default:
+        return focusMode;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final ThemeData theme = Theme.of(context);
+
     final bool isDarkMode =
-        Theme.of(context).brightness == Brightness.dark;
+        theme.brightness == Brightness.dark;
+
+    final Color primaryColor =
+        theme.colorScheme.primary;
 
     final Color cardColor = isDarkMode
         ? AppColors.scheduleCardDark
@@ -57,20 +124,22 @@ class ScheduleCard extends StatelessWidget {
                 AppConstants.scheduleCardRadius,
               ),
               border: Border.all(
-                color:
-                    schedule.categoryColor.withValues(
+                color: schedule.categoryColor.withValues(
                   alpha: isDarkMode ? 0.30 : 0.20,
                 ),
               ),
               boxShadow: isDarkMode
                   ? null
-                  : [
+                  : <BoxShadow>[
                       BoxShadow(
                         color: Colors.black.withValues(
                           alpha: 0.05,
                         ),
                         blurRadius: 12,
-                        offset: const Offset(0, 5),
+                        offset: const Offset(
+                          0,
+                          5,
+                        ),
                       ),
                     ],
             ),
@@ -79,7 +148,8 @@ class ScheduleCard extends StatelessWidget {
                 if (onCompletedChanged != null) ...[
                   Checkbox(
                     value: schedule.completed,
-                    onChanged: (value) {
+                    activeColor: primaryColor,
+                    onChanged: (bool? value) {
                       if (value == null) {
                         return;
                       }
@@ -87,26 +157,46 @@ class ScheduleCard extends StatelessWidget {
                       onCompletedChanged!(value);
                     },
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(
+                    width: 6,
+                  ),
                 ],
-
-                _EmojiBox(schedule: schedule),
-
-                const SizedBox(width: 14),
-
+                _EmojiBox(
+                  schedule: schedule,
+                ),
+                const SizedBox(
+                  width: 14,
+                ),
                 Expanded(
                   child: _ScheduleDetails(
                     schedule: schedule,
                     titleStyle: titleStyle,
                     subtitleStyle: subtitleStyle,
+                    localizedCategory:
+                        _localizedCategory(
+                      localizations,
+                      schedule.category,
+                    ),
+                    localizedFocusMode:
+                        _localizedFocusMode(
+                      localizations,
+                      schedule.focusMode,
+                    ),
+                    durationText:
+                        localizations.minutesShort(
+                      schedule.durationMinutes,
+                    ),
+                    focusColor: primaryColor,
                   ),
                 ),
-
                 if (onDelete != null) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(
+                    width: 8,
+                  ),
                   IconButton(
                     onPressed: onDelete,
-                    tooltip: 'Delete schedule',
+                    tooltip:
+                        localizations.deleteSchedule,
                     style: IconButton.styleFrom(
                       backgroundColor:
                           AppColors.danger.withValues(
@@ -146,11 +236,15 @@ class _EmojiBox extends StatelessWidget {
         color: schedule.categoryColor.withValues(
           alpha: 0.15,
         ),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(
+          15,
+        ),
       ),
       child: Text(
         schedule.emoji,
-        style: const TextStyle(fontSize: 24),
+        style: const TextStyle(
+          fontSize: 24,
+        ),
       ),
     );
   }
@@ -160,11 +254,19 @@ class _ScheduleDetails extends StatelessWidget {
   final ScheduleModel schedule;
   final TextStyle titleStyle;
   final TextStyle subtitleStyle;
+  final String localizedCategory;
+  final String localizedFocusMode;
+  final String durationText;
+  final Color focusColor;
 
   const _ScheduleDetails({
     required this.schedule,
     required this.titleStyle,
     required this.subtitleStyle,
+    required this.localizedCategory,
+    required this.localizedFocusMode,
+    required this.durationText,
+    required this.focusColor,
   });
 
   @override
@@ -175,7 +277,8 @@ class _ScheduleDetails extends StatelessWidget {
             : null;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Text(
           schedule.title,
@@ -185,7 +288,9 @@ class _ScheduleDetails extends StatelessWidget {
             decoration: decoration,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(
+          height: 7,
+        ),
         Row(
           children: [
             Icon(
@@ -193,13 +298,15 @@ class _ScheduleDetails extends StatelessWidget {
               size: 15,
               color: subtitleStyle.color,
             ),
-            const SizedBox(width: 5),
+            const SizedBox(
+              width: 5,
+            ),
             Expanded(
               child: Text(
-                '${schedule.time} • '
-                '${schedule.durationMinutes} min',
+                '${schedule.time} • $durationText',
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow:
+                    TextOverflow.ellipsis,
                 style: subtitleStyle.copyWith(
                   decoration: decoration,
                 ),
@@ -207,26 +314,29 @@ class _ScheduleDetails extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 7),
+        const SizedBox(
+          height: 7,
+        ),
         Wrap(
           spacing: 8,
           runSpacing: 6,
           children: [
             _ScheduleChip(
-              text: schedule.category,
+              text: localizedCategory,
               backgroundColor:
                   schedule.categoryColor.withValues(
                 alpha: 0.14,
               ),
-              textColor: schedule.categoryColor,
+              textColor:
+                  schedule.categoryColor,
             ),
             _ScheduleChip(
-              text: schedule.focusMode,
+              text: localizedFocusMode,
               backgroundColor:
-                  AppColors.schedulePrimary.withValues(
+                  focusColor.withValues(
                 alpha: 0.14,
               ),
-              textColor: AppColors.schedulePrimary,
+              textColor: focusColor,
             ),
           ],
         ),
@@ -249,13 +359,18 @@ class _ScheduleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(
+        maxWidth: 150,
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: 9,
         vertical: 5,
       ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          20,
+        ),
       ),
       child: Text(
         text,

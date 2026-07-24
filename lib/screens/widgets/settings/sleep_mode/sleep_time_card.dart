@@ -22,68 +22,104 @@ class SleepTimeCard extends StatelessWidget {
     final ColorScheme colorScheme =
         theme.colorScheme;
 
-    return Material(
-      color: theme.cardColor,
-      borderRadius:
-          BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
+    return Semantics(
+      button: true,
+      label: '$title, $time',
+      child: Material(
+        color: theme.cardColor,
         borderRadius:
             BorderRadius.circular(18),
-        child: Padding(
-          padding:
-              const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary
-                      .withValues(
-                    alpha: 0.12,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(
-                    12,
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  color:
-                      colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight:
-                            FontWeight.w600,
-                      ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius:
+              BorderRadius.circular(18),
+          child: Padding(
+            padding:
+                const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary
+                        .withValues(
+                      alpha: 0.12,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      time,
-                      style: TextStyle(
-                        color: colorScheme
-                            .onSurfaceVariant,
-                      ),
+                    borderRadius:
+                        BorderRadius.circular(
+                      12,
                     ),
-                  ],
+                  ),
+                  child: Icon(
+                    icon,
+                    color:
+                        colorScheme.primary,
+                  ),
                 ),
-              ),
-              const Icon(
-                Icons
-                    .chevron_right_rounded,
-              ),
-            ],
+
+                const SizedBox(
+                  width: 14,
+                ),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow
+                                .ellipsis,
+                        style: theme
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(
+                          color: colorScheme
+                              .onSurface,
+                          fontWeight:
+                              FontWeight
+                                  .w600,
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 4,
+                      ),
+
+                      Text(
+                        time,
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow
+                                .ellipsis,
+                        style: theme
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                          color: colorScheme
+                              .onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(
+                  width: 8,
+                ),
+
+                Icon(
+                  Icons
+                      .chevron_right_rounded,
+                  color: colorScheme
+                      .onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
       ),

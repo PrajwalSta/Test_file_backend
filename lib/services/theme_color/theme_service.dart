@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ThemeService {
@@ -40,5 +41,16 @@ class ThemeService {
       },
       onConflict: 'user_id',
     );
+  }
+
+  Future<ThemeMode?> getThemeMode() async {
+    final bool isDark = await loadDarkMode();
+    return isDark ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  Future<void> saveThemeMode(
+    ThemeMode mode,
+  ) async {
+    await saveDarkMode(mode == ThemeMode.dark);
   }
 }

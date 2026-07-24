@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 class FocusSummaryCard extends StatelessWidget {
   final double totalFocusHours;
   final int completedTasks;
@@ -10,7 +12,9 @@ class FocusSummaryCard extends StatelessWidget {
     required this.completedTasks,
   });
 
-  String get formattedFocusTime {
+  String formattedFocusTime(
+    AppLocalizations localizations,
+  ) {
     final int totalMinutes =
         (totalFocusHours * 60).round();
 
@@ -18,27 +22,35 @@ class FocusSummaryCard extends StatelessWidget {
     final int minutes = totalMinutes % 60;
 
     if (hours == 0) {
-      return '$minutes min';
+      return '$minutes ${localizations.minutesShort}';
     }
 
     if (minutes == 0) {
-      return '$hours hr';
+      return '$hours ${localizations.hoursShort}';
     }
 
-    return '$hours hr $minutes min';
+    return '$hours ${localizations.hoursShort} '
+        '$minutes ${localizations.minutesShort}';
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius:
+            BorderRadius.circular(24),
       ),
       child: Row(
         children: [
@@ -47,11 +59,15 @@ class FocusSummaryCard extends StatelessWidget {
             height: 58,
             decoration: BoxDecoration(
               color: colorScheme.primary,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius:
+                  BorderRadius.circular(
+                18,
+              ),
             ),
             child: Icon(
               Icons.timer_outlined,
-              color: colorScheme.onPrimary,
+              color:
+                  colorScheme.onPrimary,
               size: 30,
             ),
           ),
@@ -62,19 +78,26 @@ class FocusSummaryCard extends StatelessWidget {
                   CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Focus Time',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color:
-                        colorScheme.onPrimaryContainer,
+                  localizations.totalFocusTime,
+                  style: theme
+                      .textTheme.bodyMedium
+                      ?.copyWith(
+                    color: colorScheme
+                        .onPrimaryContainer,
                   ),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  formattedFocusTime,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color:
-                        colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
+                  formattedFocusTime(
+                    localizations,
+                  ),
+                  style: theme
+                      .textTheme.headlineSmall
+                      ?.copyWith(
+                    color: colorScheme
+                        .onPrimaryContainer,
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
               ],
@@ -86,19 +109,24 @@ class FocusSummaryCard extends StatelessWidget {
             children: [
               Text(
                 '$completedTasks',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color:
-                      colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
+                style: theme
+                    .textTheme.headlineSmall
+                    ?.copyWith(
+                  color: colorScheme
+                      .onPrimaryContainer,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
               Text(
                 completedTasks == 1
-                    ? 'Task done'
-                    : 'Tasks done',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color:
-                      colorScheme.onPrimaryContainer,
+                    ? localizations.taskDone
+                    : localizations.tasksDonePlural,
+                style: theme
+                    .textTheme.bodySmall
+                    ?.copyWith(
+                  color: colorScheme
+                      .onPrimaryContainer,
                 ),
               ),
             ],

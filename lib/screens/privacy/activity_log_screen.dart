@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/privacy/activity_log_model.dart';
 import '../../services/MFA Auth/activity_log_service.dart';
 
@@ -18,10 +19,14 @@ class _ActivityLogScreenState
   final ActivityLogService _activityLogService =
       ActivityLogService();
 
-  List<ActivityLogModel> _activities = [];
+  List<ActivityLogModel> _activities =
+      <ActivityLogModel>[];
 
   bool _isLoading = true;
   bool _isClearing = false;
+
+  AppLocalizations get _localizations =>
+      AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -29,6 +34,9 @@ class _ActivityLogScreenState
     _loadActivities();
   }
 
+  // ==========================================================
+  // LOAD ACTIVITY LOGS
+  // ==========================================================
   Future<void> _loadActivities() async {
     try {
       final List<ActivityLogModel> activities =
@@ -43,7 +51,15 @@ class _ActivityLogScreenState
         _activities = activities;
         _isLoading = false;
       });
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to load activity logs: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
       if (!mounted) {
         return;
       }
@@ -53,48 +69,58 @@ class _ActivityLogScreenState
       });
 
       _showMessage(
-        _cleanError(error),
+        _localizations.unableToLoadActivityLog,
       );
     }
   }
 
+  // ==========================================================
+  // CLEAR ACTIVITY LOGS
+  // ==========================================================
   Future<void> _clearActivities() async {
-    if (_activities.isEmpty) {
+    if (_activities.isEmpty ||
+        _isClearing) {
       return;
     }
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     final bool? confirmed =
         await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (
+        BuildContext dialogContext,
+      ) {
         return AlertDialog(
-          title: const Text(
-            'Clear activity log?',
+          title: Text(
+            localizations.clearActivityLogQuestion,
           ),
-          content: const Text(
-            'All activity records will be deleted.',
+          content: Text(
+            localizations
+                .allActivityRecordsDeleted,
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(
-                  context,
+                  dialogContext,
                   false,
                 );
               },
-              child: const Text(
-                'Cancel',
+              child: Text(
+                localizations.cancel,
               ),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(
-                  context,
+                  dialogContext,
                   true,
                 );
               },
-              child: const Text(
-                'Clear',
+              child: Text(
+                localizations.clear,
               ),
             ),
           ],
@@ -102,7 +128,8 @@ class _ActivityLogScreenState
       },
     );
 
-    if (confirmed != true) {
+    if (confirmed != true ||
+        !mounted) {
       return;
     }
 
@@ -123,11 +150,23 @@ class _ActivityLogScreenState
       });
 
       _showMessage(
-        'Activity log cleared.',
+        _localizations.activityLogCleared,
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to clear activity logs: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
       _showMessage(
-        _cleanError(error),
+        _localizations.unableToClearActivityLog,
       );
     } finally {
       if (mounted) {
@@ -138,15 +177,9 @@ class _ActivityLogScreenState
     }
   }
 
-  String _cleanError(Object error) {
-    return error
-        .toString()
-        .replaceFirst(
-          'Exception: ',
-          '',
-        );
-  }
-
+  // ==========================================================
+  // SHOW MESSAGE
+  // ==========================================================
   void _showMessage(
     String message,
   ) {
@@ -154,27 +187,39 @@ class _ActivityLogScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
+    final ScaffoldMessengerState messenger =
+        ScaffoldMessenger.of(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+        ),
+        behavior:
+            SnackBarBehavior.floating,
       ),
     );
   }
 
+  // ==========================================================
+  // GET ACTIVITY ICON
+  // ==========================================================
   IconData _getIcon(
     String iconName,
   ) {
     switch (iconName) {
       case 'password':
+      case 'lock':
         return Icons.lock_outline;
 
       case 'email':
+      case 'security':
         return Icons.email_outlined;
 
       case 'biometric':
+      case 'fingerprint':
         return Icons.fingerprint;
 
       case 'login':
@@ -189,70 +234,94 @@ class _ActivityLogScreenState
       case 'delete':
         return Icons.delete_outline;
 
+      case 'privacy':
+        return Icons.privacy_tip_outlined;
+
+      case 'history':
+        return Icons.history;
+
       default:
         return Icons.history;
     }
   }
 
+  // ==========================================================
+  // FORMAT ACTIVITY TIME
+  // ==========================================================
   String _formatTime(
+    BuildContext context,
     DateTime dateTime,
   ) {
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final DateTime localDateTime =
+        dateTime.toLocal();
+
     final DateTime now =
         DateTime.now();
 
     final Duration difference =
-        now.difference(dateTime);
+        now.difference(localDateTime);
 
-    if (difference.inMinutes < 1) {
-      return 'Just now';
+    if (difference.isNegative ||
+        difference.inMinutes < 1) {
+      return localizations.justNow;
     }
 
     if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} min ago';
+      return localizations.minutesAgo(
+        difference.inMinutes,
+      );
     }
 
     if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return localizations.hoursAgo(
+        difference.inHours,
+      );
     }
 
     if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return localizations.daysAgo(
+        difference.inDays,
+      );
     }
 
-    final String day =
-        dateTime.day.toString().padLeft(
-              2,
-              '0',
-            );
+    final MaterialLocalizations
+        materialLocalizations =
+        MaterialLocalizations.of(context);
 
-    final String month =
-        dateTime.month.toString().padLeft(
-              2,
-              '0',
-            );
-
-    return '$day/$month/${dateTime.year}';
+    return materialLocalizations
+        .formatShortDate(localDateTime);
   }
 
   @override
   Widget build(
     BuildContext context,
   ) {
+    final ThemeData theme =
+        Theme.of(context);
+
     final ColorScheme colorScheme =
-        Theme.of(context).colorScheme;
+        theme.colorScheme;
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Activity Log',
+        title: Text(
+          localizations.activityLog,
         ),
         actions: [
           IconButton(
             onPressed:
-                _isClearing || _activities.isEmpty
+                _isClearing ||
+                        _activities.isEmpty
                     ? null
                     : _clearActivities,
-            tooltip: 'Clear activity log',
+            tooltip:
+                localizations.clearActivityLog,
             icon: _isClearing
                 ? const SizedBox(
                     width: 20,
@@ -263,140 +332,224 @@ class _ActivityLogScreenState
                     ),
                   )
                 : const Icon(
-                    Icons.delete_sweep_outlined,
+                    Icons
+                        .delete_sweep_outlined,
                   ),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child:
-                  CircularProgressIndicator(),
+                  CircularProgressIndicator(
+                color:
+                    colorScheme.primary,
+              ),
             )
           : RefreshIndicator(
               onRefresh: _loadActivities,
               child: _activities.isEmpty
-                  ? ListView(
-                      physics:
-                          const AlwaysScrollableScrollPhysics(),
-                      children: const [
-                        SizedBox(
-                          height: 180,
-                        ),
-                        Icon(
-                          Icons.history,
-                          size: 72,
-                        ),
-                        SizedBox(
-                          height: 16,
-                        ),
-                        Text(
-                          'No activity recorded yet.',
-                          textAlign:
-                              TextAlign.center,
-                        ),
-                      ],
+                  ? _buildEmptyState(
+                      context,
+                      localizations,
                     )
-                  : ListView.separated(
-                      physics:
-                          const AlwaysScrollableScrollPhysics(),
-                      padding:
-                          const EdgeInsets.all(20),
-                      itemCount:
-                          _activities.length,
-                      separatorBuilder:
-                          (_, __) =>
-                              const SizedBox(
-                        height: 12,
-                      ),
-                      itemBuilder:
-                          (context, index) {
-                        final ActivityLogModel
-                            activity =
-                            _activities[index];
-
-                        return Container(
-                          padding:
-                              const EdgeInsets.all(
-                            16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme
-                                .surfaceContainerHighest,
-                            borderRadius:
-                                BorderRadius.circular(
-                              18,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor:
-                                    colorScheme
-                                        .primaryContainer,
-                                child: Icon(
-                                  _getIcon(
-                                    activity
-                                        .iconName,
-                                  ),
-                                  color: colorScheme
-                                      .onPrimaryContainer,
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 14,
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment
-                                          .start,
-                                  children: [
-                                    Text(
-                                      activity
-                                          .action,
-                                      style:
-                                          const TextStyle(
-                                        fontWeight:
-                                            FontWeight
-                                                .bold,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    Text(
-                                      activity
-                                          .description,
-                                      style:
-                                          TextStyle(
-                                        color: colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Text(
-                                _formatTime(
-                                  activity
-                                      .createdAt,
-                                ),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme
-                                      .onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                  : _buildActivityList(
+                      context,
+                      colorScheme,
                     ),
             ),
+    );
+  }
+
+  // ==========================================================
+  // EMPTY STATE
+  // ==========================================================
+  Widget _buildEmptyState(
+    BuildContext context,
+    AppLocalizations localizations,
+  ) {
+    final ColorScheme colorScheme =
+        Theme.of(context).colorScheme;
+
+    return ListView(
+      physics:
+          const AlwaysScrollableScrollPhysics(),
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 24,
+      ),
+      children: [
+        const SizedBox(
+          height: 180,
+        ),
+        Icon(
+          Icons.history,
+          size: 72,
+          color:
+              colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(
+          height: 16,
+        ),
+        Text(
+          localizations
+              .noActivityRecordedYet,
+          textAlign:
+              TextAlign.center,
+          style: Theme.of(context)
+              .textTheme
+              .bodyLarge
+              ?.copyWith(
+            color:
+                colorScheme.onSurfaceVariant,
+            fontWeight:
+                FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================================
+  // ACTIVITY LIST
+  // ==========================================================
+  Widget _buildActivityList(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    return ListView.separated(
+      physics:
+          const AlwaysScrollableScrollPhysics(),
+      padding:
+          const EdgeInsets.all(20),
+      itemCount:
+          _activities.length,
+      separatorBuilder: (
+        BuildContext context,
+        int index,
+      ) {
+        return const SizedBox(
+          height: 12,
+        );
+      },
+      itemBuilder: (
+        BuildContext context,
+        int index,
+      ) {
+        final ActivityLogModel activity =
+            _activities[index];
+
+        return Semantics(
+          container: true,
+          label:
+              '${activity.action}. '
+              '${activity.description}. '
+              '${_formatTime(context, activity.createdAt)}',
+          child: Container(
+            padding:
+                const EdgeInsets.all(
+              16,
+            ),
+            decoration: BoxDecoration(
+              color: colorScheme
+                  .surfaceContainerHighest,
+              borderRadius:
+                  BorderRadius.circular(
+                18,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  backgroundColor:
+                      colorScheme
+                          .primaryContainer,
+                  child: Icon(
+                    _getIcon(
+                      activity.iconName,
+                    ),
+                    color: colorScheme
+                        .onPrimaryContainer,
+                  ),
+                ),
+
+                const SizedBox(
+                  width: 14,
+                ),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .start,
+                    children: [
+                      Text(
+                        activity.action,
+                        style: themeTextStyle(
+                          context,
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 4,
+                      ),
+
+                      Text(
+                        activity.description,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                          color: colorScheme
+                              .onSurfaceVariant,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(
+                  width: 10,
+                ),
+
+                Text(
+                  _formatTime(
+                    context,
+                    activity.createdAt,
+                  ),
+                  textAlign:
+                      TextAlign.end,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(
+                    color: colorScheme
+                        .onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  TextStyle? themeTextStyle(
+    BuildContext context,
+  ) {
+    final ThemeData theme =
+        Theme.of(context);
+
+    return theme.textTheme.titleSmall
+        ?.copyWith(
+      color:
+          theme.colorScheme.onSurface,
+      fontWeight:
+          FontWeight.bold,
     );
   }
 }

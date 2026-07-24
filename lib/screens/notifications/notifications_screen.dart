@@ -4,8 +4,6 @@ import 'package:flutter_app_focus_glow/services/notification_setting_service.dar
 
 import '../../data/notification_data.dart';
 import '../../models/notification_setting.dart';
-//import '../../services/local_notification_service.dart';
-//import '../../services/notification_service.dart';
 
 import '../main_screen.dart';
 import '../widgets/bottom_nav_bar.dart';

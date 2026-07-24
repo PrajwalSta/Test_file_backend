@@ -12,8 +12,11 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
 
     return Container(
       width: double.infinity,
@@ -22,11 +25,14 @@ class StatCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.4),
+          color: theme.dividerColor.withValues(
+            alpha: 0.4,
+          ),
         ),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment:
+            MainAxisAlignment.center,
         children: [
           Icon(
             stat.icon,
@@ -40,7 +46,8 @@ class StatCard extends StatelessWidget {
             stat.value,
             style: TextStyle(
               color: stat.color,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
               fontSize: 18,
             ),
           ),
@@ -49,8 +56,10 @@ class StatCard extends StatelessWidget {
 
           Text(
             stat.label,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
+              color: colorScheme
+                  .onSurfaceVariant,
               fontSize: 11,
             ),
           ),

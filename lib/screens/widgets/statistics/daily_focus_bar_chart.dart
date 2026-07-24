@@ -1,53 +1,94 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
 class DailyFocusBarChart extends StatelessWidget {
-  const DailyFocusBarChart({super.key});
+  const DailyFocusBarChart({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final ThemeData theme =
+        Theme.of(context);
+
+    final AppLocalizations localizations =
+        AppLocalizations.of(context)!;
+
+    final ColorScheme colorScheme =
+        theme.colorScheme;
+
+    final List<String> days = [
+      localizations.mon,
+      localizations.tue,
+      localizations.wed,
+      localizations.thu,
+      localizations.fri,
+      localizations.sat,
+      localizations.sun,
+    ];
 
     return SizedBox(
       height: 220,
       child: BarChart(
         BarChartData(
-          alignment: BarChartAlignment.spaceAround,
+          alignment:
+              BarChartAlignment.spaceAround,
 
-          borderData: FlBorderData(show: false),
+          borderData: FlBorderData(
+            show: false,
+          ),
 
           gridData: FlGridData(
             drawVerticalLine: false,
             horizontalInterval: 2,
-            getDrawingHorizontalLine: (value) {
+            getDrawingHorizontalLine: (
+              value,
+            ) {
               return FlLine(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+                color: colorScheme
+                    .outlineVariant
+                    .withValues(
+                      alpha: 0.45,
+                    ),
                 strokeWidth: 1,
               );
             },
           ),
 
           titlesData: FlTitlesData(
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+            topTitles:
+                const AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: false,
+              ),
             ),
 
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+            rightTitles:
+                const AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: false,
+              ),
             ),
 
-            leftTitles: AxisTitles(
+            leftTitles:
+                AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 26,
-                getTitlesWidget: (value, meta) {
+                getTitlesWidget: (
+                  value,
+                  meta,
+                ) {
                   return Text(
-                    value.toInt().toString(),
+                    value
+                        .toInt()
+                        .toString(),
                     style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
+                      color: colorScheme
+                          .onSurfaceVariant,
                       fontSize: 10,
                     ),
                   );
@@ -55,32 +96,35 @@ class DailyFocusBarChart extends StatelessWidget {
               ),
             ),
 
-            bottomTitles: AxisTitles(
+            bottomTitles:
+                AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  const days = [
-                    'Mon',
-                    'Tue',
-                    'Wed',
-                    'Thu',
-                    'Fri',
-                    'Sat',
-                    'Sun',
-                  ];
+                getTitlesWidget: (
+                  value,
+                  meta,
+                ) {
+                  final int index =
+                      value.toInt();
 
-                  final index = value.toInt();
-
-                  if (index < 0 || index >= days.length) {
-                    return const SizedBox.shrink();
+                  if (index < 0 ||
+                      index >=
+                          days.length) {
+                    return const SizedBox
+                        .shrink();
                   }
 
                   return Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding:
+                        const EdgeInsets.only(
+                      top: 8,
+                    ),
                     child: Text(
                       days[index],
                       style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
+                        color:
+                            colorScheme
+                                .onSurfaceVariant,
                         fontSize: 11,
                       ),
                     ),
@@ -104,20 +148,28 @@ class DailyFocusBarChart extends StatelessWidget {
     );
   }
 
-  BarChartGroupData _bar(int x, double y) {
+  BarChartGroupData _bar(
+    int x,
+    double y,
+  ) {
     return BarChartGroupData(
       x: x,
       barRods: [
         BarChartRodData(
           toY: y,
           width: 18,
-          borderRadius: BorderRadius.circular(8),
-          gradient: const LinearGradient(
+          borderRadius:
+              BorderRadius.circular(
+            8,
+          ),
+          gradient:
+              const LinearGradient(
             colors: [
               AppColors.secondary,
               AppColors.primary,
             ],
-            begin: Alignment.bottomCenter,
+            begin:
+                Alignment.bottomCenter,
             end: Alignment.topCenter,
           ),
         ),
